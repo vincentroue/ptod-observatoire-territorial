@@ -1,0 +1,13 @@
+{
+  "name": "pdtt-observable",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "observable preview",
+    "build": "observable build",
+    "deploy": "observable deploy"
+  },
+  "devDependencies": {
+    "@observablehq/framework": "^1.13.3"
+  }
+}

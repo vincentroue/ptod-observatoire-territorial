@@ -1,0 +1,904 @@
+/* ============================================================
+ * &s DASHBOARD_LIGHT — CSS template multi-volets OTTD
+ * ============================================================
+ * Version allégée de dashboard.css (~300 lignes vs 1890)
+ * Date: 2026-01-09
+ *
+ * Classes essentielles :
+ *   - .banner, .banner-inner, .nav-btn
+ *   - .sub-banner (optionnel par volet)
+ *   - .sidebar, .panel, .panel-title
+ *   - .content, .cards-row, .card, .card-full
+ *   - .legend-bins, .legend-gradient
+ *   - Table triable minimal
+ * ============================================================ */
+
+/* === FONT INTER === */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body, html, * {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
+  font-size: 10px;
+}
+
+/* Overrides tailles spécifiques */
+h1 { font-size: 18px; }
+h2 { font-size: 14px; }
+h3 { font-size: 12px; }
+.banner-titles h1 { font-size: 16px; }
+.banner-titles p { font-size: 11px; }
+
+/* === FOND GLOBAL === */
+body {
+  background-color: #f5f6f7 !important;
+  padding-top: 54px !important;  /* Compense banner fixed */
+}
+
+/* === OVERRIDE LIENS TITRES === */
+h1, h2, h3, h4, h5, h6,
+.card h2, .panel-title {
+  color: inherit !important;
+  text-decoration: none !important;
+}
+
+/* =======================================================
+ * &s BANNER — Bannière sticky 42px spacegray
+ * ======================================================= */
+.banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: #3d4852 !important;
+  padding: 0;
+  width: 100vw;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.banner-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  width: 100%;
+  max-width: 100%;
+}
+
+.banner-titles {
+  flex: 1;
+}
+
+.banner-titles h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff !important;
+}
+
+.banner-titles p {
+  margin: 1px 0 0 0;
+  font-size: 13px;
+  color: #e8eaed;
+}
+
+/* ------- Navigation bannière ------- */
+.nav-banner {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  padding: 4px 6px;
+  background: rgba(37, 99, 235, 0.25);
+  border: 2px solid #2563eb;
+  border-radius: 6px;
+}
+
+.nav-btn {
+  display: inline-block;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #e8eaed;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: all 0.15s;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.nav-btn.active {
+  background: #2563eb;
+  color: #ffffff;
+}
+
+/* ------- Bouton sources avec tooltip ------- */
+.sources-btn {
+  display: inline-block;
+  background: #e8eaed;
+  border: 1px solid #9ca3af;
+  border-radius: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
+  color: #374151;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.sources-btn:hover {
+  background: #d5d8dc;
+  border-color: #6b7280;
+}
+
+/* Tooltip personnalisé au survol */
+.sources-btn::after {
+  content: attr(title);
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #1f2937;
+  color: #fff;
+  font-size: 11px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.sources-btn:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+/* &e BANNER */
+
+/* =======================================================
+ * &s SUB_BANNER — Sous-bannière optionnelle 32px
+ * ======================================================= */
+.sub-banner {
+  position: sticky;
+  top: 54px;
+  z-index: 85;
+  background: #e8eaed;
+  margin-left: 260px;
+  width: calc(100vw - 260px);
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sub-banner-inner {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  padding: 0 12px;
+  max-width: 1800px;
+  margin: 0 auto;
+}
+
+.sub-group {
+  padding: 4px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.sub-group-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #374151;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 3px;
+  border-bottom: 1px solid #9ca3af;
+  padding-bottom: 2px;
+  text-align: center;
+}
+
+.sub-sep {
+  width: 1px;
+  background: #9ca3af;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+
+/* Bloc instructions sous-bannière aligné à droite */
+.sub-banner-instructions {
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  font-size: 11px;
+  color: #475569;
+  text-align: right;
+  padding-right: 16px;
+  flex-shrink: 1;
+  min-width: 280px;
+  line-height: 1.3;
+}
+.sub-banner-instructions .version {
+  color: #94a3b8;
+  font-size: 10px;
+  margin-top: 2px;
+}
+/* &e SUB_BANNER */
+
+/* =======================================================
+ * &s SIDEBAR — Panel gauche fixed 260px
+ * ======================================================= */
+.sidebar {
+  position: fixed;
+  top: 54px;
+  left: 0;
+  width: 260px;
+  height: calc(100vh - 54px);
+  overflow-y: auto;
+  z-index: 95;
+  background: #e8eaed;
+  padding: 8px 10px 10px 12px;
+}
+
+/* Alias pour compatibilité */
+.left-panel {
+  position: fixed;
+  top: 54px;
+  left: 0;
+  width: 260px;
+  height: calc(100vh - 54px);
+  overflow-y: auto;
+  z-index: 95;
+  background: #e8eaed;
+  padding: 8px 10px 10px 12px;
+}
+
+/* ------- Panels sidebar ------- */
+.panel {
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+}
+
+.panel:last-child {
+  margin-bottom: 0;
+  padding-bottom: 80px;
+}
+
+.panel-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #1f2937;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-top: 4px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+
+.panel-hint {
+  display: block;
+  font-size: 11px;
+  color: #4b5563;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+/* ------- Sidebar forms/inputs ------- */
+.sidebar form, .left-panel form {
+  margin-bottom: 4px !important;
+}
+
+.sidebar label, .left-panel label {
+  font-size: 11px !important;
+  white-space: nowrap;
+}
+
+.sidebar select, .left-panel select {
+  font-size: 11px !important;
+  padding: 3px 5px !important;
+  width: 100% !important;
+  max-width: 230px !important;
+}
+
+/* Multi-select pour colonnes tableau - hauteur augmentée +70% */
+.sidebar select[multiple],
+.sidebar form select[multiple],
+.left-panel select[multiple],
+.left-panel form select[multiple] {
+  width: 100% !important;
+  max-width: 240px !important;
+  font-size: 11px !important;
+  min-height: 300px !important;
+  height: 300px !important;
+  overflow-y: auto !important;
+  background: white !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 4px !important;
+}
+
+.sidebar input[type='radio'],
+.sidebar input[type='checkbox'],
+.left-panel input[type='radio'],
+.left-panel input[type='checkbox'] {
+  margin: 2px 5px 2px 0;
+}
+/* &e SIDEBAR */
+
+/* =======================================================
+ * &s LAYOUT — Zone principale et cartes
+ * ======================================================= */
+.layout {
+  margin-left: 260px;
+  margin-top: 6px;
+  padding: 0 12px;
+}
+
+/* Alias */
+.layout-main {
+  margin-left: 260px;
+  margin-top: 6px;
+  padding: 0 20px 0 16px;
+  max-width: calc(100vw - 260px);
+}
+
+.content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ------- Cards grid ------- */
+.cards-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 0;
+  max-width: 820px;  /* Équilibré entre cartes et tableau */
+  margin-left: 16px;
+  margin-right: auto;
+  padding: 0 4px;
+}
+
+/* Réduire espace Observable code blocks entre sections */
+.layout .observablehq--block + h4,
+.layout .observablehq + h4 {
+  margin-top: 0 !important;
+}
+
+/* Observable Framework grid override */
+.grid.grid-cols-2 {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr) !important;
+  gap: 12px;
+}
+
+.card {
+  background: white;
+  padding: 12px;
+  border-radius: 0;
+  border: 1px solid #e5e7eb;
+}
+
+.card h2 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+/* ------- Section headers centered ------- */
+.layout-main h3 {
+  max-width: 1000px;
+  margin: 12px auto 8px;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.card-full {
+  grid-column: 1 / -1;
+  background: white;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+}
+/* &e LAYOUT */
+
+/* =======================================================
+ * &s LEGEND — Légendes bins et gradient
+ * ======================================================= */
+.legend-bins {
+  padding: 4px 0;
+}
+
+.bins-row {
+  display: flex;
+  gap: 2px;
+}
+
+.bin-box {
+  flex: 1;
+  height: 14px;
+  border: 1px solid #888;
+}
+
+.bins-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #4b5563;
+  margin-top: 3px;
+}
+
+/* ------- Légende gradient ------- */
+.legend-gradient {
+  padding: 4px 0;
+}
+
+.grad-bar {
+  height: 12px;
+  border-radius: 2px;
+}
+
+.grad-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #6b7280;
+  margin-top: 3px;
+}
+
+/* ------- Légende gradient verticale (createGradientLegend helper) ------- */
+.legend-gradient-vertical {
+  padding: 6px 0;
+  min-width: 120px;
+}
+
+.legend-gradient-vertical .legend-title {
+  font-size: 9px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.grad-bar-v {
+  height: 14px;
+  border-radius: 2px;
+  border: 1px solid #9ca3af;
+  margin: 2px 0;
+}
+
+.grad-axis-v {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+  color: #4b5563;
+  font-variant-numeric: tabular-nums;
+}
+
+.grad-axis-v span:first-child {
+  color: #761548;  /* Violet pour min (négatif/faible) */
+  font-weight: 500;
+}
+
+.grad-axis-v span:last-child {
+  color: #2c5c2d;  /* Vert pour max (positif/élevé) */
+  font-weight: 500;
+}
+
+.grad-axis-v span:nth-child(2) {
+  color: #6b7280;  /* Gris pour 0 */
+}
+
+/* ------- Légende items verticale ------- */
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.legend-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+}
+
+.legend-color {
+  width: 14px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid #888;
+  flex-shrink: 0;
+}
+
+.legend-text {
+  color: #374151;
+}
+
+/* ------- Légende verticale (legend.js helper) ------- */
+.legend-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 4px 0;
+}
+
+.legend-row-v {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+}
+
+.legend-color-v {
+  width: 16px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1px solid #888;
+  flex-shrink: 0;
+}
+
+.legend-text-v {
+  color: #374151;
+  white-space: nowrap;
+}
+
+.legend-count-v {
+  color: #6b7280;
+  font-size: 8px;
+  margin-left: auto;
+}
+
+.legend-title {
+  font-size: 8px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 2px;
+}
+
+.legend-unit {
+  font-size: 7px;
+  font-style: italic;
+  color: #6b7280;
+  margin-bottom: 3px;
+}
+/* &e LEGEND */
+
+/* =======================================================
+ * &s TABLE — Tableau triable minimal
+ * ======================================================= */
+.table-container {
+  overflow-x: auto;
+  max-height: 650px;
+  overflow-y: auto;
+  max-width: 920px;
+  margin-left: 16px;  /* Aligné sur cards-row */
+  margin-right: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+  border-bottom: 2px solid #9ca3af;
+}
+
+th {
+  padding: 6px 8px;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+th:hover {
+  background: #f1f5f9;
+}
+
+td {
+  padding: 5px 8px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #1f2937;
+}
+
+tr:hover td {
+  background: #f9fafb;
+}
+
+/* ------- Row selected ------- */
+tr.selected td {
+  background: #fef3c7 !important;
+}
+
+/* ------- France row sticky ------- */
+tr.row-france {
+  position: sticky;
+  top: 46px;  /* Sous le header 2 lignes (label + unit/periode) */
+  z-index: 9;
+  background: #f0f9ff;  /* Bleu très clair */
+}
+
+tr.row-france td {
+  border-bottom: 2px solid #93c5fd;  /* Liséré bleu léger sous France */
+  font-weight: 600;
+}
+
+/* ------- Numeric right-align ------- */
+td.num, th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ------- Barre proportionnelle ------- */
+.bar-cell {
+  position: relative;
+  padding-right: 50px;
+}
+
+.bar-bg {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 40px;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+/* &e TABLE */
+
+/* =======================================================
+ * &s MAP — Wrapper carte + légende + zoom
+ * ======================================================= */
+.map-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.map-wrapper svg {
+  max-width: 100%;
+  height: auto;
+}
+
+.legend-overlay {
+  position: absolute;
+  bottom: 12px;
+  left: 8px;  /* Dans l'espace blanc gauche de la carte */
+  background: rgba(255, 255, 255, 0.65);  /* Plus transparent */
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 3px;
+  padding: 4px 6px;
+  font-size: 8px;
+  max-width: 95px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Légende externe gauche (hors carte) */
+.legend-external-left {
+  position: absolute;
+  bottom: 6px;
+  left: -110px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 3px;
+  padding: 4px 6px;
+  font-size: 8px;
+  max-width: 100px;
+  z-index: 10;
+}
+
+/* Légende en dessous de la carte */
+.legend-below {
+  margin-top: 6px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 3px;
+  padding: 4px 6px;
+  font-size: 8px;
+}
+
+.legend-overlay .legend-title {
+  font-size: 8px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 3px;
+}
+
+.zoom-controls {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  z-index: 20;
+}
+
+.zoom-btn {
+  width: 24px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zoom-btn:hover {
+  background: #f3f4f6;
+}
+
+/* Légende en bas à gauche (position absolue sur la carte) */
+.legend-bottom-left {
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  padding: 3px 5px;
+  font-size: 8px;
+  max-width: 90px;
+  z-index: 10;
+}
+
+/* Bouton export SVG en bas à droite */
+.svg-export-btn {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  font-size: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.svg-export-btn:hover {
+  background: #f3f4f6;
+}
+/* &e MAP */
+
+/* =======================================================
+ * &s UTILS — Classes utilitaires
+ * ======================================================= */
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.text-muted { color: #6b7280; }
+.text-sm { font-size: 11px; }
+.text-xs { font-size: 10px; }
+.font-medium { font-weight: 500; }
+.font-semibold { font-weight: 600; }
+.mt-2 { margin-top: 8px; }
+.mb-2 { margin-bottom: 8px; }
+.gap-2 { gap: 8px; }
+
+/* ------- Flex utils ------- */
+.flex { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.flex-wrap { flex-wrap: wrap; }
+.flex-1 { flex: 1; }
+
+/* ------- Chips/Tags (pour search.js) ------- */
+.chip {
+  background: #2563eb;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.chip-close {
+  cursor: pointer;
+  font-weight: bold;
+  margin-left: 2px;
+}
+/* &e UTILS */
+
+/* =======================================================
+ * &s GRAPH_OPTIONS — Barre options graphiques
+ * ======================================================= */
+.graph-options-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 11px;
+  flex-wrap: wrap;
+}
+
+.graph-opt {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.graph-opt input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+.graph-select {
+  padding: 2px 6px;
+  font-size: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 3px;
+  background: white;
+  cursor: pointer;
+}
+
+.graph-opt-spacer {
+  flex: 1;
+}
+
+.graph-btn-export {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 10px;
+  padding: 2px 5px;
+  padding: 3px 8px;
+  font-size: 10px;
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.graph-btn-export:hover {
+  background: #e2e8f0;
+}
+
+.graph-btn-export svg {
+  flex-shrink: 0;
+}
+/* &e GRAPH_OPTIONS */
+
+/* &e DASHBOARD_LIGHT */

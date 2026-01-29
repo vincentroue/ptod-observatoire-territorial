@@ -1,0 +1,83 @@
+// ============================================================
+// &s CONSTANTS — Constantes partagées entre volets
+// ============================================================
+// Date: 2026-01-19
+// Centralise les constantes utilisées dans plusieurs fichiers
+//
+// Exports:
+// - PARIS_CODES : codes Paris par échelon (zoom défaut)
+// - DEFAULT_TABLE_INDICS : indicateurs tableau par défaut
+// - ECHELONS_SIDEBAR : liste échelons pour radio buttons
+// ============================================================
+
+// Codes Paris par échelon pour zoom par défaut cohérent
+export const PARIS_CODES = {
+  "Zone d'emploi": '1109', // ZE Paris
+  Département: '75', // DEP Paris
+  Région: '11', // Île-de-France
+  EPCI: '200054781', // Métropole Grand Paris
+  "Aire d'attraction": '001', // AAV Paris
+  'Bassin de vie': '75056', // BV Paris
+  'Unité urbaine': '00851', // UU Paris
+};
+
+/**
+ * Retourne le code Paris pour un échelon (fallback "75")
+ * @param {string} echelon - Nom échelon
+ * @returns {string} Code Paris pour cet échelon
+ */
+export function getDefaultZoomCode(echelon) {
+  return PARIS_CODES[echelon] || '75';
+}
+
+// Indicateurs clés affichés par défaut dans tableau (allégé)
+// Format: nom indicateur sans période (la période par défaut sera ajoutée)
+export const DEFAULT_TABLE_INDICS = [
+  'dm_pop_vtcam', // Évol population
+  'eco_emp_vtcam', // Évol emploi
+  'dm_sma_vtcam', // Solde migratoire apparent
+  'dmv_iv_ind', // Indice vieillissement
+  'dsp_csp_cadres_vdifp', // Hausse part cadres sup
+  'rev_med', // Revenu médian
+  'log_ressec_pct', // Part résidence secondaire
+  'logd_px2q2_mai', // Prix maison médian
+];
+
+// Indicateurs par défaut pour volet ECO (ZE)
+// Format: nom indicateur sans période (la période par défaut sera ajoutée)
+export const DEFAULT_ECO_TABLE_INDICS = [
+  'eco_emp_vtcam',      // TCAM emploi total (RP)
+  'eco_emppriv_vtcam',  // TCAM emploi privé (URSSAF)
+  'eco_txemp_1564',     // Taux d'emploi 15-64 ans
+  'eco_krugman_a5',     // Indice Krugman (spécialisation)
+  'eco_emp_pres_pct',   // Part emploi présentiel (FLORES)
+];
+
+// Liste échelons pour sidebar radio buttons
+// Ordre : Département par défaut, puis les autres
+export const ECHELONS_SIDEBAR = [
+  'Département',
+  "Zone d'emploi",
+  'Région',
+  'EPCI',
+  "Aire d'attraction",
+  // "Bassin de vie" retiré (peu utilisé)
+];
+
+// Échelons avec géographie disponible (TopoJSON)
+export const ECHELONS_WITH_GEO = [
+  "Zone d'emploi",
+  'Département',
+  'Région',
+  'EPCI',
+  "Aire d'attraction",
+  // "Bassin de vie" - disabled pour perf
+];
+
+// Seuil population minimum par défaut pour tableau communes
+export const MIN_POP_DEFAULT = 10000;
+
+// Taille page tableau par défaut
+export const PAGE_SIZE_DEFAULT = 200;
+
+// &e

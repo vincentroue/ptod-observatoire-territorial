@@ -1,0 +1,21 @@
+[
+	{"a21":"A","lib_a21":"Agriculture","lib_a5":"AZ","ord":1,"eff_19":null,"eff_24":null,"pct_24":null,"evol_1924":null},
+	{"a21":"B","lib_a21":"Ind. extractives","lib_a5":"BE","ord":2,"eff_19":21024.0,"eff_24":20310.0,"pct_24":0.1,"evol_1924":-3.4},
+	{"a21":"C","lib_a21":"Ind. manufacturière","lib_a5":"BE","ord":3,"eff_19":2744185.0,"eff_24":2805329.0,"pct_24":14.03,"evol_1924":2.23},
+	{"a21":"D","lib_a21":"Électricité, gaz","lib_a5":"BE","ord":4,"eff_19":171651.0,"eff_24":185647.0,"pct_24":0.93,"evol_1924":8.15},
+	{"a21":"E","lib_a21":"Eau, déchets","lib_a5":"BE","ord":5,"eff_19":153403.0,"eff_24":168440.0,"pct_24":0.84,"evol_1924":9.8},
+	{"a21":"F","lib_a21":"Construction","lib_a5":"FZ","ord":6,"eff_19":1528937.0,"eff_24":1604279.0,"pct_24":8.02,"evol_1924":4.93},
+	{"a21":"G","lib_a21":"Commerce","lib_a5":"GU","ord":7,"eff_19":3205458.0,"eff_24":3380870.0,"pct_24":16.91,"evol_1924":5.47},
+	{"a21":"H","lib_a21":"Transport","lib_a5":"GU","ord":8,"eff_19":1438635.0,"eff_24":1491681.0,"pct_24":7.46,"evol_1924":3.69},
+	{"a21":"I","lib_a21":"Hôtel-resto","lib_a5":"GU","ord":9,"eff_19":1157443.0,"eff_24":1291239.0,"pct_24":6.46,"evol_1924":11.56},
+	{"a21":"J","lib_a21":"Info-com","lib_a5":"GU","ord":10,"eff_19":842142.0,"eff_24":933589.0,"pct_24":4.67,"evol_1924":10.86},
+	{"a21":"K","lib_a21":"Finance","lib_a5":"GU","ord":11,"eff_19":769806.0,"eff_24":819470.0,"pct_24":4.1,"evol_1924":6.45},
+	{"a21":"L","lib_a21":"Immobilier","lib_a5":"GU","ord":12,"eff_19":273878.0,"eff_24":274653.0,"pct_24":1.37,"evol_1924":0.28},
+	{"a21":"M","lib_a21":"Act. spécialisées","lib_a5":"GU","ord":13,"eff_19":1414027.0,"eff_24":1599546.0,"pct_24":8.0,"evol_1924":13.12},
+	{"a21":"N","lib_a21":"Serv. admin.","lib_a5":"GU","ord":14,"eff_19":1859969.0,"eff_24":1967481.0,"pct_24":9.84,"evol_1924":5.78},
+	{"a21":"O","lib_a21":"Admin. publique","lib_a5":"OQ","ord":15,"eff_19":192174.0,"eff_24":193753.0,"pct_24":0.97,"evol_1924":0.82},
+	{"a21":"P","lib_a21":"Enseignement","lib_a5":"OQ","ord":16,"eff_19":352052.0,"eff_24":404016.0,"pct_24":2.02,"evol_1924":14.76},
+	{"a21":"Q","lib_a21":"Santé-social","lib_a5":"OQ","ord":17,"eff_19":1835820.0,"eff_24":1998829.0,"pct_24":10.0,"evol_1924":8.88},
+	{"a21":"R","lib_a21":"Arts-spectacles","lib_a5":"GU","ord":18,"eff_19":299606.0,"eff_24":339938.0,"pct_24":1.7,"evol_1924":13.46},
+	{"a21":"S","lib_a21":"Autres services","lib_a5":"GU","ord":19,"eff_19":488752.0,"eff_24":516306.0,"pct_24":2.58,"evol_1924":5.64}
+]

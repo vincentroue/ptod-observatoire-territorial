@@ -1,0 +1,16 @@
+# Observable Framework
+node_modules/
+dist/
+src/.observablehq/cache/
+.DS_Store
+
+# Netlify
+.netlify/
+
+# OS
+Thumbs.db
+nul
+
+# Temporary files
+*.tmp
+*.bak

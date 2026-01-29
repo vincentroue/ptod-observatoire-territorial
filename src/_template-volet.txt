@@ -1,0 +1,276 @@
+---
+title: OTTD — [NOM_VOLET]
+toc: false
+theme: dashboard
+style: styles/dashboard-light.css
+---
+
+<!-- ============================================================
+     &s TEMPLATE_VOLET — Squelette annoté pour pages OTTD
+     ============================================================
+     Date: 2026-01-09
+
+     INSTRUCTIONS :
+     1. Copier ce fichier vers jottd-[volet].md
+     2. Remplacer [PLACEHOLDERS] par valeurs réelles
+     3. Adapter sections selon besoins volet
+
+     STRUCTURE :
+     - SECTION 1 : Bannière sticky (obligatoire)
+     - SECTION 2 : Imports helpers (obligatoire)
+     - SECTION 3 : Chargement données (adapter par volet)
+     - SECTION 4 : Sous-bannière (optionnelle)
+     - SECTION 5 : Layout sidebar + contenu principal
+     ============================================================ -->
+
+<!-- ============================================================
+     SECTION 1 — BANNIÈRE (obligatoire)
+     ============================================================ -->
+<div class="banner">
+  <div class="banner-inner">
+    <div class="banner-titles">
+      <h1>OTTD</h1>
+      <p>Observatoire Trajectoires Territoriales — [NOM_VOLET]</p>
+    </div>
+    <!-- Navigation générée par JS ci-dessous -->
+    <nav class="nav-banner" id="nav-container"></nav>
+    <span class="sources-btn" title="[TOOLTIP_SOURCES]">[TEXTE_SOURCES]</span>
+  </div>
+</div>
+
+<!-- ============================================================
+     SECTION 2 — IMPORTS HELPERS (obligatoire)
+     ============================================================ -->
+
+```js
+// =======================================================
+// &s IMPORTS — Helpers et config
+// =======================================================
+// Layout
+import { createNav, OTTD_PAGES, SIDEBAR_SECTIONS_BASE } from "./helpers/layout.js";
+
+// Indicateurs et formatage
+import { INDICATEURS, formatValue, getIndicatorLabel, getIndicatorUnit } from "./helpers/indicators-ddict-js.js";
+
+// Couleurs et légendes
+import { getColorScale, PALETTES } from "./helpers/colors.js";
+import { renderLegendBins, renderLegendGradient } from "./helpers/legend.js";
+
+// Cartes et visualisations
+import { renderChoropleth } from "./helpers/maps.js";
+import { renderTable } from "./helpers/table.js";
+
+// Recherche fuzzy
+import { createSearchBox } from "./helpers/search.js";
+
+// Stats et agrégation
+import { tcam, computeStats } from "./helpers/aggregate.js";
+// &e IMPORTS
+```
+
+```js
+// =======================================================
+// &s NAV_SETUP — Génération navigation
+// =======================================================
+const navElement = createNav(OTTD_PAGES, '[VOLET_ID]');  // ex: 'exdc', 'exdl', 'exde'
+document.getElementById('nav-container').replaceWith(navElement);
+// &e NAV_SETUP
+```
+
+<!-- ============================================================
+     SECTION 3 — CHARGEMENT DONNÉES (adapter par volet)
+     ============================================================ -->
+
+```js
+// =======================================================
+// &s DATA_LOAD — Chargement données
+// =======================================================
+// [ADAPTER SELON VOLET]
+
+// Option A : JSON pré-agrégé (volets EXD, EXDC, EXDF)
+const dataJson = await FileAttachment("./data/agg_[echelon].json").json();
+
+// Option B : Parquet via DuckDB (volets EXDL, EXDE)
+// import { DuckDBClient } from "npm:@duckdb/duckdb-wasm";
+// const db = await DuckDBClient.of({ data: FileAttachment("./data/[fichier].parquet") });
+// const data = await db.query(`SELECT * FROM data WHERE ...`);
+
+// Option C : TopoJSON pour cartes (EXDC)
+// const topoCommunes = await FileAttachment("./data/topo/communes-mini.json").json();
+// &e DATA_LOAD
+```
+
+```js
+// =======================================================
+// &s DATA_PREP — Préparation données
+// =======================================================
+// France référence (ligne code "00FR" ou "FRANCE")
+const frData = dataJson.find(d => d.code === "00FR") || dataJson[0];
+
+// Données sans France pour scatter/carte
+const dataNoFrance = dataJson.filter(d => d.code !== "00FR");
+
+// Map code → label (pour chips/recherche)
+const codeToLabel = new Map(dataJson.map(d => [d.code, d.label || d.libelle]));
+// &e DATA_PREP
+```
+
+<!-- ============================================================
+     SECTION 4 — SOUS-BANNIÈRE (optionnelle)
+     Décommenter si besoin de sélecteurs indicateurs en haut
+     ============================================================ -->
+
+<!--
+<div class="sub-banner">
+  <div class="sub-banner-inner">
+    <div class="sub-group">
+      <div class="sub-group-title">Indicateur</div>
+      <div id="indicator-select"></div>
+    </div>
+    <div class="sub-sep"></div>
+    <div class="sub-group">
+      <div class="sub-group-title">Période</div>
+      <div id="period-select"></div>
+    </div>
+  </div>
+</div>
+-->
+
+<!-- ============================================================
+     SECTION 5 — LAYOUT PRINCIPAL (sidebar + contenu)
+     ============================================================ -->
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+  <!-- Panel Échelon -->
+  <section class="panel" id="panel-echelon">
+    <div class="panel-title">Échelon</div>
+    <div id="echelon-radios"></div>
+  </section>
+
+  <!-- Panel Recherche -->
+  <section class="panel" id="panel-search">
+    <div class="panel-title">Recherche</div>
+    <span class="panel-hint">Saisir 2+ caractères</span>
+    <div id="search-container"></div>
+  </section>
+
+  <!-- Panel Options (adapter selon volet) -->
+  <section class="panel" id="panel-options">
+    <div class="panel-title">Options</div>
+    <div id="options-container"></div>
+  </section>
+
+  <!-- Panel Légende -->
+  <section class="panel" id="panel-legend">
+    <div class="panel-title">Légende</div>
+    <div id="legend-container"></div>
+  </section>
+
+</aside>
+
+<!-- CONTENU PRINCIPAL -->
+<div class="layout-main">
+
+  <!-- Ligne de cartes (2 colonnes) -->
+  <div class="cards-row">
+    <div class="card" id="card-left">
+      <h2>[TITRE_CARTE_GAUCHE]</h2>
+      <div id="viz-left"></div>
+    </div>
+    <div class="card" id="card-right">
+      <h2>[TITRE_CARTE_DROITE]</h2>
+      <div id="viz-right"></div>
+    </div>
+  </div>
+
+  <!-- Tableau pleine largeur -->
+  <div class="card-full" id="card-table">
+    <h2>[TITRE_TABLEAU]</h2>
+    <div id="table-container"></div>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     SECTION 6 — LOGIQUE INTERACTIVE (Mutable + events)
+     ============================================================ -->
+
+```js
+// =======================================================
+// &s STATE — État réactif (Mutable)
+// =======================================================
+const selectedCodes = Mutable(new Set());
+const sortState = Mutable({ col: 'label', asc: true });
+const pageState = Mutable(0);
+
+// Toggle sélection
+function toggleSelection(code) {
+  const current = selectedCodes.value;
+  const next = new Set(current);
+  if (next.has(code)) {
+    next.delete(code);
+  } else {
+    next.add(code);
+  }
+  selectedCodes.value = next;
+}
+// &e STATE
+```
+
+```js
+// =======================================================
+// &s SEARCH_INIT — Initialisation recherche fuzzy
+// =======================================================
+const searchData = dataNoFrance.map(d => ({
+  code: d.code,
+  label: d.label || d.libelle,
+  pop: d.P22_POP
+}));
+
+const searchBox = createSearchBox({
+  data: searchData,
+  selection: selectedCodes,
+  onToggle: toggleSelection,
+  placeholder: "Rechercher un territoire...",
+  maxResults: 8,
+  maxChips: 5,
+  maxWidth: 240
+});
+
+document.getElementById('search-container').appendChild(searchBox);
+// &e SEARCH_INIT
+```
+
+```js
+// =======================================================
+// &s VIZ_RENDER — Rendu visualisations
+// =======================================================
+// [ADAPTER SELON VOLET]
+
+// Exemple : Carte choroplèthe
+// const mapLeft = renderChoropleth({
+//   container: document.getElementById('viz-left'),
+//   topoJson: topoData,
+//   data: dataNoFrance,
+//   valueField: indicatorLeft,
+//   colorScale: getColorScale(indicatorLeft),
+//   onClick: toggleSelection
+// });
+
+// Exemple : Tableau triable
+// renderTable({
+//   container: document.getElementById('table-container'),
+//   data: dataNoFrance,
+//   columns: ['label', 'P22_POP', indicatorLeft, indicatorRight],
+//   sortState: sortState,
+//   selectedCodes: selectedCodes,
+//   onRowClick: toggleSelection
+// });
+// &e VIZ_RENDER
+```
+
+<!-- ============================================================
+     &e TEMPLATE_VOLET
+     ============================================================ -->
