@@ -200,24 +200,28 @@ export function renderBarCell(value, colKey, stats) {
   const isExtreme = value === colStats.min || value === colStats.max;
   const fontWeight = isExtreme ? "700" : "400";
 
-  // === POP : barre bleue simple (Urban PAL_SEQ_BLUE légère) ===
+  // === POP/STOCK : barre bleue (Urban PAL_SEQ_BLUE, z-score 3 paliers) ===
   if (type === "pop") {
     const w = Math.min(value / colStats.max * 100, 100);
+    const popMean = colStats.mean ?? value;
+    const popStd = colStats.std ?? 0;
+    const popZ = popStd > 0 ? Math.abs(value - popMean) / popStd : 0;
+    const popBarColor = popZ < 1 ? "#A2D4EC" : popZ < 2.5 ? "#73BFE2" : "#1696D2";
     return html`<div style="display:flex;align-items:center;gap:5px">
       <div style="width:55px;height:12px;background:#e5e7eb">
-        <div style="width:${w}%;height:100%;background:#73bfe2"></div>
+        <div style="width:${w}%;height:100%;background:${popBarColor}"></div>
       </div>
       <span style="font-size:12px;font-weight:${fontWeight}">${Math.round(value).toLocaleString("fr-FR")}</span>
     </div>`;
   }
 
-  // === PCT : barre bleue (Urban PAL_SEQ_BLUE, z-score 4 paliers) ===
+  // === PCT : barre bleue (Urban PAL_SEQ_BLUE, z-score 3 paliers) ===
   if (type === "pct") {
     const w = Math.min(value / colStats.maxPos * 100, 100);
     const pctMean = colStats.mean ?? value;
     const pctStd = colStats.std ?? 0;
     const pctZ = pctStd > 0 ? Math.abs(value - pctMean) / pctStd : 0;
-    const pctBarColor = pctZ < 1 ? "#A2D4EC" : pctZ < 2 ? "#73BFE2" : pctZ < 3 ? "#1696D2" : "#12719E";
+    const pctBarColor = pctZ < 1 ? "#A2D4EC" : pctZ < 2.5 ? "#73BFE2" : "#1696D2";
     return html`<div style="display:flex;align-items:center;gap:5px">
       <div style="width:55px;height:12px;background:#e5e7eb">
         <div style="width:${w}%;height:100%;background:${pctBarColor}"></div>
@@ -273,12 +277,25 @@ export function renderBarCell(value, colKey, stats) {
     </div>`;
   }
 
-  // === TCAM/DIFF : triangle + barre violet/vert (palette Urban légère) ===
+  // === TCAM/DIFF : triangle + barre violet/vert (z-score 3 paliers) ===
   const max = isNeg ? colStats.maxNeg : colStats.maxPos;
   const w = Math.min(Math.abs(value) / max * 100, 100);
-  // Palette Urban PAL_PURPLE_GREEN - variantes moyennes (pas les plus saturées)
-  const barColor = isNeg ? "#e46aa7" : "#98cf90";  // rose moyen / vert pâle
-  const textColor = isNeg ? "#af1f6b" : "#2c5c2d"; // violet foncé / vert TRÈS foncé
+  const tcamMean = colStats.mean ?? 0;
+  const tcamStd = colStats.std ?? 0;
+  const tcamZ = tcamStd > 0 ? Math.abs(value - tcamMean) / tcamStd : 0;
+
+  let barColor, textColor;
+  if (tcamZ < 1) {
+    barColor = isNeg ? "#eb99c2" : "#bcdeb4";
+    textColor = isNeg ? "#af1f6b" : "#408941";
+  } else if (tcamZ < 2.5) {
+    barColor = isNeg ? "#e46aa7" : "#98cf90";
+    textColor = isNeg ? "#af1f6b" : "#2c5c2d";
+  } else {
+    barColor = isNeg ? "#af1f6b" : "#5aaa5a";
+    textColor = isNeg ? "#761548" : "#2c5c2d";
+  }
+
   const arrow = isNeg ? "▼" : "▲";
   const sign = value >= 0 ? "+" : "";
   const decimals = type === "diff" ? 1 : 2;  // vdifp: 1 déc, vtcam: 2 déc
@@ -556,25 +573,28 @@ function renderBarCellCompact(value, colKey, stats, compact = false) {
   // Urban Institute blue (signature color from PAL_SEQ_BLUE)
   const urbanBlue = "#1696D2";
 
-  // POP : barre bleue légère (Urban PAL_SEQ_BLUE)
+  // POP/STOCK : barre bleue (Urban PAL_SEQ_BLUE, z-score 3 paliers)
   if (type === "pop") {
     const w = Math.min(value / colStats.max * 100, 100);
+    const popMean = colStats.mean ?? value;
+    const popStd = colStats.std ?? 0;
+    const popZ = popStd > 0 ? Math.abs(value - popMean) / popStd : 0;
+    const popBarColor = popZ < 1 ? "#A2D4EC" : popZ < 2.5 ? "#73BFE2" : "#1696D2";
     return html`<div style="display:flex;align-items:center;gap:${compact ? "3px" : "5px"}">
       <div style="width:${barW};height:${barH};background:#e5e7eb;border-radius:2px;">
-        <div style="width:${w}%;height:100%;background:#73bfe2;border-radius:2px;"></div>
+        <div style="width:${w}%;height:100%;background:${popBarColor};border-radius:2px;"></div>
       </div>
       <span style="font-size:${fontSize}">${Math.round(value).toLocaleString("fr-FR")}</span>
     </div>`;
   }
 
-  // PCT : barre bleue (Urban PAL_SEQ_BLUE, z-score 4 paliers sans le plus foncé)
+  // PCT : barre bleue (Urban PAL_SEQ_BLUE, z-score 3 paliers)
   if (type === "pct") {
     const w = Math.min(value / colStats.maxPos * 100, 100);
     const pctMean = colStats.mean ?? value;
     const pctStd = colStats.std ?? 0;
     const pctZ = pctStd > 0 ? Math.abs(value - pctMean) / pctStd : 0;
-    // PAL_SEQ_BLUE 4 niveaux : z<1 très léger, z<2 léger, z<3 signature, z≥3 foncé
-    const pctBarColor = pctZ < 1 ? "#A2D4EC" : pctZ < 2 ? "#73BFE2" : pctZ < 3 ? "#1696D2" : "#12719E";
+    const pctBarColor = pctZ < 1 ? "#A2D4EC" : pctZ < 2.5 ? "#73BFE2" : "#1696D2";
     return html`<div style="display:flex;align-items:center;gap:${compact ? "3px" : "5px"}">
       <div style="width:${barW};height:${barH};background:#e5e7eb;border-radius:2px;">
         <div style="width:${w}%;height:100%;background:${pctBarColor};border-radius:2px;"></div>
@@ -631,11 +651,25 @@ function renderBarCellCompact(value, colKey, stats, compact = false) {
     </div>`;
   }
 
-  // TCAM/DIFF - barres violet/vert légères (Urban PAL_PURPLE_GREEN)
+  // TCAM/DIFF - barres violet/vert (z-score 3 paliers)
   const max = isNeg ? colStats.maxNeg : colStats.maxPos;
   const w = Math.min(Math.abs(value) / max * 100, 100);
-  const barColor = isNeg ? "#e46aa7" : "#98cf90";  // rose moyen / vert pâle
-  const textColor = isNeg ? "#af1f6b" : "#2c5c2d"; // violet foncé / vert TRÈS foncé
+  const tcamMean = colStats.mean ?? 0;
+  const tcamStd = colStats.std ?? 0;
+  const tcamZ = tcamStd > 0 ? Math.abs(value - tcamMean) / tcamStd : 0;
+
+  let barColor, textColor;
+  if (tcamZ < 1) {
+    barColor = isNeg ? "#eb99c2" : "#bcdeb4";
+    textColor = isNeg ? "#af1f6b" : "#408941";
+  } else if (tcamZ < 2.5) {
+    barColor = isNeg ? "#e46aa7" : "#98cf90";
+    textColor = isNeg ? "#af1f6b" : "#2c5c2d";
+  } else {
+    barColor = isNeg ? "#af1f6b" : "#5aaa5a";
+    textColor = isNeg ? "#761548" : "#2c5c2d";
+  }
+
   const arrow = isNeg ? "▼" : "▲";
   const sign = value >= 0 ? "+" : "";
   const decimals = type === "diff" ? 1 : 2;  // vdifp: 1 déc, vtcam: 2 déc

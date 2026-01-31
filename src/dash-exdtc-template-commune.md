@@ -245,6 +245,25 @@ const setTableSearch = (v) => { tableSearchState.value = v; pageState.value = 0;
   border: 1px solid #e2e8f0 !important;  /* bordure très légère gris clair */
 }
 .sub-banner .sub-group { border: none !important; padding: 0 !important; }
+
+/* Tooltip aide lecture tableaux */
+.table-help-wrap { display: inline-block; position: relative; vertical-align: middle; margin-left: 6px; }
+.table-help-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #e5e7eb; color: #6b7280;
+  font-size: 11px; font-weight: 700; cursor: help;
+}
+.table-help-wrap .help-tooltip {
+  display: none; position: absolute;
+  top: 22px; left: -8px; z-index: 100;
+  background: white; border: 1px solid #d1d5db;
+  border-radius: 6px; padding: 10px 14px;
+  font-size: 12px; font-weight: 400;
+  width: 310px; line-height: 1.6;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.table-help-wrap:hover .help-tooltip { display: block; }
 </style>
 <div class="sub-banner" style="margin-left:260px;width:calc(100% - 260px);">
 <div style="display:flex;flex-wrap:nowrap;padding:6px 16px;gap:0;align-items:flex-start;">
@@ -431,7 +450,7 @@ const zoomLabel = labelMap?.get(zoomCode) || zoomCode;
 <!-- Titres alignés -->
 <div style="display:flex;gap:12px;margin-bottom:8px;align-items:baseline;">
 <h3 style="flex:0 0 870px;margin:0;">Vue France par ${echelon} // Focus communes : ${zoomLabel}</h3>
-<h3 style="flex:1;margin:0;">Tableau ${echelon}</h3>
+<h3 style="flex:1;margin:0;">Tableau ${echelon}<span class="table-help-wrap"><span class="table-help-icon">?</span><span class="help-tooltip"><b>Couleurs</b> : intensit&eacute; proportionnelle &agrave; l'&eacute;cart par rapport &agrave; la moyenne.<br>&bull; <span style="color:#98cf90">&#9632;</span> Vert = au-dessus de la moyenne<br>&bull; <span style="color:#e46aa7">&#9632;</span> Violet = en-dessous de la moyenne<br>&bull; <span style="color:#73BFE2">&#9632;</span> Bleu = d&eacute;grad&eacute; d'intensit&eacute; (%, stocks)<br>Plus la couleur est fonc&eacute;e, plus la valeur est extr&ecirc;me (~top 1%).<br><b>Filtre</b> : tapez un nom de r&eacute;gion (ex: BRE), un n&deg; de d&eacute;partement (ex: 35) ou un nom de territoire.</span></span></h3>
 </div>
 
 <div style="display:flex;gap:12px;align-items:stretch;">
@@ -878,7 +897,7 @@ const setEchSort2 = (col) => {
 
 ```js
 // === SEARCHBAR TABLEAU ÉCHELON (viewof pattern) ===
-const echSearchInput = view(Inputs.text({ placeholder: "Filtrer...", width: 100 }));
+const echSearchInput = view(Inputs.text({ placeholder: "Taper pour filtrer territoires...", width: 200 }));
 ```
 
 ```js
@@ -969,7 +988,7 @@ display(tableWrapper);
 <!-- &e CARTES_ET_TABLEAU -->
 
 <!-- &s TABLEAU -->
-<h3 style="margin-left:4px;">Tableau communes</h3>
+<h3 style="margin-left:4px;">Tableau communes<span class="table-help-wrap"><span class="table-help-icon">?</span><span class="help-tooltip"><b>Couleurs</b> : intensit&eacute; proportionnelle &agrave; l'&eacute;cart par rapport &agrave; la moyenne.<br>&bull; <span style="color:#98cf90">&#9632;</span> Vert = au-dessus de la moyenne<br>&bull; <span style="color:#e46aa7">&#9632;</span> Violet = en-dessous de la moyenne<br>&bull; <span style="color:#73BFE2">&#9632;</span> Bleu = d&eacute;grad&eacute; d'intensit&eacute; (%, stocks)<br>Plus la couleur est fonc&eacute;e, plus la valeur est extr&ecirc;me (~top 1%).<br><b>Filtre</b> : tapez un nom de r&eacute;gion (ex: BRE), un n&deg; de d&eacute;partement (ex: 35) ou un nom de commune.</span></span></h3>
 
 <div class="card" style="padding:8px;margin-left:4px;">
 
