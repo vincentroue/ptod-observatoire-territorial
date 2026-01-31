@@ -438,14 +438,13 @@ export function addZoomBehavior(map, config = {}) {
     toMove.forEach(child => contentGroup.node().appendChild(child));
   }
 
-  // Stocker les tailles de police et stroke initiales des labels
+  // Stocker les tailles de stroke initiales des labels (pas font-size)
   const textElements = contentGroup.selectAll("text");
   const baseStyles = new Map();
   textElements.each(function() {
     const el = d3.select(this);
-    const fontSize = parseFloat(el.style("font-size") || el.attr("font-size") || 10);
     const strokeWidth = parseFloat(el.style("stroke-width") || el.attr("stroke-width") || 2.5);
-    baseStyles.set(this, { fontSize, strokeWidth });
+    baseStyles.set(this, { strokeWidth });
   });
 
   // Sélectionner tous les éléments text et les classer par tier
@@ -459,13 +458,10 @@ export function addZoomBehavior(map, config = {}) {
   d3.selectAll(tier2Texts).attr("opacity", 0);
   d3.selectAll(tier3Texts).attr("opacity", 0);
 
-  // TODO P7.4: Pré-calculer collision par tier pour éviter chevauchements
-  // Actuellement la collision est calculée une seule fois à render.
-  // Idée: stocker 3 sets de labels visibles (tier1, tier1+2, all)
-  // et switch entre eux au changement de tier.
-
-  // ZOOM géométrique + révélation progressive par tiers + counter-scale labels
-  let currentTier = 1;  // État pour détecter changement de tier
+  // ZOOM géométrique + révélation progressive par tiers
+  // Labels ne counter-scale PAS la font-size → ils rétrécissent avec le zoom
+  // comme le scatter (police stable, pas de grossissement)
+  // Seul le stroke-width est counter-scaled pour garder le halo lisible
   const zoom = d3.zoom()
     .scaleExtent([minScale, maxScale])
     .on("zoom", (event) => {
@@ -474,26 +470,22 @@ export function addZoomBehavior(map, config = {}) {
       // 1. Appliquer transform au groupe (pan + zoom géométrique)
       contentGroup.attr("transform", event.transform);
 
-      // 2. Counter-scale labels pour garder taille constante
+      // 2. Counter-scale seulement stroke (halo blanc) pas font-size
       textElements.each(function() {
         const base = baseStyles.get(this);
         if (base) {
           d3.select(this)
-            .attr("font-size", base.fontSize / k)
             .attr("stroke-width", base.strokeWidth / k);
         }
       });
 
-      // 3. Révélation progressive par tiers
-      const newTier = k >= 3.5 ? 3 : (k >= 1.8 ? 2 : 1);
-      const tier2Visible = k >= 1.8;       // Zoom >= 1.8x
-      const tier3Visible = k >= 3.5;       // Zoom >= 3.5x
+      // 3. Révélation progressive par tiers (seuils abaissés)
+      const tier2Visible = k >= 1.5;       // Zoom >= 1.5x
+      const tier3Visible = k >= 2.5;       // Zoom >= 2.5x
 
       d3.selectAll(tier1Texts).attr("opacity", 1);
       d3.selectAll(tier2Texts).attr("opacity", tier2Visible ? 1 : 0);
       d3.selectAll(tier3Texts).attr("opacity", tier3Visible ? 1 : 0);
-
-      currentTier = newTier;
     });
 
   // Appliquer au SVG

@@ -623,7 +623,7 @@ const mapC1 = renderChoropleth({
   getLabel: ({ code }) => zoomDataMap.get(code)?.libelle || code,
   formatValue: (k, v) => formatValue(indic1, v),
   indicLabel: label1, showLabels: showValuesOnMap,
-  labelMode, labelBy, topN: 15,
+  labelMode, labelBy, topN: 50,
   title: `${label1} — ${zoomLabel}`,  // Titre avec territoire
   maxLabelsAuto: 100, echelon: "Commune", width: 385, height: 355
 });
@@ -657,7 +657,7 @@ const mapC2 = renderChoropleth({
   getLabel: ({ code }) => zoomDataMap.get(code)?.libelle || code,
   formatValue: (k, v) => formatValue(indic2, v),
   indicLabel: label2, showLabels: showValuesOnMap,
-  labelMode, labelBy, topN: 15,
+  labelMode, labelBy, topN: 50,
   title: `${label2} — ${zoomLabel}`,  // Titre avec territoire
   maxLabelsAuto: 100, echelon: "Commune", width: 385, height: 355
 });
