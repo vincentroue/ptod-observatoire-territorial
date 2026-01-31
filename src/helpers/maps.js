@@ -204,91 +204,46 @@ export function renderChoropleth(config) {
       const baseFontSize = geoData.features.length < 30 ? 12 : 10;
 
       // ============================================================
-      // Anti-collision v2 : projection écran + bbox rectangulaire
+      // Tous les topN labels sont créés dans le SVG (pas de collision ici)
+      // La visibilité est gérée dynamiquement par addZoomBehavior
+      // qui masque/révèle selon le zoom et le viewport
       // ============================================================
-      // Créer projection pour convertir géo → pixels
-      const projection = d3.geoConicConformal()
-        .rotate([-3, -46.5])
-        .parallels([44, 49])
-        .fitSize([width - marginLeft - marginRight, height - marginTop - marginBottom], geoData);
-
-      // Préparer données avec centroid projeté et bbox estimée
-      const withBbox = sorted.map(d => {
-        const centroid = d.properties._centroid || d3.geoCentroid(d);
-        const projected = projection(centroid);
-        if (!projected) return null;
-
-        const text = getText(d);
-        const lines = text.split("\n");
-        const maxLineLen = Math.max(...lines.map(l => l.length));
-        // Estimation bbox : largeur ≈ chars × fontSize × 0.55, hauteur ≈ lines × fontSize × 1.2
-        const estWidth = maxLineLen * baseFontSize * 0.55;
-        const estHeight = lines.length * baseFontSize * 1.2;
-
-        return {
-          feature: d,
-          x: projected[0],
-          y: projected[1],
-          width: estWidth,
-          height: estHeight
-        };
-      }).filter(Boolean);
-
-      // Collision rectangulaire avec padding
-      const padding = 4;  // px entre labels
-      const filtered = [];
-      for (const item of withBbox) {
-        const overlaps = filtered.some(kept => {
-          // Collision AABB (Axis-Aligned Bounding Box)
-          const ax1 = item.x - item.width / 2 - padding;
-          const ax2 = item.x + item.width / 2 + padding;
-          const ay1 = item.y - item.height / 2 - padding;
-          const ay2 = item.y + item.height / 2 + padding;
-          const bx1 = kept.x - kept.width / 2;
-          const bx2 = kept.x + kept.width / 2;
-          const by1 = kept.y - kept.height / 2;
-          const by2 = kept.y + kept.height / 2;
-          return ax1 < bx2 && ax2 > bx1 && ay1 < by2 && ay2 > by1;
-        });
-        if (!overlaps) filtered.push(item);
-      }
 
       // Mode top5_bot5 : 2 marks séparés (top=blanc, bot=rouge)
       if (isTop5Bot5 && bot5Features) {
         const bot5Set = new Set(bot5Features.map(f => getCode(f)));
-        const topFiltered = filtered.filter(f => !bot5Set.has(getCode(f.feature)));
-        const botFiltered = filtered.filter(f => bot5Set.has(getCode(f.feature)));
+        const topSorted = sorted.filter(f => !bot5Set.has(getCode(f)));
+        const botSorted = sorted.filter(f => bot5Set.has(getCode(f)));
 
         return [
-          // Top 5 avec stroke blanc
-          topFiltered.length > 0 ? Plot.text(topFiltered.map(f => f.feature), {
+          topSorted.length > 0 ? Plot.text(topSorted, {
             x: d => d.properties._centroid?.[0] ?? d3.geoCentroid(d)[0],
             y: d => d.properties._centroid?.[1] ?? d3.geoCentroid(d)[1],
             text: getText,
             fontSize: baseFontSize + 1, fontWeight: 700, fill: "#1f2937",
             stroke: "#fff", strokeWidth: 2.5, lineHeight: 1.1
           }) : null,
-          // Bottom 5 avec police rouge foncé + contour blanc
-          botFiltered.length > 0 ? Plot.text(botFiltered.map(f => f.feature), {
+          botSorted.length > 0 ? Plot.text(botSorted, {
             x: d => d.properties._centroid?.[0] ?? d3.geoCentroid(d)[0],
             y: d => d.properties._centroid?.[1] ?? d3.geoCentroid(d)[1],
             text: getText,
             fontSize: baseFontSize + 1, fontWeight: 700,
-            fill: "#991b1b",  // Rouge foncé pour bottom (texte)
+            fill: "#991b1b",
             stroke: "#fff", strokeWidth: 2.5, lineHeight: 1.1
           }) : null
         ].filter(Boolean);
       }
 
-      return Plot.text(filtered.map(f => f.feature), {
+      // Tous les labels triés → addZoomBehavior gère la visibilité
+      return Plot.text(sorted, {
         x: d => d.properties._centroid?.[0] ?? d3.geoCentroid(d)[0],
         y: d => d.properties._centroid?.[1] ?? d3.geoCentroid(d)[1],
         text: getText,
-        fontSize: baseFontSize + 1,  // +1px taille police
-        fontWeight: 700,             // Gras marqué
+        fontSize: baseFontSize + 1,
+        fontWeight: 700,
         fill: "#1f2937",
         stroke: "#fff",
-        strokeWidth: 2.5,            // Halo blanc pour lisibilité
+        strokeWidth: 2.5,
         lineHeight: 1.1
       });
     })(),
@@ -450,16 +405,65 @@ export function addZoomBehavior(map, config = {}) {
     baseInfo.set(this, { origTransform, x, y });
   });
 
-  // Classer les labels par tier pour révélation progressive au zoom
-  // Plot génère les labels dans l'ordre : tier1 (0-9), tier2 (10-29), tier3 (30+)
+  // Révélation dynamique : collision détectée à chaque zoom level
+  // À k=1 : anti-collision strict (peu de labels), k>1 : bboxes réduites par k → plus de labels
   const allTexts = contentGroup.selectAll("text").nodes();
-  const tier1Texts = allTexts.slice(0, 10);
-  const tier2Texts = allTexts.slice(10, 30);
-  const tier3Texts = allTexts.slice(30);
+  const svgWidth = parseFloat(svg.attr("width")) || 400;
+  const svgHeight = parseFloat(svg.attr("height")) || 400;
 
-  // État initial : masquer tier2 et tier3
-  d3.selectAll(tier2Texts).attr("opacity", 0);
-  d3.selectAll(tier3Texts).attr("opacity", 0);
+  // Parser la position de chaque text (depuis transform ou x/y)
+  const textPositions = [];
+  allTexts.forEach((el, i) => {
+    const info = baseInfo.get(el);
+    if (!info) return;
+    let px = info.x, py = info.y;
+    if (info.origTransform) {
+      const m = info.origTransform.match(/translate\(\s*([\d.e+-]+)[\s,]+([\d.e+-]+)/);
+      if (m) { px = parseFloat(m[1]); py = parseFloat(m[2]); }
+    }
+    // Estimer la bbox du texte (largeur ≈ contenu, hauteur ≈ font)
+    const textContent = el.textContent || "";
+    const lines = textContent.split("\n");
+    const maxLen = Math.max(...lines.map(l => l.length), 1);
+    const estW = maxLen * 6;     // ~6px par caractère à taille 11px
+    const estH = lines.length * 13; // ~13px par ligne
+    textPositions.push({ el, px, py, w: estW, h: estH, idx: i });
+  });
+
+  // Fonction : déterminer les labels visibles sans chevauchement
+  // Les bboxes sont divisées par k → plus de place au zoom → plus de labels
+  function computeVisibleLabels(k, tx, ty) {
+    const margin = 30;
+    const padding = 4;
+    const shown = [];
+    for (const tp of textPositions) {
+      // Vérifier si le label est dans le viewport
+      const screenX = k * tp.px + tx;
+      const screenY = k * tp.py + ty;
+      const inViewport = screenX >= -margin && screenX <= svgWidth + margin
+                      && screenY >= -margin && screenY <= svgHeight + margin;
+      if (!inViewport) { d3.select(tp.el).attr("opacity", 0); continue; }
+
+      // Anti-collision dynamique : bbox réduite par k (labels counter-scalés)
+      const bw = tp.w / k;  // bbox réduite car label est counter-scalé
+      const bh = tp.h / k;
+      const overlaps = shown.some(s => {
+        const dx = Math.abs(tp.px - s.px);
+        const dy = Math.abs(tp.py - s.py);
+        return dx < (bw + s.w / k) / 2 + padding / k
+            && dy < (bh + s.h / k) / 2 + padding / k;
+      });
+      if (!overlaps) {
+        shown.push(tp);
+        d3.select(tp.el).attr("opacity", 1);
+      } else {
+        d3.select(tp.el).attr("opacity", 0);
+      }
+    }
+  }
+
+  // État initial : anti-collision à k=1
+  computeVisibleLabels(1, 0, 0);
 
   // ZOOM géométrique + counter-scale labels via SVG transform
   // 2 cas selon comment Plot positionne le texte :
@@ -490,13 +494,9 @@ export function addZoomBehavior(map, config = {}) {
         }
       });
 
-      // 3. Révélation progressive par tiers
-      const tier2Visible = k >= 1.5;       // Zoom >= 1.5x
-      const tier3Visible = k >= 2.5;       // Zoom >= 2.5x
-
-      d3.selectAll(tier1Texts).attr("opacity", 1);
-      d3.selectAll(tier2Texts).attr("opacity", tier2Visible ? 1 : 0);
-      d3.selectAll(tier3Texts).attr("opacity", tier3Visible ? 1 : 0);
+      // 3. Recalculer la visibilité avec collision dynamique au zoom courant
+      const { x: tx, y: ty } = event.transform;
+      computeVisibleLabels(k, tx, ty);
     });
 
   // Appliquer au SVG
