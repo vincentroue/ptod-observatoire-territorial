@@ -438,16 +438,19 @@ export function addZoomBehavior(map, config = {}) {
     toMove.forEach(child => contentGroup.node().appendChild(child));
   }
 
-  // Stocker les tailles de stroke initiales des labels (pas font-size)
+  // Stocker le transform original + position de chaque label
+  // Plot peut positionner via transform="translate(px,py)" OU via x/y attrs
   const textElements = contentGroup.selectAll("text");
-  const baseStyles = new Map();
+  const baseInfo = new Map();
   textElements.each(function() {
     const el = d3.select(this);
-    const strokeWidth = parseFloat(el.style("stroke-width") || el.attr("stroke-width") || 2.5);
-    baseStyles.set(this, { strokeWidth });
+    const origTransform = el.attr("transform") || "";
+    const x = parseFloat(el.attr("x")) || 0;
+    const y = parseFloat(el.attr("y")) || 0;
+    baseInfo.set(this, { origTransform, x, y });
   });
 
-  // Sélectionner tous les éléments text et les classer par tier
+  // Classer les labels par tier pour révélation progressive au zoom
   // Plot génère les labels dans l'ordre : tier1 (0-9), tier2 (10-29), tier3 (30+)
   const allTexts = contentGroup.selectAll("text").nodes();
   const tier1Texts = allTexts.slice(0, 10);
@@ -458,10 +461,10 @@ export function addZoomBehavior(map, config = {}) {
   d3.selectAll(tier2Texts).attr("opacity", 0);
   d3.selectAll(tier3Texts).attr("opacity", 0);
 
-  // ZOOM géométrique + révélation progressive par tiers
-  // Labels ne counter-scale PAS la font-size → ils rétrécissent avec le zoom
-  // comme le scatter (police stable, pas de grossissement)
-  // Seul le stroke-width est counter-scaled pour garder le halo lisible
+  // ZOOM géométrique + counter-scale labels via SVG transform
+  // 2 cas selon comment Plot positionne le texte :
+  //   A) transform="translate(px,py)" → on ajoute scale(1/k) après
+  //   B) attrs x/y → translate(x,y) scale(1/k) translate(-x,-y)
   const zoom = d3.zoom()
     .scaleExtent([minScale, maxScale])
     .on("zoom", (event) => {
@@ -470,16 +473,24 @@ export function addZoomBehavior(map, config = {}) {
       // 1. Appliquer transform au groupe (pan + zoom géométrique)
       contentGroup.attr("transform", event.transform);
 
-      // 2. Counter-scale seulement stroke (halo blanc) pas font-size
+      // 2. Counter-scale chaque label pour taille visuelle constante
+      const s = 1 / k;
       textElements.each(function() {
-        const base = baseStyles.get(this);
-        if (base) {
-          d3.select(this)
-            .attr("stroke-width", base.strokeWidth / k);
+        const info = baseInfo.get(this);
+        if (info) {
+          if (info.origTransform) {
+            // Cas A : texte positionné via transform → append scale
+            d3.select(this)
+              .attr("transform", `${info.origTransform} scale(${s})`);
+          } else {
+            // Cas B : texte positionné via x/y → scale autour de sa position
+            d3.select(this)
+              .attr("transform", `translate(${info.x},${info.y}) scale(${s}) translate(${-info.x},${-info.y})`);
+          }
         }
       });
 
-      // 3. Révélation progressive par tiers (seuils abaissés)
+      // 3. Révélation progressive par tiers
       const tier2Visible = k >= 1.5;       // Zoom >= 1.5x
       const tier3Visible = k >= 2.5;       // Zoom >= 2.5x
 
