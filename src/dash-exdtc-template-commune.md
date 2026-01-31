@@ -15,8 +15,8 @@ style: styles/dashboard-light.css
 ```js
 import { createBanner, createNav, OTTD_PAGES } from "./helpers/layout.js";
 display(createBanner({
-  title: "OTTD — Communes",
-  subtitle: "35k communes × comparaison indicateurs",
+  title: "Observatoire des trajectoires territoriales de développement",
+  subtitle: "35 000 communes — comparaison multi-indicateurs",
   navElement: createNav(OTTD_PAGES, 'exdtc'),
   sourcesText: "? Sources",
   sourcesTooltip: "INSEE RP 2011/2016/2022, DVF 2024, Filosofi 2021"
@@ -289,8 +289,8 @@ const periode1 = view(Inputs.select(per1Map, { value: [...per1Map.values()][0], 
 
 </div>
 
-<!-- Colonne DROITE -->
-<div style="display:flex;flex-direction:column;width:320px;margin-left:16px;">
+<!-- Colonne DROITE (décalée pour aligner sur cartes droite ~430px) -->
+<div style="display:flex;flex-direction:column;width:320px;margin-left:40px;">
 <div style="font-size:10px;font-weight:600;color:#1e40af;text-transform:uppercase;letter-spacing:0.5px;text-align:center;margin-bottom:2px;">Droite</div>
 
 ```js
@@ -447,16 +447,12 @@ const zoomCode = (_zoomVal && labelMap?.has(_zoomVal)) ? _zoomVal : getDefaultZo
 const zoomLabel = labelMap?.get(zoomCode) || zoomCode;
 ```
 
-<!-- Titres alignés -->
-<div style="display:flex;gap:12px;margin-bottom:8px;align-items:baseline;">
-<h3 style="flex:0 0 870px;margin:0;">Vue France par ${echelon} // Focus communes : ${zoomLabel}</h3>
-<h3 style="flex:1;margin:0;">Tableau ${echelon}<span class="table-help-wrap"><span class="table-help-icon">?</span><span class="help-tooltip"><b>Couleurs</b> : intensit&eacute; proportionnelle &agrave; l'&eacute;cart par rapport &agrave; la moyenne.<br>&bull; <span style="color:#98cf90">&#9632;</span> Vert = au-dessus de la moyenne<br>&bull; <span style="color:#e46aa7">&#9632;</span> Violet = en-dessous de la moyenne<br>&bull; <span style="color:#73BFE2">&#9632;</span> Bleu = d&eacute;grad&eacute; d'intensit&eacute; (%, stocks)<br>Plus la couleur est fonc&eacute;e, plus la valeur est extr&ecirc;me (~top 1%).<br><b>Filtre</b> : tapez un nom de r&eacute;gion (ex: BRE), un n&deg; de d&eacute;partement (ex: 35) ou un nom de territoire.</span></span></h3>
-</div>
-
+<!-- Titres + contenus dans même flex pour alignement naturel -->
 <div style="display:flex;gap:12px;align-items:stretch;">
 
-<!-- COLONNE GAUCHE : 4 cartes (France + Zoom) -->
+<!-- COLONNE GAUCHE : titre + 4 cartes (France + Zoom) -->
 <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:12px;">
+<h3 style="margin:0 0 0 16px;">Vue France par ${echelon} // Focus communes : ${zoomLabel}</h3>
 
 <!-- Cartes France -->
 <div class="cards-row">
@@ -883,6 +879,7 @@ display(scatterIdxContainer);
 
 <!-- COLONNE DROITE : Tableau échelon (responsive width, full height) -->
 <div class="card" style="flex:1;min-width:300px;padding:6px;display:flex;flex-direction:column;height:100%;">
+<h3 style="margin:0 0 4px 0;">Tableau ${echelon}<span class="table-help-wrap"><span class="table-help-icon">?</span><span class="help-tooltip"><b>Couleurs</b> : intensit&eacute; proportionnelle &agrave; l'&eacute;cart par rapport &agrave; la moyenne.<br>&bull; <span style="color:#98cf90">&#9632;</span> Vert = au-dessus de la moyenne<br>&bull; <span style="color:#e46aa7">&#9632;</span> Violet = en-dessous de la moyenne<br>&bull; <span style="color:#73BFE2">&#9632;</span> Bleu = d&eacute;grad&eacute; d'intensit&eacute; (%, stocks)<br>Plus la couleur est fonc&eacute;e, plus la valeur est extr&ecirc;me (~top 1%).<br><b>Filtre</b> : tapez un nom de r&eacute;gion (ex: BRE), un n&deg; de d&eacute;partement (ex: 35) ou un nom de territoire.</span></span></h3>
 
 ```js
 // === STATE TABLEAU ÉCHELON ===
