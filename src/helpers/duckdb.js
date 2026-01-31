@@ -165,7 +165,8 @@ export async function queryCommunes({ conn }, options = {}) {
     orderBy,
     orderDir = "DESC",
     limit,
-    minPop = 0  // Filtre population minimale (ex: 2000 pour alléger chargement)
+    minPop = 0,  // Filtre population minimale (ex: 2000 pour alléger chargement)
+    customWhere  // Clause WHERE brute optionnelle (ex: OR logic EPCI)
   } = options;
 
   // Construire clauses WHERE
@@ -190,6 +191,11 @@ export async function queryCommunes({ conn }, options = {}) {
       const escaped = String(value).replace(/'/g, "''");
       whereClauses.push(`CAST("${key}" AS VARCHAR) = '${escaped}'`);
     }
+  }
+
+  // Clause WHERE brute optionnelle (ex: OR logic pour EPCI)
+  if (customWhere) {
+    whereClauses.push(customWhere);
   }
 
   // Construire SQL

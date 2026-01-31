@@ -34,7 +34,7 @@ export const DEFAULT_TABLE_COLS = [
  */
 export function sortTableData(data, col, asc, options = {}) {
   const { fixFranceFirst = true } = options;
-  const textCols = ["code", "libelle", "DEP", "libelle_dep", "libelle_reg"];
+  const textCols = ["code", "libelle", "DEP", "libelle_dep", "libelle_reg", "regshort"];
 
   // Séparer France (00FR) si demandé
   let franceRow = null;
@@ -211,12 +211,16 @@ export function renderBarCell(value, colKey, stats) {
     </div>`;
   }
 
-  // === PCT : barre bleue avec % (Urban PAL_SEQ_BLUE légère) ===
+  // === PCT : barre bleue (Urban PAL_SEQ_BLUE, z-score 4 paliers) ===
   if (type === "pct") {
     const w = Math.min(value / colStats.maxPos * 100, 100);
+    const pctMean = colStats.mean ?? value;
+    const pctStd = colStats.std ?? 0;
+    const pctZ = pctStd > 0 ? Math.abs(value - pctMean) / pctStd : 0;
+    const pctBarColor = pctZ < 1 ? "#A2D4EC" : pctZ < 2 ? "#73BFE2" : pctZ < 3 ? "#1696D2" : "#12719E";
     return html`<div style="display:flex;align-items:center;gap:5px">
       <div style="width:55px;height:12px;background:#e5e7eb">
-        <div style="width:${w}%;height:100%;background:#73bfe2"></div>
+        <div style="width:${w}%;height:100%;background:${pctBarColor}"></div>
       </div>
       <span style="font-size:12px;font-weight:${fontWeight}">${value.toFixed(1)}%</span>
     </div>`;
@@ -241,22 +245,21 @@ export function renderBarCell(value, colKey, stats) {
     const maxDist = isNegZ ? maxDistNeg : maxDistPos;
     const w = maxDist > 0 ? Math.min(Math.abs(distFromMean) / maxDist * 100, 100) : 0;
 
-    // Z-score pour intensité couleur
+    // Z-score pour intensité couleur (3 paliers, seuil 2.5 ~P99.4)
     const z = std > 0 ? distFromMean / std : 0;
     const absZ = Math.abs(z);
 
-    // Palette Urban PAL_PURPLE_GREEN - 3 couleurs les moins fortes par côté
-    // Intensité par paliers z-score : <1 base, 1-2 moyen, >2 fort
+    // Palette 6 couleurs : 3 vert + 3 violet (vert max modéré #5aaa5a 51%L)
     let barColor, textColor;
     if (absZ < 1) {
-      barColor = isNegZ ? "#eb99c2" : "#bcdeb4";  // rose pâle / vert très clair
-      textColor = isNegZ ? "#af1f6b" : "#408941"; // violet / vert foncé
-    } else if (absZ < 2) {
-      barColor = isNegZ ? "#e46aa7" : "#98cf90";  // rose moyen / vert clair
-      textColor = isNegZ ? "#af1f6b" : "#2c5c2d"; // violet / vert très foncé
+      barColor = isNegZ ? "#eb99c2" : "#bcdeb4";    // rose pâle / vert très clair (79%L)
+      textColor = isNegZ ? "#af1f6b" : "#408941";
+    } else if (absZ < 2.5) {
+      barColor = isNegZ ? "#e46aa7" : "#98cf90";    // rose moyen / vert clair (69%L)
+      textColor = isNegZ ? "#af1f6b" : "#2c5c2d";
     } else {
-      barColor = isNegZ ? "#af1f6b" : "#408941";  // violet / vert moyen
-      textColor = isNegZ ? "#761548" : "#2c5c2d"; // violet foncé / vert très foncé
+      barColor = isNegZ ? "#af1f6b" : "#5aaa5a";    // violet / vert modéré (51%L)
+      textColor = isNegZ ? "#761548" : "#2c5c2d";
     }
 
     const arrow = isNegZ ? "▼" : "▲";
@@ -392,7 +395,7 @@ export function renderPagination(totalItems, page, setPage, pageSize = 50, filte
  * @param {boolean} [options.compact=false] - Mode compact (réduit padding/font)
  * @param {number} [options.maxHeight] - Hauteur max avec scroll vertical
  * @param {boolean} [options.scrollX=false] - Scroll horizontal si dépasse
- * @param {boolean} [options.stickyFirstCol=true] - Première colonne sticky en scroll horizontal
+ * @param {boolean|number} [options.stickyFirstCol=true] - Colonnes sticky: true=1 col, 2=2 cols, false=0
  * @param {boolean} [options.scrollbarTop=false] - Scrollbar horizontal en haut
  */
 export function renderTable({ data, columns, stats, sortCol, sortAsc, setSort, indicColKey, compact = false, maxHeight, scrollX = false, stickyFirstCol = true, scrollbarTop = false, highlightFrance = false }) {
@@ -403,16 +406,31 @@ export function renderTable({ data, columns, stats, sortCol, sortAsc, setSort, i
   const barWidth = compact ? "50px" : "70px";  // Barres plus larges
   const labelMaxW = compact ? "140px" : "200px";
 
-  // Style sticky première colonne
-  const stickyStyle = stickyFirstCol ? "position:sticky;left:0;z-index:2;background:#fff;" : "";
-  const stickyHeaderStyle = stickyFirstCol ? "position:sticky;left:0;z-index:3;background:#e5e7eb;" : "";
+  // Sticky columns: boolean (1 col) ou number (N cols freeze)
+  const nSticky = typeof stickyFirstCol === 'number' ? stickyFirstCol : (stickyFirstCol ? 1 : 0);
+  const stickyLeftPx = [];
+  let _cumLeft = 0;
+  for (let si = 0; si < nSticky && si < columns.length; si++) {
+    stickyLeftPx.push(_cumLeft);
+    const cw = columns[si];
+    const w = typeof cw.width === 'number' ? cw.width :
+              typeof cw.width === 'string' ? parseInt(cw.width) :
+              (cw.key === 'regshort' ? 50 : cw.key === 'code' ? 70 : 150);
+    _cumLeft += w + (compact ? 8 : 12);
+  }
+  const getCellSticky = (idx, bg) => idx < nSticky
+    ? `position:sticky;left:${stickyLeftPx[idx]}px;z-index:${nSticky - idx + 1};background:${bg};min-width:${columns[idx].width || 50}px;`
+    : "";
+  const getHeaderSticky = (idx) => idx < nSticky
+    ? `position:sticky;left:${stickyLeftPx[idx]}px;z-index:${nSticky - idx + 10};background:#e5e7eb;min-width:${columns[idx].width || 50}px;`
+    : "";
 
   // Note: scrollbarTop handled in wrapper section at end
 
   const tableEl = html`<table class="styled-table" style="border-collapse:collapse;${compact ? "font-size:11px;" : ""}">
     <thead style="position:sticky;top:0;z-index:10;background:#e5e7eb;">
       <tr style="border-bottom:3px solid #9ca3af;background:#e5e7eb;">
-        ${columns.map((c, i) => renderSortHeaderCompact(c.key, c.label, sortCol, sortAsc, setSort, c.unit || getIndicUnit(c.key), c.periode || "", compact, i === 0 ? stickyHeaderStyle : ""))}
+        ${columns.map((c, i) => renderSortHeaderCompact(c.key, c.label, sortCol, sortAsc, setSort, c.unit || getIndicUnit(c.key), c.periode || "", compact, getHeaderSticky(i)))}
       </tr>
     </thead>
     <tbody>
@@ -427,12 +445,12 @@ export function renderTable({ data, columns, stats, sortCol, sortAsc, setSort, i
           : "";
         return html`<tr style="${frStyle}">
           ${columns.map((c, i) => {
-            const isFirstCol = i === 0;
-            const cellStickyStyle = isFirstCol && stickyFirstCol ? `position:sticky;left:0;z-index:1;background:${frBg};` : "";
-            if (c.type === "text" || c.key === "code" || c.key === "libelle" || c.key === "DEP") {
+            const cellStickyStyle = getCellSticky(i, frBg);
+            if (c.type === "text" || c.key === "code" || c.key === "libelle" || c.key === "DEP" || c.key === "regshort") {
               const style = c.key === "code" ? `font-family:monospace;font-size:${compact ? "10px" : "11px"};${cellStickyStyle}` :
                             c.key === "libelle" ? `font-weight:500;font-size:${tdFont};max-width:${labelMaxW};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;${cellStickyStyle}` :
-                            c.key === "DEP" ? `font-size:${compact ? "10px" : "11px"};text-align:center;${cellStickyStyle}` : cellStickyStyle;
+                            c.key === "DEP" ? `font-size:${compact ? "10px" : "11px"};text-align:center;${cellStickyStyle}` :
+                            c.key === "regshort" ? `font-size:${compact ? "10px" : "11px"};text-align:center;color:#6b7280;${cellStickyStyle}` : cellStickyStyle;
               // Libelle avec regdep en petit italique à côté si disponible
               if (c.key === "libelle" && d.regdep) {
                 return html`<td style="${style}">${d[c.key] || "—"}<i style="font-size:9px;color:#888;font-weight:400;margin-left:8px;">${d.regdep}</i></td>`;
@@ -549,12 +567,17 @@ function renderBarCellCompact(value, colKey, stats, compact = false) {
     </div>`;
   }
 
-  // PCT : barre bleue légère (Urban PAL_SEQ_BLUE)
+  // PCT : barre bleue (Urban PAL_SEQ_BLUE, z-score 4 paliers sans le plus foncé)
   if (type === "pct") {
     const w = Math.min(value / colStats.maxPos * 100, 100);
+    const pctMean = colStats.mean ?? value;
+    const pctStd = colStats.std ?? 0;
+    const pctZ = pctStd > 0 ? Math.abs(value - pctMean) / pctStd : 0;
+    // PAL_SEQ_BLUE 4 niveaux : z<1 très léger, z<2 léger, z<3 signature, z≥3 foncé
+    const pctBarColor = pctZ < 1 ? "#A2D4EC" : pctZ < 2 ? "#73BFE2" : pctZ < 3 ? "#1696D2" : "#12719E";
     return html`<div style="display:flex;align-items:center;gap:${compact ? "3px" : "5px"}">
       <div style="width:${barW};height:${barH};background:#e5e7eb;border-radius:2px;">
-        <div style="width:${w}%;height:100%;background:#73bfe2;border-radius:2px;"></div>
+        <div style="width:${w}%;height:100%;background:${pctBarColor};border-radius:2px;"></div>
       </div>
       <span style="font-size:${fontSize}">${value.toFixed(1)}%</span>
     </div>`;
@@ -578,20 +601,21 @@ function renderBarCellCompact(value, colKey, stats, compact = false) {
     const maxDist = isNegZ ? maxDistNeg : maxDistPos;
     const w = maxDist > 0 ? Math.min(Math.abs(distFromMean) / maxDist * 100, 100) : 0;
 
-    // Z-score pour intensité couleur
+    // Z-score pour intensité couleur (3 paliers, seuil 2.5 ~P99.4)
     const z = std > 0 ? distFromMean / std : 0;
     const absZ = Math.abs(z);
 
-    // Palette Urban PAL_PURPLE_GREEN - 3 couleurs les moins fortes
+    // 6 couleurs : 3 vert (▲ au-dessus moy.) + 3 violet (▼ en-dessous moy.)
+    // Vert max #5aaa5a (51%L) modéré, pas le darkest #408941 (39%L) de PAL_PURPLE_GREEN
     let barColor, textColor;
     if (absZ < 1) {
-      barColor = isNegZ ? "#eb99c2" : "#bcdeb4";
+      barColor = isNegZ ? "#eb99c2" : "#bcdeb4";    // rose pâle / vert très clair (79%L)
       textColor = isNegZ ? "#af1f6b" : "#408941";
-    } else if (absZ < 2) {
-      barColor = isNegZ ? "#e46aa7" : "#98cf90";
+    } else if (absZ < 2.5) {
+      barColor = isNegZ ? "#e46aa7" : "#98cf90";    // rose moyen / vert clair (69%L)
       textColor = isNegZ ? "#af1f6b" : "#2c5c2d";
     } else {
-      barColor = isNegZ ? "#af1f6b" : "#408941";
+      barColor = isNegZ ? "#af1f6b" : "#5aaa5a";    // violet / vert modéré (51%L)
       textColor = isNegZ ? "#761548" : "#2c5c2d";
     }
 

@@ -3,7 +3,7 @@
 // AUTO-GÉNÉRÉ depuis config/ddict_indicateurs_ottd.json + CSV volets (v_*)
 // NE PAS MODIFIER - Relancer: Rscript scripts/util-gen-indicators-js.R
 // Volets: source CSV ddict-validation-light_ottd.csv (colonnes v_*)
-// Généré: 2026-01-29 11:53:18.643883
+// Généré: 2026-01-30 14:22:38.055165
 // =======================================================================
 
 import * as d3 from "npm:d3";
@@ -705,7 +705,7 @@ const DDICT = {
         "P22_POP6579"
       ],
       "volets": [],
-      "agg_dash": false,
+      "agg_dash": true,
       "agg_ecodash": false
     },
     "dmv_80p_seul_pct": {
@@ -730,7 +730,7 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
-      "agg_dash": false,
+      "agg_dash": true,
       "agg_ecodash": false
     },
     "&comment_dmf": "══════════ FLUX MIGRATOIRES (dmf) - MIGCOM ══════════",
@@ -810,7 +810,7 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
-      "agg_dash": false,
+      "agg_dash": true,
       "agg_ecodash": false
     },
     "dmf_tr_pct": {
@@ -1664,8 +1664,8 @@ const DDICT = {
       ],
       "volets": [],
       "interpretation": ">0 = dynamique entrepreneuriale, inclut EI et auto-entrepreneurs",
-      "agg_dash": false,
-      "agg_ecodash": false
+      "agg_dash": true,
+      "agg_ecodash": true
     },
     "eco_entrcrea_soc_vevol": {
       "rawObsvACT": "entrcrea_soc_vevol",
@@ -1686,8 +1686,8 @@ const DDICT = {
       ],
       "volets": [],
       "interpretation": ">0 = création structures solides, hors micro/auto-entreprises",
-      "agg_dash": false,
-      "agg_ecodash": false
+      "agg_dash": true,
+      "agg_ecodash": true
     },
     "&comment_eco_secteurs": "--- Part emplois par secteur (RP 11/16/22) ---",
     "eco_sectagri_pct": {
@@ -3947,7 +3947,7 @@ const DDICT = {
         "11"
       ],
       "volets": [],
-      "agg_dash": false,
+      "agg_dash": true,
       "agg_ecodash": false
     },
     "dsp_csp_artis_pct": {
@@ -3999,7 +3999,7 @@ const DDICT = {
         "16"
       ],
       "volets": [],
-      "agg_dash": false,
+      "agg_dash": true,
       "agg_ecodash": false
     },
     "dm_2024_seul_pct": {
@@ -4015,7 +4015,7 @@ const DDICT = {
         "16"
       ],
       "volets": [],
-      "agg_dash": false,
+      "agg_dash": true,
       "agg_ecodash": false
     },
     "dm_2539_seul_pct": {
@@ -4031,7 +4031,7 @@ const DDICT = {
         "16"
       ],
       "volets": [],
-      "agg_dash": false,
+      "agg_dash": true,
       "agg_ecodash": false
     },
     "dm_4054_seul_pct": {
@@ -4047,7 +4047,7 @@ const DDICT = {
         "16"
       ],
       "volets": [],
-      "agg_dash": false,
+      "agg_dash": true,
       "agg_ecodash": false
     },
     "log_sousocc_pct": {

@@ -558,13 +558,22 @@ display(wrapper2);
 ```js
 // Zoom : query données communes pour le territoire sélectionné
 const filterKey = meta?.filterKey || "DEP";
+const isEPCI = echelon === "EPCI";
+// EPCI spécial : OR logic pour MGP (EPCI_EPT=code pour Paris arrond., EPCI=code pour 150 communes MGP)
+const zoomFilter = isEPCI ? null : { [filterKey]: [zoomCode] };
+const zoomCustomWhere = isEPCI
+  ? `(CAST("EPCI_EPT" AS VARCHAR) = '${zoomCode}' OR CAST("EPCI" AS VARCHAR) = '${zoomCode}')`
+  : null;
 const zoomData = await queryCommunes({ conn }, {
-  tableName: "communes", filter: { [filterKey]: [zoomCode] },
+  tableName: "communes", filter: zoomFilter, customWhere: zoomCustomWhere,
   columns: ["code", "libelle", "P23_POP", colKey1, colKey2], limit: 2000
 });
 const zoomDataMap = new Map(zoomData.map(d => [d.code, d]));
 
-const filteredFeatures = communesGeo.features.filter(f => String(f.properties[filterKey]) === String(zoomCode));
+const filteredFeatures = communesGeo.features.filter(f => {
+  if (isEPCI) return String(f.properties.EPCI_EPT) === String(zoomCode) || String(f.properties.EPCI) === String(zoomCode);
+  return String(f.properties[filterKey]) === String(zoomCode);
+});
 const zoomGeo = {
   type: "FeatureCollection",
   features: filteredFeatures.map(f => {
@@ -858,7 +867,7 @@ display(scatterIdxContainer);
 
 ```js
 // === STATE TABLEAU ÉCHELON ===
-const echSortState2 = Mutable({ col: "P23_POP", asc: false });  // Tri pop décroissant par défaut
+const echSortState2 = Mutable({ col: null, asc: false });  // Pas de tri par défaut (ordre données)
 
 const setEchSort2 = (col) => {
   const curr = echSortState2.value.col;
@@ -886,13 +895,15 @@ const epciTypeFilter = (d) => {
 };
 const dataFiltered = echelon === "EPCI" ? dataNoFrance.filter(epciTypeFilter) : dataNoFrance;
 
-// Données avec France en 1ère ligne
-const echTableData2 = frData ? [frData, ...dataFiltered] : dataFiltered;
+// Données avec France en 1ère ligne + regshort dérivé de regdep
+const echTableData2 = (frData ? [frData, ...dataFiltered] : dataFiltered).map(d => ({
+  ...d, regshort: d.regdep ? d.regdep.split("/")[0] : ""
+}));
 
-// Filtre recherche (viewof réactif)
+// Filtre recherche : regshort + libelle + regdep (colonnes visibles uniquement)
 const echSearchVal = (echSearchInput || "").toLowerCase();
 const echFiltered2 = echSearchVal
-  ? echTableData2.filter(d => (d.libelle || "").toLowerCase().includes(echSearchVal) || (d.code || "").includes(echSearchVal))
+  ? echTableData2.filter(d => d.code === "00FR" || (d.regshort || "").toLowerCase().includes(echSearchVal) || (d.libelle || "").toLowerCase().includes(echSearchVal) || (d.regdep || "").toLowerCase().includes(echSearchVal))
   : echTableData2;
 
 // Tri
@@ -900,13 +911,13 @@ const echSortCol2 = echSortState2.col;
 const echSortAsc2 = echSortState2.asc;
 const echSorted2 = sortTableData(echFiltered2, echSortCol2, echSortAsc2);
 
-// Stats pour barres (avec P23_POP)
-const echStats2 = computeBarStats(echFiltered2, ["P23_POP", ...echAllIndicCols2]);
+// Stats pour barres
+const echStats2 = computeBarStats(echFiltered2, echAllIndicCols2);
 
-// Colonnes compactes : Territoire + P23_POP + indicateurs
+// Colonnes compactes : Rég + Territoire + indicateurs (sans Pop 2023, comme tableau communes)
 const echColumns2 = [
+  { key: "regshort", label: "Rég", type: "text", width: 45 },
   { key: "libelle", label: "Territoire", type: "text", width: 130 },
-  { key: "P23_POP", label: "Pop 2023", unit: "hab" },
   ...echAllIndicCols2.map(col => {
     const indic = col.replace(/_\d+$/, "");
     const per = col.match(/_(\d{2,4})$/)?.[1] || "";
@@ -945,7 +956,7 @@ const tableEl = renderTable({
   maxHeight: 1800,  // Plus grand pour couvrir cartes + scatter plots
   scrollX: true,
   scrollbarTop: true,
-  stickyFirstCol: true
+  stickyFirstCol: 2  // Freeze Rég + Territoire
 });
 tableWrapper.appendChild(tableEl);
 display(tableWrapper);
@@ -1003,14 +1014,16 @@ const communesData = await queryCommunes({ conn }, {
   minPop: hasSelection ? 0 : MIN_POP_DEFAULT
 });
 
-// Ligne France (lue depuis 00FR ou calculée) — toujours en 1ère ligne
+// Ligne France (lue depuis 00FR ou calculée) — toujours en 1ère ligne + regshort dérivé
 const frRow = await queryFrance({ conn }, "communes", allIndicCols);
-const tableData = frRow ? [frRow, ...communesData] : communesData;
+const tableData = (frRow ? [frRow, ...communesData] : communesData).map(d => ({
+  ...d, regshort: d.regdep ? d.regdep.split("/")[0] : ""
+}));
 
-// Filtre texte (utilise tableSearchInput du viewof)
+// Filtre texte : regshort + libelle + regdep (colonnes visibles uniquement)
 const searchLower = (tableSearchInput || "").toLowerCase();
 const filteredData = searchLower
-  ? tableData.filter(d => (d.libelle || "").toLowerCase().includes(searchLower) || (d.code || "").includes(searchLower))
+  ? tableData.filter(d => d.code === "00FR" || (d.regshort || "").toLowerCase().includes(searchLower) || (d.libelle || "").toLowerCase().includes(searchLower) || (d.regdep || "").toLowerCase().includes(searchLower))
   : tableData;
 
 const sortCol = sortState.col;
@@ -1031,7 +1044,8 @@ const extractPeriode = (colKey) => {
   return match ? match[1] : "";
 };
 const columns = [
-  { key: "libelle", label: "Commune", type: "text" },
+  { key: "regshort", label: "Rég", type: "text", width: 45 },
+  { key: "libelle", label: "Commune", type: "text", width: 180 },
   { key: "P23_POP", label: "Pop 2023", unit: "hab" },
   ...allIndicCols.map(col => {
     const indic = col.replace(/_\d+$/, "");
@@ -1071,7 +1085,7 @@ display(renderTable({
   sortAsc,
   setSort,
   indicColKey: colKey1,
-  stickyFirstCol: true,
+  stickyFirstCol: 2,  // Freeze Rég + Commune
   scrollX: true,
   scrollbarTop: true,
   maxHeight: 600
