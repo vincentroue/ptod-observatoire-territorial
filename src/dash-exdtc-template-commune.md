@@ -469,9 +469,9 @@ const map1 = renderChoropleth({
   getLabel: ({ code }) => getLabelMap(echelon)?.get(code) || code,
   formatValue: (k, v) => formatValue(indic1, v),
   indicLabel: label1, selectedCodes: [...mapSelectionState],
-  showLabels: showValuesOnMap, labelMode, labelBy, topN: 15,
+  showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
   title: label1,  // Titre SVG pour export
-  echelon, width: 385, height: 355,
+  echelon, width: 385, height: 355, maxLabelsAuto: 300,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 const counts1 = countBins(dataNoFrance, colKey1, bins1.thresholds || []);
@@ -523,9 +523,9 @@ const map2 = renderChoropleth({
   getLabel: ({ code }) => getLabelMap(echelon)?.get(code) || code,
   formatValue: (k, v) => formatValue(indic2, v),
   indicLabel: label2, selectedCodes: [...mapSelectionState],
-  showLabels: showValuesOnMap, labelMode, labelBy, topN: 15,
+  showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
   title: label2,  // Titre SVG pour export
-  echelon, width: 385, height: 355,
+  echelon, width: 385, height: 355, maxLabelsAuto: 300,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 const counts2 = countBins(dataNoFrance, colKey2, bins2.thresholds || []);

@@ -139,8 +139,10 @@ export function renderChoropleth(config) {
     (() => {
       if (!showLabels || labelMode === "none") return null;
 
-      // Auto-disable si trop de features (sauf si topN explicite)
-      const shouldShow = topN > 0 || geoData.features.length <= maxLabelsAuto;
+      // Auto-disable labels pour datasets très grands (communes 35K+)
+      // topN > 0 : toujours actif (limite explicite)
+      // topN = 0 : actif si features ≤ maxLabelsAuto × 5 (cap effectif = maxLabelsAuto)
+      const shouldShow = topN > 0 || geoData.features.length <= maxLabelsAuto * 5;
       if (!shouldShow) return null;
 
       // Filtrer features avec valeurs valides
@@ -176,8 +178,11 @@ export function renderChoropleth(config) {
 
       if (sorted.length === 0) return null;
 
-      // Si topN explicite, limiter
-      if (topN > 0) sorted = sorted.slice(0, topN);
+      // Limiter le nombre de labels pour performance
+      // topN > 0 : limite explicite (communes = 50)
+      // topN = 0 : auto, utiliser maxLabelsAuto comme cap (France maps)
+      const maxLabels = topN > 0 ? topN : maxLabelsAuto;
+      if (maxLabels > 0) sorted = sorted.slice(0, maxLabels);
 
       // Fonction texte selon labelMode - Cherche libellé dans TopoJSON puis lookup Map
       const getText = (d) => {
