@@ -265,7 +265,7 @@ const setTableSearch = (v) => { tableSearchState.value = v; pageState.value = 0;
 }
 .table-help-wrap:hover .help-tooltip { display: block; }
 </style>
-<div class="sub-banner" style="margin-left:260px;width:calc(100% - 260px);">
+<div class="sub-banner">
 <div style="display:flex;flex-wrap:nowrap;padding:6px 16px;gap:0;align-items:flex-start;">
 
 <!-- Colonne labels à gauche -->
@@ -877,9 +877,10 @@ display(scatterIdxContainer);
 </div>
 <!-- Fin COLONNE GAUCHE (4 cartes + scatter) -->
 
-<!-- COLONNE DROITE : Tableau échelon (responsive width, full height) -->
-<div class="card" style="flex:1;min-width:300px;padding:6px;display:flex;flex-direction:column;height:100%;">
+<!-- COLONNE DROITE : Titre + Tableau échelon -->
+<div style="flex:1;min-width:300px;display:flex;flex-direction:column;">
 <h3 style="margin:0 0 4px 0;">Tableau ${echelon}<span class="table-help-wrap"><span class="table-help-icon">?</span><span class="help-tooltip"><b>Couleurs</b> : intensit&eacute; proportionnelle &agrave; l'&eacute;cart par rapport &agrave; la moyenne.<br>&bull; <span style="color:#98cf90">&#9632;</span> Vert = au-dessus de la moyenne<br>&bull; <span style="color:#e46aa7">&#9632;</span> Violet = en-dessous de la moyenne<br>&bull; <span style="color:#73BFE2">&#9632;</span> Bleu = d&eacute;grad&eacute; d'intensit&eacute; (%, stocks)<br>Plus la couleur est fonc&eacute;e, plus la valeur est extr&ecirc;me (~top 1%).<br><b>Filtre</b> : tapez un nom de r&eacute;gion (ex: BRE), un n&deg; de d&eacute;partement (ex: 35) ou un nom de territoire.</span></span></h3>
+<div class="card" style="flex:1;padding:6px;display:flex;flex-direction:column;min-height:0;">
 
 ```js
 // === STATE TABLEAU ÉCHELON ===
@@ -978,8 +979,9 @@ tableWrapper.appendChild(tableEl);
 display(tableWrapper);
 ```
 
+</div><!-- card -->
 </div>
-<!-- Fin COLONNE DROITE (tableau) -->
+<!-- Fin COLONNE DROITE (titre + tableau) -->
 
 </div>
 <!-- &e CARTES_ET_TABLEAU -->

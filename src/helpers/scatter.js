@@ -80,7 +80,8 @@ export function renderScatter(config) {
     xTicks: customXTicks = null,
     yTicks: customYTicks = null,
     labelCodes = [],        // Codes à labelliser (Top5/Bot5)
-    labelMode = "both"      // "names", "values", "both"
+    labelMode = "both",     // "names", "values", "both"
+    zoomFactor = 1          // Facteur zoom pour adapter collision (1 = pas de zoom)
   } = config;
 
   // Filtrer données valides
@@ -158,8 +159,9 @@ export function renderScatter(config) {
       })).filter(d => !isNaN(d._px) && !isNaN(d._py));
 
       // Greedy anti-collision : garder labels qui ne chevauchent pas
+      // La bounding box se réduit quand on zoome → plus de labels visibles
       const filtered = [];
-      const BBOX_W = 70, BBOX_H = 28;  // Taille estimée label
+      const BBOX_W = 70 / zoomFactor, BBOX_H = 28 / zoomFactor;
 
       for (const item of positioned) {
         const overlaps = filtered.some(existing => {
@@ -299,10 +301,16 @@ export function createScatterWithZoom(config) {
   // Fonction pour redessiner le scatter
   const redraw = () => {
     plotContainer.innerHTML = "";
+    // Zoom factor = ratio domaine original / domaine courant (moyenne X et Y)
+    const xZoom = (originalXDomain[1] - originalXDomain[0]) / (currentXDomain[1] - currentXDomain[0]);
+    const yZoom = (originalYDomain[1] - originalYDomain[0]) / (currentYDomain[1] - currentYDomain[0]);
+    const zoomFactor = Math.max(1, (xZoom + yZoom) / 2);  // minimum 1 (pas de réduction)
+
     const scatter = renderScatter({
       ...scatterConfig,
       xDomain: currentXDomain,
-      yDomain: currentYDomain
+      yDomain: currentYDomain,
+      zoomFactor
     });
     plotContainer.appendChild(scatter);
 
