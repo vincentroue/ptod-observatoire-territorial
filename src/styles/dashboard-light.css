@@ -884,47 +884,52 @@ td.num, th.num {
   color: #1f2937;
 }
 
-/* Overlay plein écran carte */
-.map-fullscreen-overlay {
-  display: none;
+/* Popup modale carte (class toggle — DOM intact, zoom/tooltip préservés) */
+.map-modal-backdrop {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.8);
-  z-index: 9999;
-  justify-content: center;
-  align-items: center;
+  background: rgba(0, 0, 0, 0);
+  z-index: 9998;
+  transition: background 0.2s;
 }
 
-.map-fullscreen-overlay.active {
-  display: flex;
+.map-modal-backdrop.active {
+  background: rgba(0, 0, 0, 0.65);
 }
 
-.map-fullscreen-content {
-  position: relative;
+.map-content.modal-open {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 92vw;
+  height: 88vh;
+  max-width: 1400px;
   background: #fff;
   border-radius: 8px;
-  padding: 12px;
-  width: 92vw;
-  height: 92vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  padding: 16px;
+  z-index: 9999;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.map-fullscreen-content svg {
+.map-content.modal-open > svg {
+  width: 100% !important;
+  height: 100% !important;
   max-width: 100%;
   max-height: 100%;
 }
 
-.map-fullscreen-close {
+.map-modal-close {
   position: absolute;
-  top: 6px;
-  right: 10px;
-  font-size: 22px;
+  top: 8px;
+  right: 12px;
+  font-size: 24px;
   background: none;
   border: none;
   cursor: pointer;
@@ -933,8 +938,29 @@ td.num, th.num {
   z-index: 10;
 }
 
-.map-fullscreen-close:hover {
+.map-modal-close:hover {
   color: #1f2937;
+}
+
+.map-content.modal-open .map-expand-btn {
+  display: none;
+}
+
+.map-content.modal-open .legend-bottom-left {
+  font-size: 10px;
+  max-width: 150px;
+  padding: 6px 10px;
+}
+
+.map-content.modal-open .zoom-btn {
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+}
+
+.map-content.modal-open .map-tooltip {
+  font-size: 13px;
+  padding: 7px 12px;
 }
 /* Tooltip carte custom (HTML, instantané) */
 .map-tooltip {

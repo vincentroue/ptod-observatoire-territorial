@@ -1,1 +1,15 @@
-C:/Users/vince/DBD-datab/TDC-ref/fr/geo-tdc/tdc_geo_sat3col_region_2025.csv
+﻿REG;REGlib;REGlibNCC;REGshort;n_comm;pct_comm;pct_pop;pop_mean;pop_med;sma_1623;sma_1116;top10;popmax;pop_23;pop_22
+24;Centre-Val de Loire;CENTRE-VAL DE LOIRE;CVL;1754;5.0;3.9;1472;526;0.12;0.01;Tours/Orléans/Bourges/Blois/Châteauroux/Joué-lès-Tours/Chartres/Dreux/Vierzon/Olivet;Tours;2587031;2581597
+27;Bourgogne-Franche-Comté;BOURGOGNE-FRANCHE-COMTÉ;BFC;3685;10.6;4.3;761;267;0.09;-0.06;Dijon/Besançon/Belfort/Chalon-sur-Saône/Auxerre/Mâcon/Nevers/Sens/Montbéliard/Dole;Dijon;2802670;2803977
+28;Normandie;NORMANDIE;NOR;2644;7.6;5.1;1263;448;0.08;-0.08;Le Havre/Rouen/Caen/Cherbourg-en-Cotentin/Évreux/Sotteville-lès-Rouen/Saint-Étienne-du-Rouvray/Dieppe/Le Grand-Quevilly/Alençon;Le Havre;3345842;3339074
+32;Hauts-de-France;HAUTS-DE-FRANCE;HDF;3782;10.9;9.1;1586;434;-0.2;-0.26;Lille/Amiens/Roubaix/Tourcoing/Dunkerque/Calais/Villeneuve-d'Ascq/Beauvais/Saint-Quentin/Valenciennes;Lille;5992194;5998916
+44;Grand Est;GRAND EST;GES;5115;14.7;8.4;1087;299;0.03;-0.17;Strasbourg/Reims/Metz/Mulhouse/Nancy/Colmar/Troyes/Charleville-Mézières/Châlons-en-Champagne/Thionville;Strasbourg;5563378;5560079
+52;Pays de la Loire;PAYS DE LA LOIRE;PDL;1228;3.5;5.9;3159;1174;0.54;0.41;Nantes/Angers/Le Mans/Saint-Nazaire/La Roche-sur-Yon/Cholet/Saint-Herblain/Laval/Les Sables-d'Olonne/Rezé;Nantes;3907156;3879216
+53;Bretagne;BRETAGNE;BRE;1202;3.5;5.2;2848;1383;0.73;0.45;Rennes/Brest/Quimper/Lorient/Vannes/Saint-Malo/Saint-Brieuc/Lanester/Concarneau/Fougères;Rennes;3449370;3422845
+75;Nouvelle-Aquitaine;NOUVELLE-AQUITAINE;NAQ;4293;12.4;9.3;1424;481;0.72;0.59;Bordeaux/Limoges/Poitiers/La Rochelle/Pau/Mérignac/Pessac/Niort/Bayonne/Brive-la-Gaillarde;Bordeaux;6150451;6113384
+76;Occitanie;OCCITANIE;OCC;4446;12.8;9.2;1368;307;0.81;0.69;Toulouse/Montpellier/Nîmes/Perpignan/Béziers/Montauban/Narbonne/Albi/Carcassonne/Sète;Toulouse;6124653;6080731
+84;Auvergne-Rhône-Alpes;AUVERGNE-RHÔNE-ALPES;ARA;4025;11.6;12.4;2028;667;0.31;0.32;Saint-Étienne/Villeurbanne/Grenoble/Clermont-Ferrand/Annecy/Vénissieux/Valence/Chambéry/Vaulx-en-Velin/Saint-Priest;Saint-Étienne;8205557;8163884
+93;Provence-Alpes-Côte d'Azur;PROVENCE-ALPES-CÔTE D'AZUR;PACA;946;2.7;7.9;5465;856;0.5;0.18;Nice/Toulon/Aix-en-Provence/Avignon/Antibes/Cannes/La Seyne-sur-Mer/Fréjus/Hyères/Cagnes-sur-Mer;Nice;5218960;5170312
+94;Corse;CORSE;COR;360;1.0;0.5;976;152;1.2;1.01;Ajaccio/Bastia/Porto-Vecchio/Borgo/Corte/Biguglia/Lucciana/Furiani/Calvi/Bastelicaccia;Ajaccio;355486;351276
+11;Île-de-France;ÎLE-DE-FRANCE;IDF;1266;3.6;18.8;9780;1382;-0.35;-0.47;Saint-Denis/Boulogne-Billancourt/Montreuil/Argenteuil/Nanterre/Vitry-sur-Seine/Créteil/Asnières-sur-Seine/Colombes/Aubervilliers;Saint-Denis;12463067;12380964
+TOTAL;;;;34746;100.0;100.0;1895;456;0.23;0.09;;;66165815;65846255

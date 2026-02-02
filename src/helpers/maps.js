@@ -333,7 +333,7 @@ export function createMapWrapper(map, statsOverlay, legendElement = null, zoomCo
         <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
       </svg>
     </button>`;
-    expandBtn.onclick = () => openMapFullscreen(map);
+    expandBtn.onclick = () => openMapFullscreen(mapContent);
     mapContent.appendChild(expandBtn);
 
     // Tooltip HTML custom — event delegation (même stratégie que handleMapClick)
@@ -377,61 +377,76 @@ export function createMapWrapper(map, statsOverlay, legendElement = null, zoomCo
 }
 
 // ============================================================
-// &s FULLSCREEN — Overlay plein écran carte
+// &s FULLSCREEN — Popup modale carte (DOM in-place, pas de clone)
 // ============================================================
 
 /**
- * Ouvre une carte en plein écran dans un overlay modal
- * Clone le SVG et le scale via viewBox pour remplir l'écran
+ * Ouvre/ferme une carte en popup modale large (92vw × 88vh)
+ * Le DOM reste en place (class CSS toggle) : zoom, tooltip, légende préservés
+ * Pas de requestFullscreen — overlay CSS avec backdrop
  *
- * @param {SVGElement} svgElement - Le SVG Plot.plot() à agrandir
+ * @param {HTMLElement} mapContentEl - Le conteneur .map-content
  */
-function openMapFullscreen(svgElement) {
-  if (!svgElement) return;
+function openMapFullscreen(mapContentEl) {
+  if (!mapContentEl) return;
 
-  // Créer overlay
-  const overlay = html`<div class="map-fullscreen-overlay">
-    <div class="map-fullscreen-content">
-      <button class="map-fullscreen-close" title="Fermer (Échap)">&times;</button>
-    </div>
-  </div>`;
-
-  const content = overlay.querySelector(".map-fullscreen-content");
-  const closeBtn = overlay.querySelector(".map-fullscreen-close");
-
-  // Cloner le SVG
-  const clone = svgElement.cloneNode(true);
-  const origW = parseFloat(svgElement.getAttribute("width")) || svgElement.getBoundingClientRect().width;
-  const origH = parseFloat(svgElement.getAttribute("height")) || svgElement.getBoundingClientRect().height;
-
-  // ViewBox pour scaling proportionnel
-  if (!clone.getAttribute("viewBox")) {
-    clone.setAttribute("viewBox", `0 0 ${origW} ${origH}`);
+  // Toggle : si déjà ouvert, fermer
+  if (mapContentEl.classList.contains("modal-open")) {
+    closeMapModal(mapContentEl);
+    return;
   }
-  clone.setAttribute("preserveAspectRatio", "xMidYMid meet");
-  clone.removeAttribute("width");
-  clone.removeAttribute("height");
-  clone.style.width = "100%";
-  clone.style.height = "100%";
 
-  content.appendChild(clone);
+  // ViewBox pour scaling proportionnel du SVG dans le modal
+  const svgEl = mapContentEl.querySelector("svg");
+  if (svgEl && !svgEl.getAttribute("viewBox")) {
+    const w = parseFloat(svgEl.getAttribute("width")) || svgEl.getBoundingClientRect().width;
+    const h = parseFloat(svgEl.getAttribute("height")) || svgEl.getBoundingClientRect().height;
+    svgEl.setAttribute("viewBox", `0 0 ${w} ${h}`);
+    svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  }
 
-  // Fermeture
+  // Placeholder min-height pour éviter collapse du wrapper parent
+  const wrapperParent = mapContentEl.parentElement;
+  if (wrapperParent) wrapperParent.style.minHeight = mapContentEl.offsetHeight + "px";
+
+  // Backdrop semi-transparent
+  const backdrop = document.createElement("div");
+  backdrop.className = "map-modal-backdrop";
+  document.body.appendChild(backdrop);
+
+  // Bouton fermer (×)
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "map-modal-close";
+  closeBtn.innerHTML = "&times;";
+  closeBtn.title = "Fermer (Échap)";
+  mapContentEl.appendChild(closeBtn);
+
+  // Activer le mode modal via classe CSS
+  mapContentEl.classList.add("modal-open");
+  requestAnimationFrame(() => backdrop.classList.add("active"));
+
+  // Handlers fermeture (Échap, clic backdrop, bouton ×)
   function close() {
-    overlay.classList.remove("active");
-    if (overlay.parentNode) overlay.remove();
+    closeMapModal(mapContentEl);
+    document.removeEventListener("keydown", onEsc);
   }
-
   closeBtn.onclick = close;
-  overlay.onclick = (e) => { if (e.target === overlay) close(); };
-  const onEsc = (e) => {
-    if (e.key === "Escape") { close(); document.removeEventListener("keydown", onEsc); }
-  };
+  backdrop.onclick = close;
+  const onEsc = (e) => { if (e.key === "Escape") close(); };
   document.addEventListener("keydown", onEsc);
+}
 
-  // Afficher
-  document.body.appendChild(overlay);
-  requestAnimationFrame(() => overlay.classList.add("active"));
+/**
+ * Ferme la popup modale et restaure le layout original
+ */
+function closeMapModal(mapContentEl) {
+  mapContentEl.classList.remove("modal-open");
+  const closeBtn = mapContentEl.querySelector(".map-modal-close");
+  if (closeBtn) closeBtn.remove();
+  const backdrop = document.querySelector(".map-modal-backdrop");
+  if (backdrop) backdrop.remove();
+  const wrapperParent = mapContentEl.parentElement;
+  if (wrapperParent) wrapperParent.style.minHeight = "";
 }
 
 // &e
