@@ -145,8 +145,9 @@ function getIndicType(colKey) {
   // Volumes, stocks, montants € → barre bleue + nombre formaté (séparateurs milliers)
   if (ddictType === "stock" || ddictType === "vol" || unit.includes("€")) return "pop";
 
-  // Évolutions → barre rouge/verte
-  if (ddictType === "vtcam" || ddictType === "vevol") return "tcam";
+  // Évolutions → barre rouge/verte (vtcam 2 déc, vevol 1 déc)
+  if (ddictType === "vtcam") return "tcam";
+  if (ddictType === "vevol") return "vevol";
 
   // Différences en points → barre rouge/verte
   if (ddictType === "vdifp") return "diff";
@@ -174,6 +175,9 @@ export function formatCellValue(value, colKey) {
     case "tcam":
       const signT = value >= 0 ? "+" : "";
       return `${signT}${value.toFixed(2)}`;  // TCAM : 2 décimales
+    case "vevol":
+      const signV = value >= 0 ? "+" : "";
+      return `${signV}${value.toFixed(1)}`;  // vevol : 1 décimale
     case "diff":
       const signD = value >= 0 ? "+" : "";
       return `${signD}${value.toFixed(1)}`;  // vdifp : 1 décimale (pts %)
@@ -298,7 +302,7 @@ export function renderBarCell(value, colKey, stats) {
 
   const arrow = isNeg ? "▼" : "▲";
   const sign = value >= 0 ? "+" : "";
-  const decimals = type === "diff" ? 1 : 2;  // vdifp: 1 déc, vtcam: 2 déc
+  const decimals = (type === "diff" || type === "vevol") ? 1 : 2;  // vdifp/vevol: 1 déc, vtcam: 2 déc
 
   return html`<div style="display:flex;align-items:center;gap:4px">
     <span style="font-size:10px;color:${barColor}">${arrow}</span>
@@ -672,7 +676,7 @@ function renderBarCellCompact(value, colKey, stats, compact = false) {
 
   const arrow = isNeg ? "▼" : "▲";
   const sign = value >= 0 ? "+" : "";
-  const decimals = type === "diff" ? 1 : 2;  // vdifp: 1 déc, vtcam: 2 déc
+  const decimals = (type === "diff" || type === "vevol") ? 1 : 2;  // vdifp/vevol: 1 déc, vtcam: 2 déc
 
   return html`<div style="display:flex;align-items:center;gap:${compact ? "2px" : "4px"}">
     <span style="font-size:${compact ? "8px" : "10px"};color:${barColor}">${arrow}</span>

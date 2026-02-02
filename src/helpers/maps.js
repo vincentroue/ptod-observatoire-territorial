@@ -107,7 +107,7 @@ export function renderChoropleth(config) {
     Plot.geo(geoData, {
       fill: d => getColor(d.properties[valueCol], d),
       stroke: "#fff",
-      strokeWidth: 0.2
+      strokeWidth: 0.12
     }),
 
     // Overlay contours (départements sur ZE/EPCI/etc.)
@@ -398,11 +398,14 @@ function openMapFullscreen(mapContentEl) {
 
   // ViewBox pour scaling proportionnel du SVG dans le modal
   const svgEl = mapContentEl.querySelector("svg");
-  if (svgEl && !svgEl.getAttribute("viewBox")) {
-    const w = parseFloat(svgEl.getAttribute("width")) || svgEl.getBoundingClientRect().width;
-    const h = parseFloat(svgEl.getAttribute("height")) || svgEl.getBoundingClientRect().height;
-    svgEl.setAttribute("viewBox", `0 0 ${w} ${h}`);
-    svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  let origW = 0, origH = 0;
+  if (svgEl) {
+    origW = parseFloat(svgEl.getAttribute("width")) || svgEl.getBoundingClientRect().width;
+    origH = parseFloat(svgEl.getAttribute("height")) || svgEl.getBoundingClientRect().height;
+    if (!svgEl.getAttribute("viewBox")) {
+      svgEl.setAttribute("viewBox", `0 0 ${origW} ${origH}`);
+      svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
+    }
   }
 
   // Placeholder min-height pour éviter collapse du wrapper parent
@@ -421,9 +424,40 @@ function openMapFullscreen(mapContentEl) {
   closeBtn.title = "Fermer (Échap)";
   mapContentEl.appendChild(closeBtn);
 
+  // Cloner le titre (il est dans .map-wrapper, pas dans .map-content)
+  const wrapper = mapContentEl.parentElement;
+  const titleBlock = wrapper?.querySelector(".map-title-block");
+  if (titleBlock) {
+    const titleClone = titleBlock.cloneNode(true);
+    titleClone.classList.add("modal-title-clone");
+    mapContentEl.insertBefore(titleClone, mapContentEl.firstChild);
+  }
+
   // Activer le mode modal via classe CSS
   mapContentEl.classList.add("modal-open");
-  requestAnimationFrame(() => backdrop.classList.add("active"));
+
+  // Après layout : calculer le ratio de scaling viewBox → injecter <style> compensé
+  // Le viewBox agrandit tout proportionnellement. On réduit font-size pour compenser.
+  requestAnimationFrame(() => {
+    backdrop.classList.add("active");
+    if (svgEl && origW > 0) {
+      const rendered = svgEl.getBoundingClientRect();
+      const scaleX = rendered.width / origW;
+      const scaleY = rendered.height / origH;
+      const scale = Math.min(scaleX, scaleY);
+      if (scale > 1.05) {
+        // Cible : ~9px visuels pour labels, ~2px visuels pour halo blanc
+        const targetFontPx = 9;
+        const targetStrokePx = 2;
+        const svgFs = (targetFontPx / scale).toFixed(1);
+        const svgSw = (targetStrokePx / scale).toFixed(2);
+        const modalStyle = document.createElementNS("http://www.w3.org/2000/svg", "style");
+        modalStyle.id = "modal-text-style";
+        modalStyle.textContent = `g.zoom-content text { font-size: ${svgFs}px !important; stroke-width: ${svgSw}px !important; }`;
+        svgEl.appendChild(modalStyle);
+      }
+    }
+  });
 
   // Handlers fermeture (Échap, clic backdrop, bouton ×)
   function close() {
@@ -441,8 +475,16 @@ function openMapFullscreen(mapContentEl) {
  */
 function closeMapModal(mapContentEl) {
   mapContentEl.classList.remove("modal-open");
+  // Retirer le <style> injecté dans le SVG → labels retrouvent taille normale
+  const svgForStyle = mapContentEl.querySelector("svg");
+  if (svgForStyle) {
+    const modalStyle = svgForStyle.querySelector("#modal-text-style");
+    if (modalStyle) modalStyle.remove();
+  }
   const closeBtn = mapContentEl.querySelector(".map-modal-close");
   if (closeBtn) closeBtn.remove();
+  const titleClone = mapContentEl.querySelector(".modal-title-clone");
+  if (titleClone) titleClone.remove();
   const backdrop = document.querySelector(".map-modal-backdrop");
   if (backdrop) backdrop.remove();
   const wrapperParent = mapContentEl.parentElement;
