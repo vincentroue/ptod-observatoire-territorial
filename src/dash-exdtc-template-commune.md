@@ -710,12 +710,11 @@ const densiteLabel = densiteFilter !== "Tous" ? ` — ${densiteFilter}` : "";
 const scatterEmpData = (() => {
   let filtered = dataNoFrance.filter(d => d.P23_POP != null);
 
-  // Si EPCI, filtrer CA/CU/Métropoles/EPT
+  // Si EPCI, filtrer CA/CU/Métropoles/EPT via type_epci (exclut CC)
   if (echelon === "EPCI") {
     filtered = filtered.filter(d => {
-      const lib = d.libelle || "";
-      return lib.startsWith("CA ") || lib.startsWith("CU ") || lib.startsWith("EPT ") ||
-             lib.toLowerCase().includes("métropole") || lib.toLowerCase().includes("tropole");
+      const t = d.type_epci || "";
+      return t === "CA" || t === "CU" || t === "MET" || t === "EPT";
     });
   }
 
@@ -727,10 +726,10 @@ const scatterEmpData = (() => {
   return filtered.sort((a, b) => b.P23_POP - a.P23_POP);
 })();
 
-// Scale sqrt pour taille bulles — min radius adapté au nombre de territoires
+// Scale pow(0.65) pour taille bulles — plus de contraste que sqrt (0.5)
 const popExtentEmp = d3.extent(scatterEmpData, d => d.P23_POP);
-const minRadiusEmp = scatterEmpData.length < 20 ? 8 : scatterEmpData.length < 50 ? 5 : 2;
-const radiusScaleEmp = d3.scaleSqrt().domain(popExtentEmp).range([minRadiusEmp, 55]);
+const minRadiusEmp = scatterEmpData.length < 20 ? 8 : scatterEmpData.length < 50 ? 4 : 1.5;
+const radiusScaleEmp = d3.scalePow().exponent(0.65).domain(popExtentEmp).range([minRadiusEmp, 60]);
 
 // Couleur par densité
 const getDensColorEmp = (d) => {
@@ -806,12 +805,11 @@ display(scatterEmpContainer);
 const scatterIdxData = (() => {
   let filtered = dataNoFrance.filter(d => d.P23_POP != null);
 
-  // Si EPCI, filtrer CA/CU/Métropoles/EPT
+  // Si EPCI, filtrer CA/CU/Métropoles/EPT via type_epci (exclut CC)
   if (echelon === "EPCI") {
     filtered = filtered.filter(d => {
-      const lib = d.libelle || "";
-      return lib.startsWith("CA ") || lib.startsWith("CU ") || lib.startsWith("EPT ") ||
-             lib.toLowerCase().includes("métropole") || lib.toLowerCase().includes("tropole");
+      const t = d.type_epci || "";
+      return t === "CA" || t === "CU" || t === "MET" || t === "EPT";
     });
   }
 
@@ -823,10 +821,10 @@ const scatterIdxData = (() => {
   return filtered.sort((a, b) => b.P23_POP - a.P23_POP);
 })();
 
-// Scale sqrt pour taille bulles — min radius adapté au nombre de territoires
+// Scale pow(0.65) pour taille bulles — plus de contraste que sqrt (0.5)
 const popExtentIdx = d3.extent(scatterIdxData, d => d.P23_POP);
-const minRadiusIdx = scatterIdxData.length < 20 ? 8 : scatterIdxData.length < 50 ? 5 : 2;
-const radiusScaleIdx = d3.scaleSqrt().domain(popExtentIdx).range([minRadiusIdx, 55]);
+const minRadiusIdx = scatterIdxData.length < 20 ? 8 : scatterIdxData.length < 50 ? 4 : 1.5;
+const radiusScaleIdx = d3.scalePow().exponent(0.65).domain(popExtentIdx).range([minRadiusIdx, 60]);
 
 // Couleur par densité
 const getDensColorIdx = (d) => {
@@ -917,10 +915,10 @@ const echExtraCols2 = (extraIndics || []).filter(i => !i.startsWith("__sep_")).m
 // Extras EN PREMIER (position 1), puis colonnes cartes
 const echAllIndicCols2 = [...new Set([...echExtraCols2, ...echBaseCols2])];
 
-// Filtrer CA/CU/Métropoles/EPT si EPCI, sinon toutes les données
+// Filtrer CA/CU/Métropoles/EPT si EPCI via type_epci (exclut CC)
 const epciTypeFilter = (d) => {
-  const lib = d.libelle || "";
-  return lib.startsWith("CA ") || lib.startsWith("CU ") || lib.startsWith("EPT ") || lib.toLowerCase().includes("métropole") || lib.toLowerCase().includes("tropole");
+  const t = d.type_epci || "";
+  return t === "CA" || t === "CU" || t === "MET" || t === "EPT";
 };
 const dataFiltered = echelon === "EPCI" ? dataNoFrance.filter(epciTypeFilter) : dataNoFrance;
 
