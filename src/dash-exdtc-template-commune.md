@@ -342,10 +342,10 @@ const echelon = view(Inputs.radio(
 const colorMode = view(Inputs.radio(["8 catégories", "Gradient"], { value: "8 catégories", label: "Mode représ." }));
 const showValuesOnMap = view(Inputs.toggle({ label: "Afficher labels", value: true }));
 const labelBy = view(Inputs.select(new Map([
-  ["10 terr. princ.", "population"],
-  ["Top 5 + Bot 5", "top5_bot5"],
-  ["Top 15 indic", "indicator_top"],
-  ["Bottom 15 indic", "indicator_bottom"]
+  ["Principaux terr.", "population"],
+  ["Top 20 + Bot 20", "top5_bot5"],
+  ["Top 20 indic", "indicator_top"],
+  ["Bottom 20 indic", "indicator_bottom"]
 ]), { value: "population", label: "Labels" }));
 const labelMode = view(Inputs.radio(["values", "names", "both"], { value: "both", label: "Contenu" }));
 const showOverlay = view(Inputs.toggle({ label: "Contours départ.", value: false }));
@@ -367,8 +367,7 @@ const densiteFilter = view(Inputs.radio(
 </section>
 
 <section class="panel">
-<div class="panel-title">Colonnes tableau</div>
-<span class="panel-hint"><i>sel. indic. suppl. ctrl/shift click</i></span>
+<div class="panel-title">Colonnes tableau <span class="panel-tooltip-wrap"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">Sélectionner des indicateurs supplémentaires à ajouter au tableau.<br><b>Ctrl+clic</b> : ajouter/retirer un indicateur.<br><b>Shift+clic</b> : sélection continue.</span></span></div>
 
 ```js
 // Multi-select indicateurs supplémentaires (dans sidebar)
@@ -451,14 +450,18 @@ const zoomLabel = labelMap?.get(zoomCode) || zoomCode;
 <div style="display:flex;gap:12px;align-items:stretch;">
 
 <!-- COLONNE GAUCHE : titre + 4 cartes (France + Zoom) -->
-<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:12px;">
-<h3 style="margin:0 0 0 16px;">Vue France par ${echelon} // Focus communes : ${zoomLabel}</h3>
+<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:4px;">
+<h3 style="margin:0 0 0 8px;">Vue France par ${echelon} // Focus communes : ${zoomLabel}</h3>
+
+```js
+// Zoom state persistant entre re-renders (survit aux changements labelBy/labelMode)
+if (!window._zoomStates) window._zoomStates = {};
+```
 
 <!-- Cartes France -->
 <div class="cards-row">
 
 <div class="card">
-<h2>${label1}</h2>
 
 ```js
 // Carte 1 : renderChoropleth + mini options
@@ -471,7 +474,7 @@ const map1 = renderChoropleth({
   indicLabel: label1, selectedCodes: [...mapSelectionState],
   showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
   title: label1,  // Titre SVG pour export
-  echelon, width: 385, height: 355, maxLabelsAuto: 300,
+  echelon, width: 385, height: 355, maxLabelsAuto: 600,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 const counts1 = countBins(dataNoFrance, colKey1, bins1.thresholds || []);
@@ -503,8 +506,11 @@ map1.addEventListener("click", (e) => {
     }
   }
 });
-const wrapper1 = createMapWrapper(map1, null, legend1, addZoomBehavior(map1), {
-  exportSVGFn: exportSVG, echelon, colKey: colKey1
+const wrapper1 = createMapWrapper(map1, null, legend1, addZoomBehavior(map1, {
+  initialTransform: window._zoomStates.map1,
+  onZoom: t => { window._zoomStates.map1 = t; }
+}), {
+  exportSVGFn: exportSVG, echelon, colKey: colKey1, title: label1
 });
 display(wrapper1);
 ```
@@ -512,7 +518,6 @@ display(wrapper1);
 </div>
 
 <div class="card">
-<h2>${label2}</h2>
 
 ```js
 // Carte 2 : même pattern + mini options
@@ -525,7 +530,7 @@ const map2 = renderChoropleth({
   indicLabel: label2, selectedCodes: [...mapSelectionState],
   showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
   title: label2,  // Titre SVG pour export
-  echelon, width: 385, height: 355, maxLabelsAuto: 300,
+  echelon, width: 385, height: 355, maxLabelsAuto: 600,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 const counts2 = countBins(dataNoFrance, colKey2, bins2.thresholds || []);
@@ -557,8 +562,11 @@ map2.addEventListener("click", (e) => {
     }
   }
 });
-const wrapper2 = createMapWrapper(map2, null, legend2, addZoomBehavior(map2), {
-  exportSVGFn: exportSVG, echelon, colKey: colKey2
+const wrapper2 = createMapWrapper(map2, null, legend2, addZoomBehavior(map2, {
+  initialTransform: window._zoomStates.map2,
+  onZoom: t => { window._zoomStates.map2 = t; }
+}), {
+  exportSVGFn: exportSVG, echelon, colKey: colKey2, title: label2
 });
 display(wrapper2);
 ```
@@ -613,7 +621,6 @@ const getColorC2 = isGradient ? gradientC2.getColor : zoomBins2.getColor;
 <div class="cards-row">
 
 <div class="card">
-<h2>${label1}</h2>
 
 ```js
 const mapC1 = renderChoropleth({
@@ -623,7 +630,7 @@ const mapC1 = renderChoropleth({
   getLabel: ({ code }) => zoomDataMap.get(code)?.libelle || code,
   formatValue: (k, v) => formatValue(indic1, v),
   indicLabel: label1, showLabels: showValuesOnMap,
-  labelMode, labelBy, topN: 50,
+  labelMode, labelBy, topN: 300,
   title: `${label1} — ${zoomLabel}`,  // Titre avec territoire
   maxLabelsAuto: 100, echelon: "Commune", width: 385, height: 355
 });
@@ -639,15 +646,17 @@ const legendC1 = isGradient
       colors: zoomBins1.palette, labels: binsC1.labels || [], counts: countsC1,
       vertical: true, title: "Légende", unit: unit1, reverse: !zoomBins1.isDiv
     });
-display(createMapWrapper(mapC1, null, legendC1, addZoomBehavior(mapC1), {
-  exportSVGFn: exportSVG, echelon: zoomLabel, colKey: colKey1
+display(createMapWrapper(mapC1, null, legendC1, addZoomBehavior(mapC1, {
+  initialTransform: window._zoomStates.mapC1,
+  onZoom: t => { window._zoomStates.mapC1 = t; }
+}), {
+  exportSVGFn: exportSVG, echelon: zoomLabel, colKey: colKey1, title: `${label1} — ${zoomLabel}`
 }));
 ```
 
 </div>
 
 <div class="card">
-<h2>${label2}</h2>
 
 ```js
 const mapC2 = renderChoropleth({
@@ -657,7 +666,7 @@ const mapC2 = renderChoropleth({
   getLabel: ({ code }) => zoomDataMap.get(code)?.libelle || code,
   formatValue: (k, v) => formatValue(indic2, v),
   indicLabel: label2, showLabels: showValuesOnMap,
-  labelMode, labelBy, topN: 50,
+  labelMode, labelBy, topN: 300,
   title: `${label2} — ${zoomLabel}`,  // Titre avec territoire
   maxLabelsAuto: 100, echelon: "Commune", width: 385, height: 355
 });
@@ -673,8 +682,11 @@ const legendC2 = isGradient
       colors: zoomBins2.palette, labels: binsC2.labels || [], counts: countsC2,
       vertical: true, title: "Légende", unit: unit2, reverse: !zoomBins2.isDiv
     });
-display(createMapWrapper(mapC2, null, legendC2, addZoomBehavior(mapC2), {
-  exportSVGFn: exportSVG, echelon: zoomLabel, colKey: colKey2
+display(createMapWrapper(mapC2, null, legendC2, addZoomBehavior(mapC2, {
+  initialTransform: window._zoomStates.mapC2,
+  onZoom: t => { window._zoomStates.mapC2 = t; }
+}), {
+  exportSVGFn: exportSVG, echelon: zoomLabel, colKey: colKey2, title: `${label2} — ${zoomLabel}`
 }));
 ```
 

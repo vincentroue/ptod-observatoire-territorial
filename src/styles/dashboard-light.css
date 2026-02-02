@@ -50,7 +50,7 @@ h1, h2, h3, h4, h5, h6,
   left: 0;
   right: 0;
   z-index: 100;
-  background: #4b5563 !important;
+  background: #505a6b !important;
   padding: 0;
   width: 100vw;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
@@ -286,6 +286,54 @@ h1, h2, h3, h4, h5, h6,
   color: #4b5563;
   font-style: italic;
   margin-top: 4px;
+}
+
+/* Tooltip inline (icône ? avec popup au hover) */
+.panel-tooltip-wrap {
+  position: relative;
+  display: inline-block;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+.panel-tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #d1d5db;
+  color: #374151;
+  font-size: 9px;
+  font-weight: 700;
+  font-style: normal;
+  cursor: help;
+  line-height: 1;
+}
+
+.panel-tooltip-text {
+  display: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 20px;
+  width: 200px;
+  background: #1f2937;
+  color: #f3f4f6;
+  font-size: 10px;
+  font-weight: 400;
+  font-style: normal;
+  text-transform: none;
+  line-height: 1.4;
+  padding: 6px 8px;
+  border-radius: 4px;
+  z-index: 100;
+  letter-spacing: 0;
+}
+
+.panel-tooltip-wrap:hover .panel-tooltip-text {
+  display: block;
 }
 
 /* ------- Sidebar forms/inputs ------- */
@@ -673,8 +721,11 @@ td.num, th.num {
  * &s MAP — Wrapper carte + légende + zoom
  * ======================================================= */
 .map-wrapper {
-  position: relative;
   display: inline-block;
+}
+
+.map-content {
+  position: relative;
 }
 
 .map-wrapper svg {
@@ -788,6 +839,102 @@ td.num, th.num {
 
 .svg-export-btn:hover {
   background: #f3f4f6;
+}
+
+/* Titre + sous-titre carte */
+.map-title-block {
+  text-align: left;
+  padding: 4px 8px 2px;
+}
+
+.map-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1.3;
+}
+
+.map-subtitle {
+  font-size: 9.5px;
+  font-weight: 400;
+  color: #6b7280;
+  margin-top: 1px;
+}
+
+/* Bouton expand plein écran */
+.map-expand-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #d1d5db;
+  border-radius: 3px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  color: #6b7280;
+}
+
+.map-expand-btn:hover {
+  background: #f3f4f6;
+  color: #1f2937;
+}
+
+/* Overlay plein écran carte */
+.map-fullscreen-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.8);
+  z-index: 9999;
+  justify-content: center;
+  align-items: center;
+}
+
+.map-fullscreen-overlay.active {
+  display: flex;
+}
+
+.map-fullscreen-content {
+  position: relative;
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px;
+  width: 92vw;
+  height: 92vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.map-fullscreen-content svg {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.map-fullscreen-close {
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 22px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #9ca3af;
+  line-height: 1;
+  z-index: 10;
+}
+
+.map-fullscreen-close:hover {
+  color: #1f2937;
 }
 /* &e MAP */
 

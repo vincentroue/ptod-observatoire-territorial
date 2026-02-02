@@ -14,7 +14,7 @@
 import * as Plot from "npm:@observablehq/plot";
 import * as d3 from "npm:d3";
 import { html } from "npm:htl";
-import { INDICATEURS } from "./indicators-ddict-js.js";
+import { INDICATEURS, PERIODES } from "./indicators-ddict-js.js";
 import { parseColKey } from "./indicators-ddict-ext.js";
 
 // ============================================================
@@ -90,28 +90,24 @@ export function renderChoropleth(config) {
 
   const selectedSet = new Set(selectedCodes || []);
 
+  // Sous-titre automatique : unité + période (depuis valueCol)
+  const { indic: _indic, periode: _periode } = parseColKey(valueCol);
+  const _unit = INDICATEURS[_indic]?.unit || INDICATEURS[valueCol]?.unit || "";
+  const _perLabel = _periode && PERIODES[_periode]?.long
+    ? PERIODES[_periode].long
+    : (_periode || "");
+  const subtitle = [_unit, _perLabel].filter(Boolean).join(" — ");
+
   // Construire marks optimisés
   const marks = [
-    // 0. Titre SVG (s'exporte avec la carte)
-    title ? Plot.text([title], {
-      x: width / 2,
-      y: 16,
-      text: d => d,
-      fontSize: 14,
-      fontWeight: 700,
-      fill: "#1f2937",
-      textAnchor: "middle",
-      frameAnchor: "top"
-    }) : null,
+    // 1. Contour France en fond : stroke gris (bordure extérieure + côte)
+    Plot.geo(geoData, { fill: "none", stroke: "#555", strokeWidth: 0.8 }),
 
-    // 1. Contour France en fond : stroke gris foncé (bordure extérieure)
-    Plot.geo(geoData, { fill: "none", stroke: "#333", strokeWidth: 1.5 }),
-
-    // 2. Fill + stroke intérieur blanc fin (couvre stroke sauf bordure France)
+    // 2. Fill + stroke intérieur blanc fin
     Plot.geo(geoData, {
       fill: d => getColor(d.properties[valueCol], d),
-      stroke: d => selectedSet.has(getCode(d)) ? "#000" : "#fff",
-      strokeWidth: d => selectedSet.has(getCode(d)) ? 2.5 : 0.3,
+      stroke: "#fff",
+      strokeWidth: 0.2,
       title: d => {
         const code = getCode(d);
         const lbl = getLabel({ code }) || code;
@@ -129,9 +125,15 @@ export function renderChoropleth(config) {
     overlayGeo ? Plot.geo(overlayGeo, {
       fill: "none",
       stroke: "#666",
-      strokeWidth: 1,
-      strokeOpacity: 0.6
+      strokeWidth: 0.5,
+      strokeOpacity: 0.5
     }) : null,
+
+    // Surbrillance sélection (AVANT labels pour que les étiquettes passent devant)
+    selectedSet.size > 0 ? Plot.geo(
+      geoData.features.filter(f => selectedSet.has(getCode(f))),
+      { fill: "none", stroke: "#ffd500", strokeWidth: 1 }
+    ) : null,
 
     // Labels intelligents en 3 tiers (progressive reveal au zoom)
     // IMPORTANT: Un seul mark avec tous labels triés par |valeur|
@@ -149,10 +151,10 @@ export function renderChoropleth(config) {
       let sorted = geoData.features.filter(f => f.properties[valueCol] != null);
 
       // Trier selon labelBy
-      // Flag spécial top5_bot5 : besoin de séparer top et bottom
-      let isTop5Bot5 = labelBy === "top5_bot5";
-      let top5Features = null;
-      let bot5Features = null;
+      // Flag spécial top5_bot5 : séparer top et bottom (20+20)
+      let isTopBot = labelBy === "top5_bot5";
+      let topFeatures = null;
+      let botFeatures = null;
 
       if (labelBy === "population") {
         // Par population décroissante (P22_POP ou P23_POP)
@@ -164,13 +166,12 @@ export function renderChoropleth(config) {
       } else if (labelBy === "indicator_bottom") {
         // Bottom écarts négatifs (valeurs les plus basses)
         sorted.sort((a, b) => a.properties[valueCol] - b.properties[valueCol]);
-      } else if (isTop5Bot5) {
-        // Top 5 + Bottom 5 : séparer les deux groupes
+      } else if (isTopBot) {
+        // Top 20 + Bottom 20 : séparer les deux groupes
         const sortedByValue = [...sorted].sort((a, b) => b.properties[valueCol] - a.properties[valueCol]);
-        top5Features = sortedByValue.slice(0, 5);
-        bot5Features = sortedByValue.slice(-5).reverse();  // 5 plus bas, inversé pour avoir le pire en premier
-        // Continuer avec top5 pour le tri principal
-        sorted = [...top5Features, ...bot5Features];
+        topFeatures = sortedByValue.slice(0, 20);
+        botFeatures = sortedByValue.slice(-20).reverse();
+        sorted = [...topFeatures, ...botFeatures];
       } else {
         // Fallback: par |valeur| absolue
         sorted.sort((a, b) => Math.abs(b.properties[valueCol]) - Math.abs(a.properties[valueCol]));
@@ -185,10 +186,16 @@ export function renderChoropleth(config) {
       if (maxLabels > 0) sorted = sorted.slice(0, maxLabels);
 
       // Fonction texte selon labelMode - Cherche libellé dans TopoJSON puis lookup Map
+      // Types évolution : afficher +/- devant la valeur
+      const { indic } = parseColKey(valueCol);
+      const indicType = INDICATEURS[indic]?.type || INDICATEURS[valueCol]?.type || "";
+      const isEvolution = ["vtcam", "vevol", "vdifp"].includes(indicType);
+
       const getText = (d) => {
         const code = getCode(d);
         const val = d.properties[valueCol];
-        const valStr = (val >= 0 ? "+" : "") + val.toFixed(1);
+        const prefix = isEvolution && val >= 0 ? "+" : "";
+        const valStr = prefix + val.toFixed(1);
         // 1. Chercher dans TopoJSON (noms varient selon échelon)
         const topoName = d.properties.nom_officiel      // DEP, REG
                       || d.properties.libze2020         // ZE
@@ -214,11 +221,11 @@ export function renderChoropleth(config) {
       // qui masque/révèle selon le zoom et le viewport
       // ============================================================
 
-      // Mode top5_bot5 : 2 marks séparés (top=blanc, bot=rouge)
-      if (isTop5Bot5 && bot5Features) {
-        const bot5Set = new Set(bot5Features.map(f => getCode(f)));
-        const topSorted = sorted.filter(f => !bot5Set.has(getCode(f)));
-        const botSorted = sorted.filter(f => bot5Set.has(getCode(f)));
+      // Mode top+bot : 2 marks séparés (top=noir, bot=rouge)
+      if (isTopBot && botFeatures) {
+        const botSet = new Set(botFeatures.map(f => getCode(f)));
+        const topSorted = sorted.filter(f => !botSet.has(getCode(f)));
+        const botSorted = sorted.filter(f => botSet.has(getCode(f)));
 
         return [
           topSorted.length > 0 ? Plot.text(topSorted, {
@@ -253,11 +260,7 @@ export function renderChoropleth(config) {
       });
     })(),
 
-    // Surbrillance CONTOUR pour sélectionnés (pas de fill)
-    selectedSet.size > 0 ? Plot.geo(
-      geoData.features.filter(f => selectedSet.has(getCode(f))),
-      { fill: "none", stroke: "#ffd500", strokeWidth: 2.5 }
-    ) : null
+    // (sélection déplacée avant les labels)
   ].flat().filter(Boolean);  // flat() pour top5_bot5 qui retourne un array de marks
 
   return Plot.plot({
@@ -287,26 +290,38 @@ export function renderChoropleth(config) {
  * @returns {Object} HTML wrapper element
  */
 export function createMapWrapper(map, statsOverlay, legendElement = null, zoomControls = null, config = {}) {
-  const { legendPosition = "overlay", exportSVGFn = null, echelon = "", colKey = "" } = config;
+  const { legendPosition = "overlay", exportSVGFn = null, echelon = "", colKey = "", title = "" } = config;
   const wrapper = html`<div class="map-wrapper"></div>`;
   if (map) {
-    wrapper.appendChild(map);
+    // Titre + sous-titre HTML (au-dessus de la carte, hors zone positionnée)
+    if (title || colKey) {
+      const { indic: _ti, periode: _tp } = colKey ? parseColKey(colKey) : {};
+      const _tUnit = _ti ? (INDICATEURS[_ti]?.unit || "") : "";
+      const _tPer = _tp && PERIODES[_tp]?.long ? PERIODES[_tp].long : "";
+      const subtitleParts = [_tUnit, _tPer].filter(Boolean).join(" — ");
+      const titleEl = html`<div class="map-title-block">
+        ${title ? html`<div class="map-title">${title}</div>` : ""}
+        ${subtitleParts ? html`<div class="map-subtitle">${subtitleParts}</div>` : ""}
+      </div>`;
+      wrapper.appendChild(titleEl);
+    }
+
+    // Conteneur SVG + overlays (position:relative pour absolute children)
+    const mapContent = html`<div class="map-content"></div>`;
+    mapContent.appendChild(map);
     if (statsOverlay) {
-      wrapper.appendChild(statsOverlay);
+      mapContent.appendChild(statsOverlay);
     }
     if (legendElement) {
-      // Légende toujours en bas à gauche (position absolue)
       const legendWrapper = html`<div class="legend-bottom-left"></div>`;
       legendWrapper.appendChild(legendElement);
-      wrapper.appendChild(legendWrapper);
+      mapContent.appendChild(legendWrapper);
     }
-    // Bouton SVG en bas à droite (même ligne que légende)
     if (exportSVGFn && map) {
       const svgBtn = html`<button class="svg-export-btn" title="Export SVG">📥</button>`;
       svgBtn.onclick = () => exportSVGFn(map, `carte_${echelon || "map"}_${colKey || "indic"}.svg`);
-      wrapper.appendChild(svgBtn);
+      mapContent.appendChild(svgBtn);
     }
-    // Boutons zoom (P4.7)
     if (zoomControls) {
       const zoomBtns = html`<div class="zoom-controls">
         <button class="zoom-btn" title="Zoom +">+</button>
@@ -317,11 +332,80 @@ export function createMapWrapper(map, statsOverlay, legendElement = null, zoomCo
       btnIn.onclick = () => zoomControls.zoomIn();
       btnOut.onclick = () => zoomControls.zoomOut();
       btnReset.onclick = () => zoomControls.zoomReset();
-      wrapper.appendChild(zoomBtns);
+      mapContent.appendChild(zoomBtns);
     }
+    const expandBtn = html`<button class="map-expand-btn" title="Agrandir">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>
+      </svg>
+    </button>`;
+    expandBtn.onclick = () => openMapFullscreen(map);
+    mapContent.appendChild(expandBtn);
+
+    wrapper.appendChild(mapContent);
   }
   return wrapper;
 }
+
+// ============================================================
+// &s FULLSCREEN — Overlay plein écran carte
+// ============================================================
+
+/**
+ * Ouvre une carte en plein écran dans un overlay modal
+ * Clone le SVG et le scale via viewBox pour remplir l'écran
+ *
+ * @param {SVGElement} svgElement - Le SVG Plot.plot() à agrandir
+ */
+function openMapFullscreen(svgElement) {
+  if (!svgElement) return;
+
+  // Créer overlay
+  const overlay = html`<div class="map-fullscreen-overlay">
+    <div class="map-fullscreen-content">
+      <button class="map-fullscreen-close" title="Fermer (Échap)">&times;</button>
+    </div>
+  </div>`;
+
+  const content = overlay.querySelector(".map-fullscreen-content");
+  const closeBtn = overlay.querySelector(".map-fullscreen-close");
+
+  // Cloner le SVG
+  const clone = svgElement.cloneNode(true);
+  const origW = parseFloat(svgElement.getAttribute("width")) || svgElement.getBoundingClientRect().width;
+  const origH = parseFloat(svgElement.getAttribute("height")) || svgElement.getBoundingClientRect().height;
+
+  // ViewBox pour scaling proportionnel
+  if (!clone.getAttribute("viewBox")) {
+    clone.setAttribute("viewBox", `0 0 ${origW} ${origH}`);
+  }
+  clone.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  clone.removeAttribute("width");
+  clone.removeAttribute("height");
+  clone.style.width = "100%";
+  clone.style.height = "100%";
+
+  content.appendChild(clone);
+
+  // Fermeture
+  function close() {
+    overlay.classList.remove("active");
+    if (overlay.parentNode) overlay.remove();
+  }
+
+  closeBtn.onclick = close;
+  overlay.onclick = (e) => { if (e.target === overlay) close(); };
+  const onEsc = (e) => {
+    if (e.key === "Escape") { close(); document.removeEventListener("keydown", onEsc); }
+  };
+  document.addEventListener("keydown", onEsc);
+
+  // Afficher
+  document.body.appendChild(overlay);
+  requestAnimationFrame(() => overlay.classList.add("active"));
+}
+
+// &e
 
 // ============================================================
 // &s CLICK — Gestionnaire click sur carte
@@ -368,12 +452,14 @@ export function addMapClickHandlers(map, geoData, getCode, onClick) {
  * @param {Object} [config={}] - Configuration zoom
  * @param {number} [config.minScale=1] - Zoom minimum (1 = pas de dézoom)
  * @param {number} [config.maxScale=8] - Zoom maximum
+ * @param {Object} [config.initialTransform=null] - {k,x,y} transform à restaurer
+ * @param {Function} [config.onZoom=null] - Callback({k,x,y}) appelé à chaque zoom
  * @returns {Object|null} { zoomIn, zoomOut, zoomReset } ou null si pas de map
  */
 export function addZoomBehavior(map, config = {}) {
   if (!map) return null;
 
-  const { minScale = 1, maxScale = 8 } = config;
+  const { minScale = 1, maxScale = 8, initialTransform = null, onZoom = null } = config;
 
   // Sélectionner le SVG avec D3
   const svg = d3.select(map);
@@ -412,51 +498,90 @@ export function addZoomBehavior(map, config = {}) {
 
   // Révélation dynamique : collision détectée à chaque zoom level
   // À k=1 : anti-collision strict (peu de labels), k>1 : bboxes réduites par k → plus de labels
+  // Tous les labels sont pointer-events:none — les clics traversent vers les polygones
   const allTexts = contentGroup.selectAll("text").nodes();
+  contentGroup.selectAll("text").style("pointer-events", "none");
   const svgWidth = parseFloat(svg.attr("width")) || 400;
   const svgHeight = parseFloat(svg.attr("height")) || 400;
 
   // Parser la position de chaque text (depuis transform ou x/y)
+  // Filtrer : NaN (features sans géométrie), titre/sous-titre (y < 35)
   const textPositions = [];
   allTexts.forEach((el, i) => {
     const info = baseInfo.get(el);
     if (!info) return;
     let px = info.x, py = info.y;
     if (info.origTransform) {
-      const m = info.origTransform.match(/translate\(\s*([\d.e+-]+)[\s,]+([\d.e+-]+)/);
+      const m = info.origTransform.match(/translate\(\s*([^\s,)]+)[\s,]+([^\s,)]+)/);
       if (m) { px = parseFloat(m[1]); py = parseFloat(m[2]); }
     }
-    // Estimer la bbox du texte (largeur ≈ contenu, hauteur ≈ font)
-    const textContent = el.textContent || "";
-    const lines = textContent.split("\n");
-    const maxLen = Math.max(...lines.map(l => l.length), 1);
-    const estW = maxLen * 6;     // ~6px par caractère à taille 11px
-    const estH = lines.length * 13; // ~13px par ligne
-    textPositions.push({ el, px, py, w: estW, h: estH, idx: i });
+    // Ignorer titre/sous-titre (positionnés en haut du SVG, y < 35)
+    if (py < 35 && px > svgWidth * 0.3 && px < svgWidth * 0.7) return;
+    // Ignorer les labels avec coordonnées invalides (centroid NaN ou positionnés à 0,0)
+    if (isNaN(px) || isNaN(py) || (px === 0 && py === 0 && info.origTransform)) {
+      d3.select(el).attr("opacity", 0);
+      return;
+    }
+    // Mesurer la bbox réelle du texte (plus précis que l'estimation)
+    let w, h;
+    try {
+      const bbox = el.getBBox();
+      w = bbox.width || 40;
+      h = bbox.height || 13;
+    } catch (e) {
+      // Fallback estimation si getBBox() échoue (élément pas encore rendu)
+      const textContent = el.textContent || "";
+      const lines = textContent.split("\n");
+      const maxLen = Math.max(...lines.map(l => l.length), 1);
+      w = maxLen * 5.5;
+      h = lines.length * 12;
+    }
+    textPositions.push({ el, px, py, w, h, idx: i });
   });
 
   // Fonction : déterminer les labels visibles sans chevauchement
-  // Les bboxes sont divisées par k → plus de place au zoom → plus de labels
+  // Double contrôle : anti-collision + cap adaptatif à la densité du viewport
+  const MAX_INITIAL = 12;  // Labels max sans zoom
+
   function computeVisibleLabels(k, tx, ty) {
     const margin = 30;
-    const padding = 4;
+
+    // Cap adaptatif : MAX_INITIAL + bonus progressif par cran de zoom
+    // k=1 → 12, k=1.5 → 16, k=2 → 20, k=3 → 28, k=4 → 35, k=6 → 45, k=8 → 52
+    let maxShow;
+    if (k <= 1.05) {
+      maxShow = MAX_INITIAL;
+    } else {
+      // Bonus linéaire basé sur k : chaque doublement de zoom ajoute ~12 labels
+      maxShow = Math.round(MAX_INITIAL + 20 * Math.log2(k));
+    }
+
+    // Anti-collision : bbox / k (taille visuelle réelle) + padding généreux
     const shown = [];
+
     for (const tp of textPositions) {
-      // Vérifier si le label est dans le viewport
+      // Viewport check
       const screenX = k * tp.px + tx;
       const screenY = k * tp.py + ty;
       const inViewport = screenX >= -margin && screenX <= svgWidth + margin
                       && screenY >= -margin && screenY <= svgHeight + margin;
       if (!inViewport) { d3.select(tp.el).attr("opacity", 0); continue; }
 
-      // Anti-collision dynamique : bbox réduite par k (labels counter-scalés)
-      const bw = tp.w / k;  // bbox réduite car label est counter-scalé
+      // Cap atteint
+      if (shown.length >= maxShow) {
+        d3.select(tp.el).attr("opacity", 0);
+        continue;
+      }
+
+      // Anti-collision : bbox / k = taille visuelle exacte après counter-scale
+      const bw = tp.w / k;
       const bh = tp.h / k;
+      const pad = 6 / k;  // Marge entre labels
       const overlaps = shown.some(s => {
         const dx = Math.abs(tp.px - s.px);
         const dy = Math.abs(tp.py - s.py);
-        return dx < (bw + s.w / k) / 2 + padding / k
-            && dy < (bh + s.h / k) / 2 + padding / k;
+        return dx < (bw + s.w / k) / 2 + pad
+            && dy < (bh + s.h / k) / 2 + pad;
       });
       if (!overlaps) {
         shown.push(tp);
@@ -486,26 +611,36 @@ export function addZoomBehavior(map, config = {}) {
       const s = 1 / k;
       textElements.each(function() {
         const info = baseInfo.get(this);
-        if (info) {
-          if (info.origTransform) {
-            // Cas A : texte positionné via transform → append scale
-            d3.select(this)
-              .attr("transform", `${info.origTransform} scale(${s})`);
-          } else {
-            // Cas B : texte positionné via x/y → scale autour de sa position
-            d3.select(this)
-              .attr("transform", `translate(${info.x},${info.y}) scale(${s}) translate(${-info.x},${-info.y})`);
-          }
+        if (!info) return;
+        // Skip labels avec positions NaN (features sans géométrie valide)
+        if (isNaN(info.x) && isNaN(info.y) && info.origTransform && info.origTransform.includes("NaN")) return;
+        if (info.origTransform) {
+          // Cas A : texte positionné via transform → append scale
+          d3.select(this)
+            .attr("transform", `${info.origTransform} scale(${s})`);
+        } else {
+          // Cas B : texte positionné via x/y → scale autour de sa position
+          d3.select(this)
+            .attr("transform", `translate(${info.x},${info.y}) scale(${s}) translate(${-info.x},${-info.y})`);
         }
       });
 
       // 3. Recalculer la visibilité avec collision dynamique au zoom courant
       const { x: tx, y: ty } = event.transform;
       computeVisibleLabels(k, tx, ty);
+
+      // 4. Sauvegarder l'état zoom (pour persistance entre re-renders)
+      if (onZoom) onZoom({ k, x: tx, y: ty });
     });
 
   // Appliquer au SVG
   svg.call(zoom);
+
+  // Restaurer le zoom précédent si fourni (persistance entre re-renders)
+  if (initialTransform && initialTransform.k > 1) {
+    const t = d3.zoomIdentity.translate(initialTransform.x, initialTransform.y).scale(initialTransform.k);
+    svg.call(zoom.transform, t);
+  }
 
   // Retourner les fonctions de contrôle
   return {
