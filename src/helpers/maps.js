@@ -103,21 +103,11 @@ export function renderChoropleth(config) {
     // 1. Contour France en fond : stroke gris (bordure extérieure + côte)
     Plot.geo(geoData, { fill: "none", stroke: "#555", strokeWidth: 0.8 }),
 
-    // 2. Fill + stroke intérieur blanc fin + tooltip instantané (tip:true)
+    // 2. Fill + stroke intérieur blanc fin
     Plot.geo(geoData, {
       fill: d => getColor(d.properties[valueCol], d),
       stroke: "#fff",
-      strokeWidth: 0.2,
-      tip: true,
-      channels: {
-        Territoire: d => getLabel({ code: getCode(d) }) || getCode(d),
-        [(() => { const { indic } = parseColKey(valueCol); return INDICATEURS[indic]?.medium || indicLabel || valueCol; })()]:
-          d => formatValue(valueCol, d.properties[valueCol]),
-        "Pop 2023": d => {
-          const p = d.properties.P23_POP;
-          return p ? p.toLocaleString("fr-FR") : "—";
-        }
-      }
+      strokeWidth: 0.2
     }),
 
     // Overlay contours (départements sur ZE/EPCI/etc.)
@@ -262,7 +252,7 @@ export function renderChoropleth(config) {
     // (sélection déplacée avant les labels)
   ].flat().filter(Boolean);  // flat() pour top5_bot5 qui retourne un array de marks
 
-  return Plot.plot({
+  const plot = Plot.plot({
     projection: { ...PROJECTION_FRANCE, domain: geoData },
     marks,
     width,
@@ -272,6 +262,11 @@ export function renderChoropleth(config) {
     marginRight,
     marginBottom
   });
+
+  // Stocker config tooltip sur le plot (event delegation dans createMapWrapper)
+  plot._tipConfig = { geoData, getCode, getLabel, valueCol, formatValue };
+
+  return plot;
 }
 
 // ============================================================
@@ -340,6 +335,41 @@ export function createMapWrapper(map, statsOverlay, legendElement = null, zoomCo
     </button>`;
     expandBtn.onclick = () => openMapFullscreen(map);
     mapContent.appendChild(expandBtn);
+
+    // Tooltip HTML custom — event delegation (même stratégie que handleMapClick)
+    if (map._tipConfig) {
+      const { geoData: _geo, getCode: _gc, getLabel: _gl, valueCol: _vc, formatValue: _fv } = map._tipConfig;
+      const tooltip = html`<div class="map-tooltip"></div>`;
+      mapContent.appendChild(tooltip);
+
+      const svgEl = map.querySelector ? (map.querySelector("svg") || map) : map;
+      svgEl.addEventListener("mousemove", (e) => {
+        const path = e.target.closest("path");
+        if (!path) { tooltip.style.display = "none"; return; }
+        const parent = path.parentElement;
+        const paths = Array.from(parent.querySelectorAll("path"));
+        const idx = paths.indexOf(path);
+        if (idx < 0 || idx >= _geo.features.length) { tooltip.style.display = "none"; return; }
+        const feature = _geo.features[idx];
+        const code = _gc(feature);
+        if (!code) { tooltip.style.display = "none"; return; }
+        const lbl = _gl({ code }) || code;
+        const v = feature.properties[_vc];
+        const p23 = feature.properties.P23_POP;
+        tooltip.innerHTML = `<b>${lbl}</b><br>` +
+          `${v != null ? _fv(_vc, v) : "—"}<br>` +
+          `<span class="map-tooltip-pop">Pop: ${p23 ? p23.toLocaleString("fr-FR") : "—"}</span>`;
+        tooltip.style.display = "block";
+        const rect = mapContent.getBoundingClientRect();
+        let x = e.clientX - rect.left + 10;
+        let y = e.clientY - rect.top - 35;
+        if (x + 140 > rect.width) x = e.clientX - rect.left - 150;
+        if (y < 0) y = e.clientY - rect.top + 15;
+        tooltip.style.left = x + "px";
+        tooltip.style.top = y + "px";
+      });
+      svgEl.addEventListener("mouseleave", () => { tooltip.style.display = "none"; });
+    }
 
     wrapper.appendChild(mapContent);
   }
