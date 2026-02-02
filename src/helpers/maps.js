@@ -103,21 +103,20 @@ export function renderChoropleth(config) {
     // 1. Contour France en fond : stroke gris (bordure extérieure + côte)
     Plot.geo(geoData, { fill: "none", stroke: "#555", strokeWidth: 0.8 }),
 
-    // 2. Fill + stroke intérieur blanc fin
+    // 2. Fill + stroke intérieur blanc fin + tooltip instantané (tip:true)
     Plot.geo(geoData, {
       fill: d => getColor(d.properties[valueCol], d),
       stroke: "#fff",
       strokeWidth: 0.2,
-      title: d => {
-        const code = getCode(d);
-        const lbl = getLabel({ code }) || code;
-        const v = d.properties[valueCol];
-        const p23 = d.properties.P23_POP;
-        // Récupérer le medium de l'indicateur depuis INDICATEURS
-        const { indic } = parseColKey(valueCol);
-        const indicMedium = INDICATEURS[indic]?.medium || indicLabel || indic;
-        return lbl + "\n" + indicMedium + ": " + formatValue(valueCol, v) +
-          "\nPop 2023: " + (p23 ? p23.toLocaleString("fr-FR") : "—");
+      tip: true,
+      channels: {
+        Territoire: d => getLabel({ code: getCode(d) }) || getCode(d),
+        [(() => { const { indic } = parseColKey(valueCol); return INDICATEURS[indic]?.medium || indicLabel || valueCol; })()]:
+          d => formatValue(valueCol, d.properties[valueCol]),
+        "Pop 2023": d => {
+          const p = d.properties.P23_POP;
+          return p ? p.toLocaleString("fr-FR") : "—";
+        }
       }
     }),
 
