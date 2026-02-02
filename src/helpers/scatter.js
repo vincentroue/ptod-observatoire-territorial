@@ -229,7 +229,7 @@ export function createScatterWithZoom(config) {
   // --- Container principal ---
   const container = document.createElement("div");
   container.className = "scatter-container";
-  container.style.cssText = "position:relative;background:white;border:1px solid #e5e7eb;border-radius:4px;padding:12px;margin:8px 0;max-width:820px;margin-left:16px;margin-right:auto;";
+  container.style.cssText = "position:relative;background:white;border:1px solid #e5e7eb;border-radius:4px;padding:8px 12px;margin:8px 0;max-width:820px;";
   const origStyle = container.style.cssText;
 
   // --- Header : titre + boutons ---

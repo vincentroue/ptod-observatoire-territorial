@@ -593,8 +593,10 @@ const zoomData = await queryCommunes({ conn }, {
 });
 const zoomDataMap = new Map(zoomData.map(d => [d.code, d]));
 
+// EPCI : le topojson n'a pas de colonne EPCI (seulement EPCI_EPT = EPT code)
+// → filtrer par CODGEO matching les résultats DuckDB (qui eux ont la bonne colonne EPCI)
 const filteredFeatures = communesGeo.features.filter(f => {
-  if (isEPCI) return String(f.properties.EPCI_EPT) === String(zoomCode) || String(f.properties.EPCI) === String(zoomCode);
+  if (isEPCI) return zoomDataMap.has(f.properties.CODGEO);
   return String(f.properties[filterKey]) === String(zoomCode);
 });
 const zoomGeo = {
