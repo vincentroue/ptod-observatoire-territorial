@@ -66,7 +66,7 @@ import { computeIndicBins, createGradientScale, GRADIENT_PALETTES } from "./help
 import { createBinsLegend, createGradientLegend } from "./helpers/legend.js";
 import { renderChoropleth, createMapWrapper, addZoomBehavior } from "./helpers/maps.js";
 import { createSearchBox } from "./helpers/search.js";
-import { sortTableData, computeBarStats, getIndicUnit, renderTable, renderPagination, exportCSV, createTableToolbar } from "./helpers/0table.js";
+import { sortTableData, computeBarStats, getIndicUnit, renderTable, renderPagination, exportCSV, createTableToolbar, openTableFullscreen } from "./helpers/0table.js";
 import { exportSVG } from "./helpers/graph-options.js";
 import { renderButterflyMulti } from "./helpers/graph-butterfly.js";
 import { renderSlopeChart, renderIndice100Chart, renderIndice100Multi, LABELS_A5 } from "./helpers/graph-slope-indice.js";
@@ -220,6 +220,13 @@ display(mapSelectionState.size > 0
 ```js
 const colorMode = view(Inputs.radio(["8 catégories", "Gradient"], { value: "8 catégories", label: "Mode" }));
 const showValuesOnMap = view(Inputs.toggle({ label: "Labels", value: true }));
+const labelBy = view(Inputs.select(new Map([
+  ["Principaux terr.", "population"],
+  ["Top 20 + Bot 20", "top5_bot5"],
+  ["Top 20 indic", "indicator_top"],
+  ["Bottom 20 indic", "indicator_bottom"]
+]), { value: "population", label: "Labels" }));
+const labelMode = view(Inputs.radio(["values", "names", "both"], { value: "both", label: "Contenu" }));
 ```
 
 </section>
@@ -298,7 +305,7 @@ const mapZE = renderChoropleth({
   getLabel: ({ code }) => zeLabelMap.get(code) || code,
   formatValue: (k, v) => formatValue(indicCarte, v),
   indicLabel: labelCarte, selectedCodes: [...mapSelectionState],
-  showLabels: showValuesOnMap, labelMode: "names", labelBy: "population", topN: 10,
+  showLabels: showValuesOnMap, labelMode, labelBy, topN: 10,
   title: labelCarte, echelon: "Zone d'emploi", width: 500, height: 440
 });
 
@@ -337,7 +344,7 @@ display(createMapWrapper(mapZE, null, legend, addZoomBehavior(mapZE)));
 
 ```js
 // === BUTTERFLY HORIZONTAL A21 FLORES ===
-const vbCodes = [...mapSelectionState].slice(0, 2);  // Max 2 territoires
+const vbCodes = [...mapSelectionState];  // Tous les territoires sélectionnés
 
 // France A21 FLORES (trié par part décroissante)
 const vbFranceData = floresFr.toArray()
@@ -397,7 +404,7 @@ const setEchSort2 = (col) => {
 
 ```js
 // === SEARCHBAR TABLEAU (viewof pattern) ===
-const echSearchInput2 = view(Inputs.text({ placeholder: "Filtrer...", width: 100 }));
+const echSearchInput2 = view(Inputs.text({ placeholder: "1ers caract. territoire ou n° dép...", width: 180 }));
 ```
 
 ```js
@@ -450,17 +457,26 @@ const echColumns2 = [
   })
 ];
 
-// Header : count + export
+// Header : count + export + fullscreen
 display(html`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
   <span style="font-size:10px;color:#6b7280;">${echFiltered2.length} ZE</span>
-  <button style="font-size:10px;padding:2px 6px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:3px;cursor:pointer;"
-    onclick=${() => exportCSV(echSorted2, echColumns2, "eco_ze_" + new Date().toISOString().slice(0,10) + ".csv")}>
-    📥
-  </button>
+  <div style="display:flex;gap:4px;">
+    <button style="font-size:10px;padding:2px 6px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:3px;cursor:pointer;"
+      onclick=${() => exportCSV(echSorted2, echColumns2, "eco_ze_" + new Date().toISOString().slice(0,10) + ".csv")}>
+      📥
+    </button>
+    <button style="font-size:12px;padding:2px 6px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:3px;cursor:pointer;" title="Plein écran"
+      onclick=${() => { const t = document.querySelector(".eco-table-fs-target"); if (t) openTableFullscreen(t); }}>
+      ⤢
+    </button>
+  </div>
 </div>`);
 
 // Tableau compact avec scroll vertical (hauteur carte + courbe)
-display(renderTable({
+const _ecoTblWrap = document.createElement("div");
+_ecoTblWrap.className = "eco-table-fs-target";
+_ecoTblWrap.style.cssText = "flex:1;display:flex;flex-direction:column;min-height:0;";
+_ecoTblWrap.appendChild(renderTable({
   data: echSorted2,
   columns: echColumns2,
   stats: echStats2,
@@ -469,11 +485,13 @@ display(renderTable({
   setSort: setEchSort2,
   indicColKey: colKeyCarte,
   compact: true,
-  maxHeight: 750,
+  maxHeight: 1200,
   scrollX: true,
   scrollbarTop: true,
   stickyFirstCol: true
 }));
+display(_ecoTblWrap);
+void 0;
 ```
 
 </div>
@@ -491,7 +509,7 @@ display(renderTable({
 ```js
 // Année base 100
 const baseYearOptions = [2014, 2016, 2018, 2020];
-const baseYear = view(Inputs.select(baseYearOptions, { value: 2014, label: "Base 100" }));
+const baseYear = view(Inputs.select(baseYearOptions, { value: 2016, label: "Base 100" }));
 ```
 
 ```js
@@ -505,7 +523,7 @@ const sectorOptions = [
   { value: "TBE,TFZ", label: "Industrie + Construction" },
   { value: "TAZ", label: "Agriculture seule" }
 ];
-const indice100SectorFilter = view(Inputs.select(sectorOptions, { value: "noAZT", label: "Secteurs", format: d => d.label }));
+const indice100SectorFilter = view(Inputs.select(sectorOptions, { value: "noAZ", label: "Secteurs", format: d => d.label }));
 ```
 
 ```js
@@ -517,7 +535,7 @@ const indice100FixedScale = view(Inputs.toggle({ label: "Échelle fixe 90-130", 
 
 ```js
 // Graph indice 100 : France + territoires sélectionnés côte à côte
-const indice100Codes = [...mapSelectionState].slice(0, 3);  // Max 3 territoires
+const indice100Codes = [...mapSelectionState];  // Tous les territoires sélectionnés
 
 // Parser le filtre secteurs
 // "noAZT" = tous sauf agriculture ET total via excludeSectors
@@ -658,7 +676,7 @@ const bfPeriode = view(Inputs.radio([...periodOptions.keys()], {
 // Pour 22-24, EAE205 utilise 22-23 (arrêt en 2023)
 const eaePeriodeLabel = bfPeriode === "22-24" ? "22-23" : bfPeriode;
 const eaeNote = bfPeriode === "22-24" ? " (EAE s'arrête en 2023)" : "";
-display(html`<h4 style="margin:0 0 10px 0;font-size:13px;color:#1e40af;">5 grands secteurs (${eaePeriodeLabel})${eaeNote}</h4>`);
+display(html`<h4 style="margin:0 0 10px 0;font-size:14px;color:#1e40af;">EAE205 — Emploi salarié, 5 grands secteurs (${eaePeriodeLabel})${eaeNote}</h4>`);
 ```
 
 ```js
@@ -690,7 +708,7 @@ const eaeFranceParts = (() => {
 })();
 
 // Territoires EAE205 A5 (sans Total)
-const eaeTerrParts = [...mapSelectionState].slice(0, 3).map(code => {
+const eaeTerrParts = [...mapSelectionState].map(code => {
   const codePadded = code.padStart(4, '0');
   // Exclure le Total (na5 = "T")
   const zeStartData = eae205ZeSerie.filter(d =>
@@ -718,11 +736,20 @@ const eaeTerrParts = [...mapSelectionState].slice(0, 3).map(code => {
   return { label: zeLabelMap.get(code) || code, data };
 });
 
-display(renderButterflyMulti({
-  franceData: eaeFranceParts,
-  territories: eaeTerrParts,
-  options: { barHeight: 22, widthPart: 90, widthEvol: 90, widthLabels: 110, evolLabel: `Évol. ${eaePeriodeLabel}` }
-}));
+{
+  const chart = renderButterflyMulti({
+    franceData: eaeFranceParts,
+    territories: eaeTerrParts,
+    options: { barHeight: 18, widthPart: 105, widthEvol: 105, widthLabels: 110, evolLabel: `Évol. ${eaePeriodeLabel}` }
+  });
+  if (eaeTerrParts.length === 0) {
+    const hint = document.createElement('div');
+    hint.style.cssText = 'margin-left:12px;padding:15px 20px;background:#f0f9ff;border:1px dashed #93c5fd;border-radius:6px;display:flex;align-items:center;justify-content:center;text-align:center;color:#2563eb;font-size:11px;min-height:80px;';
+    hint.innerHTML = '<span><strong>Sélectionnez des ZE</strong><br>pour comparer</span>';
+    chart.appendChild(hint);
+  }
+  display(chart);
+}
 ```
 
 <p style="font-size:9px;color:#6b7280;margin:6px 0 0 0;">
@@ -737,7 +764,7 @@ display(renderButterflyMulti({
 // Mapper période vers URSSAF : 16-23/19-23 → évol 5 ans (19-24), 22-24 → évol 2 ans (22-24)
 const urssafPeriode = bfPeriode === "22-24" ? "22-24" : "19-24";
 const urssafNote = bfPeriode === "16-23" ? " (URSSAF démarre en 2019)" : "";
-display(html`<h4 style="margin:0 0 10px 0;font-size:13px;color:#1e40af;">Emploi privé ${bfNiveauUrssaf} — ${urssafPeriode}${urssafNote}</h4>`);
+display(html`<h4 style="margin:0 0 10px 0;font-size:14px;color:#1e40af;">URSSAF — Emploi privé ${bfNiveauUrssaf} (${urssafPeriode})${urssafNote}</h4>`);
 ```
 
 ```js
@@ -756,23 +783,32 @@ const bfFranceDataUrssaf = (() => {
       .filter(d => d.a21 && d.a21 !== "")
       .map(d => ({ secteur: d.lib, pct: d.pct_24, evol: d[evolColUrssaf], is: 1.0 }));
   } else {
-    // A38 : calculer depuis données ZE (moyenne pondérée ou fr_pct_24)
+    // A38 : agréger effectifs ZE pour calculer France evol
     const a38Data = bfUrssafData.toArray();
     const secteurs = new Map();
     for (const d of a38Data) {
       if (!secteurs.has(d.a38)) {
-        secteurs.set(d.a38, { lib: d.lib, fr_pct: d.fr_pct_24, evol: d[evolColUrssaf] });
+        secteurs.set(d.a38, { lib: d.lib, fr_pct: d.fr_pct_24, eff_19: 0, eff_22: 0, eff_24: 0 });
       }
+      const s = secteurs.get(d.a38);
+      s.eff_19 += d.eff_19 || 0;
+      s.eff_22 += d.eff_22 || 0;
+      s.eff_24 += d.eff_24 || 0;
     }
     return [...secteurs.values()]
       .filter(d => d.fr_pct != null)
-      .map(d => ({ secteur: d.lib, pct: d.fr_pct, evol: d.evol, is: 1.0 }))
+      .map(d => {
+        const evol = evolColUrssaf === "evol_2224"
+          ? (d.eff_22 > 0 ? Math.round(1000 * (d.eff_24 - d.eff_22) / d.eff_22) / 10 : null)
+          : (d.eff_19 > 0 ? Math.round(1000 * (d.eff_24 - d.eff_19) / d.eff_19) / 10 : null);
+        return { secteur: d.lib, pct: d.fr_pct, evol, is: 1.0 };
+      })
       .sort((a, b) => b.pct - a.pct);
   }
 })();
 
 // Territoires URSSAF (inline pour éviter problème closure)
-const bfTerritoriesUrssaf = [...mapSelectionState].slice(0, 3).map(code => {
+const bfTerritoriesUrssaf = [...mapSelectionState].map(code => {
   const rows = bfUrssafData.toArray().filter(d => d.code_ze === code);
   return {
     label: zeLabelMap.get(code) || code,
@@ -793,15 +829,24 @@ const bfOptionsUrssaf = {
   barHeight: bfNiveauUrssaf === "A21" ? 16 : 12,  // Tassé pour A21/A38
   widthPart: 120,
   widthEvol: 120,
-  widthLabels: bfNiveauUrssaf === "A21" ? 90 : 75,  // Labels plus courts
+  widthLabels: bfNiveauUrssaf === "A21" ? 100 : 95,  // Labels élargis
   evolLabel: evolLabelMap[urssafPeriode]
 };
 
-display(renderButterflyMulti({
-  franceData: bfFranceDataUrssaf,
-  territories: bfTerritoriesUrssaf,
-  options: bfOptionsUrssaf
-}));
+{
+  const chart = renderButterflyMulti({
+    franceData: bfFranceDataUrssaf,
+    territories: bfTerritoriesUrssaf,
+    options: bfOptionsUrssaf
+  });
+  if (bfTerritoriesUrssaf.length === 0) {
+    const hint = document.createElement('div');
+    hint.style.cssText = 'margin-left:12px;padding:15px 20px;background:#f0f9ff;border:1px dashed #93c5fd;border-radius:6px;display:flex;align-items:center;justify-content:center;text-align:center;color:#2563eb;font-size:11px;min-height:80px;';
+    hint.innerHTML = '<span><strong>Sélectionnez des ZE</strong><br>pour comparer</span>';
+    chart.appendChild(hint);
+  }
+  display(chart);
+}
 ```
 
 <p style="font-size:9px;color:#6b7280;margin:4px 0 0 0;">

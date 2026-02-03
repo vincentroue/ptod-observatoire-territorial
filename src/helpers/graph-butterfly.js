@@ -116,7 +116,7 @@ export function renderButterflyMulti({ franceData, territories = [], options = {
       marginTop: 0,
       marginBottom: 0,
       x: { domain: [maxPct, 0], axis: null },
-      y: { domain: sectorOrder, axis: null, padding: 0 },
+      y: { domain: sectorOrder, axis: null, padding: 0.12 },
       marks: [
         Plot.barX(data, {
           x: "pct",
@@ -143,6 +143,7 @@ export function renderButterflyMulti({ franceData, territories = [], options = {
     chartRow.appendChild(plotPart);
 
     // Labels secteurs centrés (colonne séparée)
+    const maxLabelLen = Math.round(widthLabels / 7);  // ~1 char = 7px à fontSize 10
     const plotLabels = Plot.plot({
       width: widthLabels,
       height: plotHeight,
@@ -151,19 +152,29 @@ export function renderButterflyMulti({ franceData, territories = [], options = {
       marginTop: 0,
       marginBottom: 0,
       x: { domain: [0, 1], axis: null },
-      y: { domain: sectorOrder, axis: null, padding: 0 },
+      y: { domain: sectorOrder, axis: null, padding: 0.12 },
       marks: [
-        Plot.text(sectorOrder.map(s => ({ secteur: s })), {
-          x: 0.5,
+        Plot.text(sectorOrder.map(s => ({
+          secteur: s,
+          short: s.length > maxLabelLen ? s.substring(0, maxLabelLen - 1) + "…" : s
+        })), {
+          x: 0.02,
           y: "secteur",
-          text: "secteur",
-          textAnchor: "middle",
+          text: "short",
+          title: "secteur",  // Tooltip full name on hover
+          textAnchor: "start",
           fontSize: 10,
-          fontWeight: "500",
-          fill: "#374151"
+          fontWeight: "600",
+          fill: "#1f2937",
+          stroke: "#fff",
+          strokeWidth: 2,
+          paintOrder: "stroke"
         })
       ]
     });
+    // Labels can overflow slightly into adjacent columns
+    const labelSvg = plotLabels.querySelector("svg") || plotLabels;
+    labelSvg.style.overflow = "visible";
     chartRow.appendChild(plotLabels);
 
     // Évolution moyenne
@@ -178,7 +189,7 @@ export function renderButterflyMulti({ franceData, territories = [], options = {
       marginTop: 0,
       marginBottom: 0,
       x: { domain: [minEvol, maxEvol], axis: null },
-      y: { domain: sectorOrder, axis: null, padding: 0 },
+      y: { domain: sectorOrder, axis: null, padding: 0.12 },
       marks: [
         // Barres secteurs
         Plot.barX(data, {

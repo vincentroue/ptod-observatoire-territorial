@@ -207,6 +207,8 @@ export function renderIndice100Chart(data, {
       range: sectors.map(s => PALETTE_A5[s] || "#999")
     },
     marks: [
+      // Axe X plein léger (bas du graphique)
+      Plot.ruleY([minY], { stroke: "#d1d5db", strokeWidth: 0.5 }),
       // Ligne base 100
       Plot.ruleY([100], { stroke: "#bbb", strokeDasharray: "3,2" }),
       // Lignes séries
