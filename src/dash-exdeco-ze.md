@@ -370,7 +370,7 @@ if (vbCodes.length > 0) {
       width: 540,
       maxSectors: 12,
       barHeight: 18,
-      title: "Structure sectorielle FLORES A21 (2023)"
+      title: "Répartition de l'emploi total par secteur d'activité (A21)"
     }
   }));
 } else {
@@ -500,7 +500,7 @@ void 0;
 </div>
 
 <!-- &s INDICES_100_MULTI — Indice 100 France + territoires sélectionnés -->
-<h3 style="margin-top:24px;font-size:16px;">Évolution emploi par secteur (indice base 100)</h3>
+<h3 style="margin-top:24px;font-size:16px;text-align:left;">Emploi salarié total — Évolution par secteur (indice base 100)</h3>
 
 <div class="card" style="padding:12px;">
 
@@ -643,10 +643,14 @@ display(indice100Container);
 <!-- &e INDICES_100_MULTI -->
 
 <!-- &s GRAPH_BUTTERFLY_POC — POC multi-territoires avec helper -->
-<h3 style="margin-top:24px;font-size:16px;">Structure sectorielle — Part emploi et évolution</h3>
+<h3 style="margin-top:24px;font-size:16px;text-align:left;">Structure sectorielle — Part et évolution de l'emploi</h3>
 
-<!-- Contrôles partagés : Niveau URSSAF + Période (synchronisée entre les 2 graphiques) -->
-<div style="display:flex;gap:24px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+<!-- EAE205 A5 + URSSAF — Contrôles dans le card -->
+<div class="card" style="padding:12px;margin-bottom:12px;">
+
+<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+<h4 style="margin:0;font-size:14px;color:#1e40af;">Emploi salarié total — 5 grands secteurs</h4>
+<div style="display:flex;gap:16px;align-items:center;">
 
 ```js
 // Niveau URSSAF (A21 ou A38)
@@ -668,15 +672,12 @@ const bfPeriode = view(Inputs.radio([...periodOptions.keys()], {
 ```
 
 </div>
-
-<!-- EAE205 A5 (5 secteurs) - Emploi salarié -->
-<div class="card" style="padding:12px;margin-bottom:12px;">
+</div>
 
 ```js
 // Pour 22-24, EAE205 utilise 22-23 (arrêt en 2023)
 const eaePeriodeLabel = bfPeriode === "22-24" ? "22-23" : bfPeriode;
 const eaeNote = bfPeriode === "22-24" ? " (EAE s'arrête en 2023)" : "";
-display(html`<h4 style="margin:0 0 10px 0;font-size:14px;color:#1e40af;">EAE205 — Emploi salarié, 5 grands secteurs (${eaePeriodeLabel})${eaeNote}</h4>`);
 ```
 
 ```js
@@ -740,7 +741,7 @@ const eaeTerrParts = [...mapSelectionState].map(code => {
   const chart = renderButterflyMulti({
     franceData: eaeFranceParts,
     territories: eaeTerrParts,
-    options: { barHeight: 18, widthPart: 105, widthEvol: 105, widthLabels: 110, evolLabel: `Évol. ${eaePeriodeLabel}` }
+    options: { barHeight: 18, widthPart: 105, widthEvol: 105, widthLabels: 110, evolLabel: `Évol. ${eaePeriodeLabel}`, capEvol: 30 }
   });
   if (eaeTerrParts.length === 0) {
     const hint = document.createElement('div');
@@ -764,7 +765,7 @@ const eaeTerrParts = [...mapSelectionState].map(code => {
 // Mapper période vers URSSAF : 16-23/19-23 → évol 5 ans (19-24), 22-24 → évol 2 ans (22-24)
 const urssafPeriode = bfPeriode === "22-24" ? "22-24" : "19-24";
 const urssafNote = bfPeriode === "16-23" ? " (URSSAF démarre en 2019)" : "";
-display(html`<h4 style="margin:0 0 10px 0;font-size:14px;color:#1e40af;">URSSAF — Emploi privé ${bfNiveauUrssaf} (${urssafPeriode})${urssafNote}</h4>`);
+display(html`<h4 style="margin:0 0 10px 0;font-size:14px;color:#1e40af;">Emploi privé URSSAF — ${bfNiveauUrssaf}${urssafNote}</h4>`);
 ```
 
 ```js
@@ -830,7 +831,8 @@ const bfOptionsUrssaf = {
   widthPart: 120,
   widthEvol: 120,
   widthLabels: bfNiveauUrssaf === "A21" ? 100 : 95,  // Labels élargis
-  evolLabel: evolLabelMap[urssafPeriode]
+  evolLabel: evolLabelMap[urssafPeriode],
+  capEvol: 30  // Cap barres à ±30% (évite qu'un outlier écrase tout en A38)
 };
 
 {
@@ -1005,7 +1007,7 @@ if (treemapZeCode) {
 <!-- &e LAYOUT_MAIN -->
 
 <!-- &s SLOPE_CHART_BOTTOM — Structure sectorielle France 2000-2023 -->
-<h3 style="margin-top:24px;">Structure emploi — Évolution sectorielle France</h3>
+<h3 style="margin-top:24px;text-align:left;">Structure emploi — Évolution sectorielle France</h3>
 
 <div class="card" style="max-width:500px;padding:12px;">
 
@@ -1087,7 +1089,7 @@ display(courbeUrssaf);
 <!-- &e RESERVE_URSSAF -->
 
 <!-- &s PIVOTS_SECTEURS — FLORES + URSSAF côte à côte (déplacé en bas) -->
-<h3 style="margin-top:24px;">Structure sectorielle — Emploi total (FLORES) vs Emploi privé (URSSAF)</h3>
+<h3 style="margin-top:24px;text-align:left;">Structure sectorielle — Emploi total (FLORES) vs Emploi privé (URSSAF)</h3>
 
 <div style="margin-bottom:12px;">
 

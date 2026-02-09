@@ -499,7 +499,7 @@ export function renderTable({ data, columns, stats, sortCol, sortAsc, setSort, i
 
       // Create container with top scroll + main content
       const container = document.createElement("div");
-      container.style.cssText = "display:flex;flex-direction:column;";
+      container.style.cssText = "display:flex;flex-direction:column;flex:1;min-height:0;";
 
       // Top scrollbar (fake div that shows scrollbar)
       const topScroll = document.createElement("div");
@@ -512,7 +512,7 @@ export function renderTable({ data, columns, stats, sortCol, sortAsc, setSort, i
       // Main content scroll area
       const mainScroll = document.createElement("div");
       mainScroll.id = mainScrollId;
-      mainScroll.style.cssText = mainWrapperStyle;
+      mainScroll.style.cssText = mainWrapperStyle + "flex:1;min-height:0;";
       mainScroll.appendChild(tableEl);
 
       container.appendChild(topScroll);
@@ -770,10 +770,105 @@ export function createTableToolbar(config) {
   csvBtn.onclick = onExportCSV;
   toolbar.appendChild(csvBtn);
 
+  // Bouton plein écran (si callback fourni)
+  if (config.onFullscreen) {
+    const fsBtn = document.createElement("button");
+    fsBtn.textContent = "⤢";
+    fsBtn.title = "Plein écran";
+    fsBtn.className = "table-btn-fullscreen";
+    fsBtn.style.cssText = "font-size:14px;padding:4px 8px;cursor:pointer;background:#f3f4f6;border:1px solid #d1d5db;border-radius:3px;";
+    fsBtn.onclick = config.onFullscreen;
+    toolbar.appendChild(fsBtn);
+  }
+
   return toolbar;
 }
 
 // &e TABLE_TOOLBAR
+
+// =============================================================================
+// &s TABLE_FULLSCREEN — Plein écran CSS-in-place (pas de MOVE DOM)
+// =============================================================================
+
+/**
+ * Ouvre un tableau en plein écran via CSS position:fixed IN PLACE.
+ * L'élément reste dans le DOM Observable → tri/filtre/re-render fonctionnent.
+ * Un MutationObserver ré-applique le style fullscreen si Observable recrée l'élément.
+ *
+ * @param {HTMLElement} tableSourceEl - Élément contenant le tableau
+ */
+export function openTableFullscreen(tableSourceEl) {
+  const targetClass = tableSourceEl.className.split(" ")[0];
+  const parentEl = tableSourceEl.parentNode;
+  let currentEl = tableSourceEl;
+  let origStyle = tableSourceEl.style.cssText;
+
+  // Backdrop
+  const backdrop = document.createElement("div");
+  backdrop.style.cssText = "position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0);z-index:9998;transition:background 0.2s;";
+  document.body.appendChild(backdrop);
+  requestAnimationFrame(() => { backdrop.style.background = "rgba(0,0,0,0.65)"; });
+
+  function applyFullscreen(el) {
+    origStyle = el.style.cssText;
+    // Unlock inner scroll constraints
+    el.querySelectorAll("div").forEach(d => {
+      if (d.style.maxHeight && d.style.maxHeight !== "none") {
+        d.dataset.origmh = d.style.maxHeight;
+        d.style.maxHeight = "none";
+      }
+    });
+    // Fullscreen via CSS in place (element stays in Observable DOM)
+    el.style.cssText = "position:fixed;top:4vh;left:4vw;width:92vw;height:88vh;max-width:1600px;"
+      + "z-index:9999;padding:16px;background:white;border-radius:8px;"
+      + "box-shadow:0 8px 32px rgba(0,0,0,0.3);overflow:auto;";
+    // Close button
+    if (!el.querySelector(".tbl-fs-close")) {
+      const btn = document.createElement("button");
+      btn.innerHTML = "&times;";
+      btn.className = "tbl-fs-close";
+      btn.style.cssText = "position:sticky;top:0;float:right;font-size:26px;background:white;"
+        + "border:none;cursor:pointer;color:#666;z-index:10;line-height:1;padding:0 4px;";
+      btn.onclick = close;
+      el.insertBefore(btn, el.firstChild);
+    }
+    currentEl = el;
+  }
+
+  applyFullscreen(tableSourceEl);
+
+  // Observer : quand Observable re-render (tri/filtre), ré-appliquer fullscreen au nouvel élément
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      for (const node of m.addedNodes) {
+        if (node.nodeType === 1 && node.classList?.contains(targetClass)) {
+          applyFullscreen(node);
+        }
+      }
+    }
+  });
+  observer.observe(parentEl, { childList: true });
+
+  function close() {
+    observer.disconnect();
+    // Restaurer styles
+    currentEl.style.cssText = origStyle;
+    currentEl.querySelectorAll("[data-origmh]").forEach(d => {
+      d.style.maxHeight = d.dataset.origmh;
+      delete d.dataset.origmh;
+    });
+    const btn = currentEl.querySelector(".tbl-fs-close");
+    if (btn) btn.remove();
+    backdrop.remove();
+    document.removeEventListener("keydown", onEsc);
+  }
+
+  const onEsc = (e) => { if (e.key === "Escape") close(); };
+  document.addEventListener("keydown", onEsc);
+  backdrop.onclick = close;
+}
+
+// &e TABLE_FULLSCREEN
 
 // =============================================================================
 // &s BUILD_COLUMNS — Construction colonnes dynamiques

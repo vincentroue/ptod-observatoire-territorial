@@ -225,11 +225,12 @@ export function createScatterWithZoom(config) {
   let currentYDomain = [...originalYDomain];
   let isModal = false;
   let modalCleanup = null;
+  let isDragging = false;
 
   // --- Container principal ---
   const container = document.createElement("div");
   container.className = "scatter-container";
-  container.style.cssText = "position:relative;background:white;border:1px solid #e5e7eb;border-radius:4px;padding:8px 12px;margin:8px 0;max-width:820px;";
+  container.style.cssText = "position:relative;background:white;border:none;border-radius:0;padding:8px 0 8px 0;margin:8px 0 8px 0;width:830px;";
   const origStyle = container.style.cssText;
 
   // --- Header : titre + boutons ---
@@ -254,7 +255,7 @@ export function createScatterWithZoom(config) {
 
   const zoomInBtn = mkBtn("+", "Zoom avant");
   const zoomOutBtn = mkBtn("−", "Zoom arrière");
-  const resetBtn = mkBtn("↺", "Reset zoom");
+  const resetBtn = mkBtn("⌂", "Reset zoom");
   const expandBtn = mkBtn("⤢", "Plein écran", "font-size:15px;");
 
   [zoomInBtn, zoomOutBtn, resetBtn, expandBtn].forEach(b => btnRow.appendChild(b));
@@ -264,7 +265,7 @@ export function createScatterWithZoom(config) {
   // --- Légende ---
   if (legend.length > 0) {
     const legendEl = document.createElement("div");
-    legendEl.style.cssText = "display:flex;gap:12px;font-size:11px;color:#6b7280;align-items:center;margin-bottom:8px;flex-wrap:wrap;";
+    legendEl.style.cssText = "display:flex;gap:12px;font-size:11px;color:#6b7280;align-items:center;margin-bottom:8px;flex-wrap:wrap;padding-left:8px;";
     legend.forEach(item => {
       const span = document.createElement("span");
       span.style.cssText = "display:flex;align-items:center;gap:3px;";
@@ -309,6 +310,25 @@ export function createScatterWithZoom(config) {
     const yZoom = (originalYDomain[1] - originalYDomain[0]) / (currentYDomain[1] - currentYDomain[0]);
     const zoomFactor = Math.max(1, (xZoom + yZoom) / 2);
 
+    // Progressive labels: expand candidates based on zoom level (like maps)
+    const baseLabelCodes = scatterConfig.labelCodes || [];
+    const MAX_BASE = Math.max(baseLabelCodes.length, 8);
+    const maxLabels = Math.round(MAX_BASE + 15 * Math.log2(Math.max(1, zoomFactor)));
+    const allByPop = scatterConfig.data
+      .filter(d => d[scatterConfig.xCol] != null && d[scatterConfig.yCol] != null)
+      .sort((a, b) => (b.P23_POP || 0) - (a.P23_POP || 0));
+    const dynamicLabels = [...baseLabelCodes];
+    for (const d of allByPop) {
+      if (dynamicLabels.length >= maxLabels) break;
+      if (!dynamicLabels.includes(d.code)) dynamicLabels.push(d.code);
+    }
+
+    // Bulles grossissent avec le zoom (facteur amorti logarithmique)
+    const radiusBoost = 1 + 0.4 * Math.log2(Math.max(1, zoomFactor));
+    const boostedGetRadius = scatterConfig.getRadius
+      ? (d) => scatterConfig.getRadius(d) * radiusBoost
+      : undefined;
+
     const scatter = renderScatter({
       ...scatterConfig,
       xDomain: currentXDomain,
@@ -316,7 +336,9 @@ export function createScatterWithZoom(config) {
       width: dims.width,
       height: dims.height,
       zoomFactor,
-      _customTooltip: true
+      labelCodes: dynamicLabels,
+      _customTooltip: true,
+      ...(boostedGetRadius ? { getRadius: boostedGetRadius } : {})
     });
     plotContainer.insertBefore(scatter, tooltip);
     currentPlot = scatter;
@@ -324,8 +346,9 @@ export function createScatterWithZoom(config) {
     // --- Tooltip event delegation sur circles ---
     const validData = scatter._tipData;
     if (validData && scatterConfig.getTooltip) {
-      scatter.style.cursor = "crosshair";
+      scatter.style.cursor = "grab";
       scatter.addEventListener("mousemove", (e) => {
+        if (isDragging) { tooltip.style.display = "none"; return; }
         const circle = e.target.closest("circle");
         if (!circle) { tooltip.style.display = "none"; return; }
         const circles = Array.from(scatter.querySelectorAll("circle"));
@@ -390,6 +413,44 @@ export function createScatterWithZoom(config) {
     if (wheelRAF) cancelAnimationFrame(wheelRAF);
     wheelRAF = requestAnimationFrame(redraw);
   }, { passive: false });
+
+  // --- Click+drag pan : shift domain with mouse (like maps) ---
+  plotContainer.style.cursor = "grab";
+  plotContainer.addEventListener("mousedown", (e) => {
+    if (e.target.closest("circle")) return;
+    if (e.button !== 0) return;
+    isDragging = true;
+    const startPos = { x: e.clientX, y: e.clientY };
+    const startDomain = { x: [...currentXDomain], y: [...currentYDomain] };
+    plotContainer.style.cursor = "grabbing";
+
+    const onMove = (ev) => {
+      if (!isDragging) return;
+      const dims = getDims();
+      const ml = 55, mt = 10, mr = 20, mb = 50;
+      const pw = dims.width - ml - mr;
+      const ph = dims.height - mt - mb;
+      const dx = ev.clientX - startPos.x;
+      const dy = ev.clientY - startPos.y;
+      const xRange = startDomain.x[1] - startDomain.x[0];
+      const yRange = startDomain.y[1] - startDomain.y[0];
+      currentXDomain = [startDomain.x[0] - (dx / pw) * xRange, startDomain.x[1] - (dx / pw) * xRange];
+      currentYDomain = [startDomain.y[0] + (dy / ph) * yRange, startDomain.y[1] + (dy / ph) * yRange];
+      if (wheelRAF) cancelAnimationFrame(wheelRAF);
+      wheelRAF = requestAnimationFrame(redraw);
+    };
+
+    const onUp = () => {
+      isDragging = false;
+      plotContainer.style.cursor = "grab";
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    e.preventDefault();
+  });
 
   // --- Boutons zoom ---
   zoomInBtn.addEventListener("click", () => {

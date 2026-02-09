@@ -113,7 +113,8 @@ import {
   renderPagination,     // (total, page, setPage) → pagination HTML
   renderTable,          // ({data, columns, stats}) → table HTML
   createTableToolbar,   // ({onSearch, onExportCSV}) → toolbar HTML
-  exportCSV             // (data, columns, filename) → télécharge CSV
+  exportCSV,            // (data, columns, filename) → télécharge CSV
+  openTableFullscreen   // (tableEl) → modal plein écran
 } from "./helpers/0table.js";
 
 // === graph-options.js — Export SVG (simplifié) ===
@@ -450,8 +451,8 @@ const zoomLabel = labelMap?.get(zoomCode) || zoomCode;
 <div style="display:flex;gap:12px;align-items:stretch;">
 
 <!-- COLONNE GAUCHE : titre + 4 cartes (France + Zoom) -->
-<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:4px;">
-<h3 style="margin:0 0 0 8px;">Vue France par ${echelon} // Focus communes : ${zoomLabel}</h3>
+<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:4px;padding-left:6px;">
+<h3 style="margin:0 0 0 0;">Vue France par ${echelon} // Focus communes : ${zoomLabel}</h3>
 
 ```js
 // Zoom state persistant entre re-renders (survit aux changements labelBy/labelMode)
@@ -512,6 +513,14 @@ const wrapper1 = createMapWrapper(map1, null, legend1, addZoomBehavior(map1, {
 }), {
   exportSVGFn: exportSVG, echelon, colKey: colKey1, title: label1
 });
+// Moyenne France 00FR
+const frVal1 = frData?.[colKey1];
+if (frVal1 != null) {
+  const frLbl1 = document.createElement("div");
+  frLbl1.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;font-style:italic;";
+  frLbl1.textContent = `Moy. France : ${formatValue(indic1, frVal1)}`;
+  wrapper1.appendChild(frLbl1);
+}
 display(wrapper1);
 ```
 
@@ -568,6 +577,14 @@ const wrapper2 = createMapWrapper(map2, null, legend2, addZoomBehavior(map2, {
 }), {
   exportSVGFn: exportSVG, echelon, colKey: colKey2, title: label2
 });
+// Moyenne France 00FR
+const frVal2 = frData?.[colKey2];
+if (frVal2 != null) {
+  const frLbl2 = document.createElement("div");
+  frLbl2.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;font-style:italic;";
+  frLbl2.textContent = `Moy. France : ${formatValue(indic2, frVal2)}`;
+  wrapper2.appendChild(frLbl2);
+}
 display(wrapper2);
 ```
 
@@ -728,10 +745,12 @@ const scatterEmpData = (() => {
   return filtered.sort((a, b) => b.P23_POP - a.P23_POP);
 })();
 
-// Scale pow(0.65) pour taille bulles — plus de contraste que sqrt (0.5)
+// Scale pow(0.5) pour taille bulles — domaine capé P90 pour éviter que Paris écrase tout
 const popExtentEmp = d3.extent(scatterEmpData, d => d.P23_POP);
-const minRadiusEmp = scatterEmpData.length < 20 ? 8 : scatterEmpData.length < 50 ? 4 : 1.5;
-const radiusScaleEmp = d3.scalePow().exponent(0.65).domain(popExtentEmp).range([minRadiusEmp, 60]);
+const popSortedEmp = scatterEmpData.map(d => d.P23_POP || 0).sort((a, b) => a - b);
+const popP90Emp = popSortedEmp[Math.floor(popSortedEmp.length * 0.90)] || popExtentEmp[1];
+const minRadiusEmp = scatterEmpData.length < 20 ? 8 : scatterEmpData.length < 50 ? 5 : 3;
+const radiusScaleEmp = d3.scalePow().exponent(0.5).domain([popExtentEmp[0], popP90Emp]).range([minRadiusEmp, 40]).clamp(true);
 
 // Couleur par densité
 const getDensColorEmp = (d) => {
@@ -787,7 +806,7 @@ const scatterEmpContainer = createScatterWithZoom({
   isSelected: d => mapSelectionState.has(d.code),
   getTooltip: d => `${d.libelle || d.code}\nEmploi: ${d.eco_emp_vtcam_1622?.toFixed(2)}%/an\nSMA: ${d.dm_sma_vtcam_1622?.toFixed(2)}%/an\nPop 2023: ${d.P23_POP?.toLocaleString("fr-FR")}\nDensité: ${d.dens3 === "1" ? "Urbain" : d.dens3 === "2" ? "Intermédiaire" : "Rural"}`,
   fillOpacity: 0.6,
-  width: 790,
+  width: 820,
   height: 400,
   labelCodes: scatterEmpLabelCodes,
   labelMode: labelMode
@@ -823,10 +842,12 @@ const scatterIdxData = (() => {
   return filtered.sort((a, b) => b.P23_POP - a.P23_POP);
 })();
 
-// Scale pow(0.65) pour taille bulles — plus de contraste que sqrt (0.5)
+// Scale pow(0.5) pour taille bulles — domaine capé P90
 const popExtentIdx = d3.extent(scatterIdxData, d => d.P23_POP);
-const minRadiusIdx = scatterIdxData.length < 20 ? 8 : scatterIdxData.length < 50 ? 4 : 1.5;
-const radiusScaleIdx = d3.scalePow().exponent(0.65).domain(popExtentIdx).range([minRadiusIdx, 60]);
+const popSortedIdx = scatterIdxData.map(d => d.P23_POP || 0).sort((a, b) => a - b);
+const popP90Idx = popSortedIdx[Math.floor(popSortedIdx.length * 0.90)] || popExtentIdx[1];
+const minRadiusIdx = scatterIdxData.length < 20 ? 8 : scatterIdxData.length < 50 ? 5 : 3;
+const radiusScaleIdx = d3.scalePow().exponent(0.5).domain([popExtentIdx[0], popP90Idx]).range([minRadiusIdx, 40]).clamp(true);
 
 // Couleur par densité
 const getDensColorIdx = (d) => {
@@ -876,7 +897,7 @@ const scatterIdxContainer = createScatterWithZoom({
   isSelected: d => mapSelectionState.has(d.code),
   getTooltip: d => `${d.libelle || d.code}\nRésid: ${d.idxresid_dyn_ind_1622?.toFixed(1)}\nÉco: ${d.idxeco_tot_ind_1724?.toFixed(1)}\nPop 2023: ${d.P23_POP?.toLocaleString("fr-FR")}\nDensité: ${d.dens3 === "1" ? "Urbain" : d.dens3 === "2" ? "Intermédiaire" : "Rural"}`,
   fillOpacity: 0.6,
-  width: 790,
+  width: 820,
   height: 400,
   labelCodes: scatterIdxLabelCodes,
   labelMode: labelMode
@@ -907,7 +928,7 @@ const setEchSort2 = (col) => {
 
 ```js
 // === SEARCHBAR TABLEAU ÉCHELON (viewof pattern) ===
-const echSearchInput = view(Inputs.text({ placeholder: "Taper pour filtrer territoires...", width: 200 }));
+const echSearchInput = view(Inputs.text({ placeholder: "1ers caract. territoire ou n° dép...", width: 200 }));
 ```
 
 ```js
@@ -959,18 +980,25 @@ const echColumns2 = [
   })
 ];
 
-// Header : count + export (searchbar déjà affichée par viewof)
+// Header : count + export + fullscreen (searchbar déjà affichée par viewof)
 display(html`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
   <span style="font-size:10px;color:#6b7280;">${echFiltered2.length} terr.</span>
-  <button style="font-size:10px;padding:2px 6px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:3px;cursor:pointer;"
-    onclick=${() => exportCSV(echSorted2, echColumns2, echelon.replace(/[^a-zA-Z]/g, "") + "_" + new Date().toISOString().slice(0,10) + ".csv")}>
-    📥
-  </button>
+  <div style="display:flex;gap:4px;">
+    <button style="font-size:10px;padding:2px 6px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:3px;cursor:pointer;"
+      onclick=${() => exportCSV(echSorted2, echColumns2, echelon.replace(/[^a-zA-Z]/g, "") + "_" + new Date().toISOString().slice(0,10) + ".csv")}>
+      📥
+    </button>
+    <button style="font-size:12px;padding:2px 6px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:3px;cursor:pointer;" title="Plein écran"
+      onclick=${() => { const t = document.querySelector(".ech-table-fs-target"); if (t) openTableFullscreen(t); }}>
+      ⤢
+    </button>
+  </div>
 </div>`);
 
 // Tableau compact avec scroll vertical pour couvrir hauteur 4 cartes + scatter
 // Wrapper flex-grow pour que le tableau remplisse tout l'espace disponible
 const tableWrapper = document.createElement("div");
+tableWrapper.className = "ech-table-fs-target";
 tableWrapper.style.cssText = "flex:1;display:flex;flex-direction:column;min-height:0;";
 
 const tableEl = renderTable({
@@ -989,6 +1017,7 @@ const tableEl = renderTable({
 });
 tableWrapper.appendChild(tableEl);
 display(tableWrapper);
+void 0;
 ```
 
 </div><!-- card -->
@@ -1006,7 +1035,7 @@ display(tableWrapper);
 ```js
 // === INPUT RECHERCHE TABLEAU (viewof pattern Observable) ===
 const tableSearchInput = view(Inputs.text({
-  placeholder: "Taper pour filtrer territoires...",
+  placeholder: "1ers caract. territoire ou n° dép...",
   width: 240
 }));
 ```
@@ -1091,11 +1120,15 @@ const columns = [
 ```
 
 ```js
-// Bouton export CSV (l'input search est déjà affiché par le view() ci-dessus)
-display(html`<div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+// Bouton export CSV + fullscreen (l'input search est déjà affiché par le view() ci-dessus)
+display(html`<div style="display:flex;justify-content:flex-end;gap:8px;margin-bottom:8px;">
   <button style="font-size:11px;padding:4px 10px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;"
     onclick=${() => exportCSV(sorted, columns, "communes_" + echelon + "_" + new Date().toISOString().slice(0,10) + ".csv")}>
-    📥 Export CSV
+    📥
+  </button>
+  <button style="font-size:14px;padding:4px 10px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;" title="Plein écran"
+    onclick=${() => { const t = document.querySelector(".comm-table-fs-target"); if (t) openTableFullscreen(t); }}>
+    ⤢
   </button>
 </div>`);
 ```
@@ -1107,7 +1140,9 @@ display(renderPagination(sorted.length, currentPage, setPage, PAGE_SIZE_DEFAULT,
 ```
 
 ```js
-display(renderTable({
+const _commTblWrap = document.createElement("div");
+_commTblWrap.className = "comm-table-fs-target";
+_commTblWrap.appendChild(renderTable({
   data: paged,
   columns,
   stats,
@@ -1120,6 +1155,8 @@ display(renderTable({
   scrollbarTop: true,
   maxHeight: 600
 }));
+display(_commTblWrap);
+void 0;
 ```
 
 </div>

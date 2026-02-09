@@ -46,7 +46,8 @@ export function renderButterflyMulti({ franceData, territories = [], options = {
     widthPart = 100,       // Réduit (était 160)
     widthEvol = 120,       // Réduit (était 160)
     widthLabels = 110,     // Réduit (était 120)
-    evolLabel = "Évol. 22→23 (%)"  // Configurable selon source
+    evolLabel = "Évol. 22→23 (%)",  // Configurable selon source
+    capEvol = null          // Cap barres évol à ±N% (ex: 30)
   } = options;
 
   // Ordre secteurs = ordre France (par part décroissante)
@@ -60,8 +61,11 @@ export function renderButterflyMulti({ franceData, territories = [], options = {
   // Domaines axes - SERRÉ pour barres plus visibles
   const allData = [franceData, ...territories.map(t => t.data)].flat();
   const maxPct = Math.ceil(Math.max(...allData.map(d => d.pct || 0)) / 5) * 5 + 2;  // Marge réduite
-  const minEvol = Math.floor(Math.min(...allData.map(d => d.evol || 0))) - 2;
-  const maxEvol = Math.ceil(Math.max(...allData.map(d => d.evol || 0))) + 2;
+  const rawMinEvol = Math.floor(Math.min(...allData.map(d => d.evol || 0))) - 2;
+  const rawMaxEvol = Math.ceil(Math.max(...allData.map(d => d.evol || 0))) + 2;
+  // Cap évol domain si option active (évite qu'un outlier écrase tout)
+  const minEvol = capEvol ? Math.max(-capEvol, rawMinEvol) : rawMinEvol;
+  const maxEvol = capEvol ? Math.min(capEvol, rawMaxEvol) : rawMaxEvol;
 
   // Aligner données sur ordre France
   const alignData = (data) => {
@@ -191,9 +195,9 @@ export function renderButterflyMulti({ franceData, territories = [], options = {
       x: { domain: [minEvol, maxEvol], axis: null },
       y: { domain: sectorOrder, axis: null, padding: 0.12 },
       marks: [
-        // Barres secteurs
+        // Barres secteurs (cappées si capEvol)
         Plot.barX(data, {
-          x: "evol",
+          x: d => capEvol ? Math.max(-capEvol, Math.min(capEvol, d.evol || 0)) : d.evol,
           y: "secteur",
           fill: d => getEvolColor(d.evol),
           insetTop: 2,
@@ -202,20 +206,23 @@ export function renderButterflyMulti({ franceData, territories = [], options = {
           title: d => `${d.secteur}\nÉvol: ${d.evol > 0 ? '+' : ''}${d.evol?.toFixed(1)}%`
         }),
         Plot.ruleX([0], { stroke: "#999", strokeWidth: 1 }),
-        // Ligne moyenne (pointillé léger, sans fond)
+        // Ligne moyenne (pointillé léger, cappée si besoin)
         ...(avgEvol != null ? [
-          Plot.ruleX([avgEvol], { stroke: "#93c5fd", strokeWidth: 1, strokeDasharray: "3,3" })
+          Plot.ruleX([capEvol ? Math.max(-capEvol, Math.min(capEvol, avgEvol)) : avgEvol], { stroke: "#93c5fd", strokeWidth: 1, strokeDasharray: "3,3" })
         ] : []),
-        // Étiquettes Évol - alignées à droite, COLORÉES selon valeur
+        // Étiquettes Évol - valeur réelle + ▸ si cappée
         Plot.text(data.filter(d => d.evol != null), {
           x: maxEvol,
           y: "secteur",
-          text: d => (d.evol > 0 ? '+' : '') + d.evol?.toFixed(1),
+          text: d => {
+            const val = (d.evol > 0 ? '+' : '') + d.evol?.toFixed(1);
+            return (capEvol && Math.abs(d.evol) > capEvol) ? val + ' ▸' : val;
+          },
           textAnchor: "end",
           dx: -4,
           fontSize: 10,
           fill: d => getEvolLabelColor(d.evol),
-          fontWeight: "500"
+          fontWeight: d => (capEvol && Math.abs(d.evol) > capEvol) ? "700" : "500"
         })
       ]
     });
