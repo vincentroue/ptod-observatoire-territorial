@@ -3,7 +3,7 @@
 // AUTO-GÉNÉRÉ depuis config/ddict_indicateurs_ottd.json + CSV volets (v_*)
 // NE PAS MODIFIER - Relancer: Rscript scripts/util-gen-indicators-js.R
 // Volets: source CSV ddict-validation-light_ottd.csv (colonnes v_*)
-// Généré: 2026-01-30 14:22:38.055165
+// Généré: 2026-02-09 18:53:26.015257
 // =======================================================================
 
 import * as d3 from "npm:d3";
@@ -121,6 +121,36 @@ const DDICT = {
       "long": "2019-2021",
       "duree": 2,
       "source": "Filosofi"
+    },
+    "20": {
+      "short": "2020",
+      "long": "2020",
+      "type": "stock",
+      "source": "LOVAC"
+    },
+    "20_23": {
+      "short": "20-23",
+      "long": "2020-2023",
+      "duree": 3,
+      "source": "LOVAC"
+    },
+    "25": {
+      "short": "2025",
+      "long": "2025",
+      "type": "stock",
+      "source": "ANIL"
+    },
+    "22_25": {
+      "short": "22-25",
+      "long": "2022-2025",
+      "duree": 3,
+      "source": "ANIL"
+    },
+    "20_24": {
+      "short": "20-24",
+      "long": "2020-2024",
+      "duree": 4,
+      "source": "LOVAC"
     }
   },
   "themes": {
@@ -172,6 +202,33 @@ const DDICT = {
       "label": "Revenus/Pauvreté",
       "ordre": 11,
       "source": "Filosofi"
+    },
+    "logv": {
+      "label": "Vacance parc privé",
+      "ordre": 12,
+      "source": "LOVAC/SDES"
+    },
+    "logsr": {
+      "label": "Construction résidentielle",
+      "ordre": 13,
+      "source": "SITADEL/SDES"
+    },
+    "logsn": {
+      "label": "Construction non-résidentielle",
+      "ordre": 14,
+      "source": "SITADEL/SDES"
+    },
+    "logl": {
+      "label": "Loyers prédits",
+      "color": "#8b5cf6",
+      "icon": "home",
+      "ordre": 15
+    },
+    "logs": {
+      "label": "Construction SITADEL",
+      "color": "#f59e0b",
+      "icon": "building",
+      "ordre": 16
     }
   },
   "indicateurs": {
@@ -200,7 +257,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "idxeco_soc_ind": {
       "short": "IDX Attract. éco. (soc)",
@@ -216,7 +274,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "idxeco_tot_ind": {
       "short": "IDX Attract. éco. (tot)",
@@ -232,7 +291,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "idxgentri_ind": {
       "rawObsvACT": "idx_gentri",
@@ -259,13 +319,14 @@ const DDICT = {
         "dmf_tr_pct_22"
       ],
       "srcVarOpt": [
-        "logd_px2_mai_vtcam_1924",
-        "logd_px2_appt_vtcam_1924"
+        "logd_px2_mai_vevol_1924",
+        "logd_px2_appt_vevol_1924"
       ],
       "volets": [],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "idxlogtens_ind": {
       "rawObsvACT": "idx_logtens",
@@ -291,7 +352,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_dm": "══════════ DÉMOGRAPHIE GÉNÉRALE (dm) ══════════",
     "dm_pop_vtcam": {
@@ -320,7 +382,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_sn_vtcam": {
       "rawObsvACT": "tcam_sn",
@@ -349,7 +412,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_pop_vevol": {
       "rawObsvACT": {},
@@ -371,7 +435,8 @@ const DDICT = {
       ],
       "volets": "exdc",
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_sma_vtcam": {
       "rawObsvACT": "tcam_sma",
@@ -393,7 +458,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_dmv": "══════════ VIEILLISSEMENT (dmv) ══════════",
     "dmv_60p_pct": {
@@ -419,7 +485,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmv_60p_vdifp": {
       "rawObsvACT": "var_60plus",
@@ -439,7 +506,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmv_75p_pct": {
       "rawObsvACT": "pct_75plus",
@@ -464,7 +532,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmv_75p_vdifp": {
       "rawObsvACT": "var_75plus",
@@ -484,7 +553,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmv_iv_ind": {
       "rawObsvACT": "iv",
@@ -511,7 +581,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmv_iv_vdifp": {
       "rawObsvACT": "var_iv",
@@ -531,7 +602,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_dm_tranches": "--- Tranches d'âge détaillées (structure pop, pas vieillissement) ---",
     "dm_1519_pct": {
@@ -553,7 +625,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_2024_pct": {
       "rawObsvACT": "pct_2024",
@@ -574,7 +647,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_2539_pct": {
       "rawObsvACT": "pct_2539",
@@ -596,7 +670,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_4054_pct": {
       "rawObsvACT": "pct_4054",
@@ -617,7 +692,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_5564_pct": {
       "rawObsvACT": "pct_5564",
@@ -638,7 +714,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_6579_pct": {
       "rawObsvACT": "pct_6579",
@@ -660,7 +737,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_80p_pct": {
       "rawObsvACT": "pct_80p",
@@ -681,7 +759,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_dmv_seul": "--- Personnes vivant seules par tranche ---",
     "dmv_6579_seul_pct": {
@@ -706,7 +785,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmv_80p_seul_pct": {
       "rawObsvACT": "pct_80p_seul",
@@ -731,7 +811,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_dmf": "══════════ FLUX MIGRATOIRES (dmf) - MIGCOM ══════════",
     "dmf_pe_pct": {
@@ -752,7 +833,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_ps_pct": {
       "rawObsvACT": "PS_pct",
@@ -772,7 +854,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_sm_stock": {
       "rawObsvACT": "SM",
@@ -791,7 +874,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_tm_vtcam": {
       "rawObsvACT": "TM",
@@ -811,7 +895,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_tr_pct": {
       "rawObsvACT": "TR_pct",
@@ -831,7 +916,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_eco": "══════════ ÉCONOMIE / EMPLOI (eco) ══════════",
     "eco_emp_vtcam": {
@@ -858,7 +944,8 @@ const DDICT = {
       "volets": ["exd", "exde"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "&comment_eco_actifs": "--- Actifs et Actifs Occupés ---",
     "eco_act1564_stock": {
@@ -880,7 +967,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "eco_actocc1564_stock": {
       "rawObsvACT": "actocc1564",
@@ -901,7 +989,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_eco_csp_actocc": "--- CSP Actifs Occupés 15-64 ---",
     "eco_actocc_artcom_pct": {
@@ -924,7 +1013,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "eco_actocc_cadres_pct": {
       "rawObsvACT": "pct_actocc_cadres",
@@ -946,7 +1036,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "eco_actocc_profint_pct": {
       "rawObsvACT": "pct_actocc_profint",
@@ -968,7 +1059,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "eco_actocc_employes_pct": {
       "rawObsvACT": "pct_actocc_employes",
@@ -990,7 +1082,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "eco_actocc_ouvriers_pct": {
       "rawObsvACT": "pct_actocc_ouvriers",
@@ -1012,7 +1105,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_eco_salnsal": "--- Salariés / Non-salariés ---",
     "eco_sal_pct": {
@@ -1036,7 +1130,8 @@ const DDICT = {
       "volets": ["exd", "exdc", "exde"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_nsal_pct": {
       "rawObsvACT": "pct_nsal",
@@ -1059,7 +1154,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "&comment_eco_txemp": "--- Taux d'emploi par âge ---",
     "eco_txemp_1564": {
@@ -1087,7 +1183,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exde"],
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_txemp_1564_vdifp": {
       "rawObsvACT": "txemp_1564_evol",
@@ -1110,7 +1207,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "eco_txemp_1524": {
       "rawObsvACT": "txemp_1524",
@@ -1136,7 +1234,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "eco_txemp_2554": {
       "rawObsvACT": "txemp_2554",
@@ -1162,7 +1261,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "eco_txemp_5564": {
       "rawObsvACT": "txemp_5564",
@@ -1187,7 +1287,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_eco_concentration": "--- Concentration emploi (attractivité) ---",
     "eco_ratio_emplt_actoc": {
@@ -1212,7 +1313,8 @@ const DDICT = {
       "volets": ["exd", "exdc", "exde"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "&comment_idx_synth": "--- 4 Indices Synthétiques v2 (z-score cappé ±3) ---",
     "idxresid_dyn_pct": {
@@ -1238,7 +1340,8 @@ const DDICT = {
       "volets": [],
       "eda": false,
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "idxeco_dyn_ind": {
       "rawObsvACT": "idx_eco",
@@ -1264,7 +1367,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "idxeco_dyn_pct": {
       "rawObsvACT": "idx_eco_pct",
@@ -1289,7 +1393,8 @@ const DDICT = {
       "volets": [],
       "eda": false,
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "idxgentri_pct": {
       "rawObsvACT": "idx_gentri_pct",
@@ -1315,13 +1420,14 @@ const DDICT = {
         "dmf_tr_pct_22"
       ],
       "srcVarOpt": [
-        "logd_px2_mai_vtcam_1924",
-        "logd_px2_appt_vtcam_1924"
+        "logd_px2_mai_vevol_1924",
+        "logd_px2_appt_vevol_1924"
       ],
       "volets": [],
       "eda": false,
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "idxlogtens_pct": {
       "rawObsvACT": "idx_logtens_pct",
@@ -1346,7 +1452,8 @@ const DDICT = {
       "volets": [],
       "eda": false,
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_eco_flores": "--- Entreprises et Établissements (FLORES) ---",
     "eco_emp_pres_pct": {
@@ -1369,7 +1476,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc", "exde"],
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_emp_npres_pct": {
       "rawObsvACT": "pct_emp_npres",
@@ -1391,7 +1499,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "eco_eff_petites_pct": {
       "rawObsvACT": "pct_eff_petites",
@@ -1413,7 +1522,8 @@ const DDICT = {
       ],
       "volets": "exde",
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_eff_grandes_pct": {
       "rawObsvACT": "pct_eff_grandes",
@@ -1435,7 +1545,8 @@ const DDICT = {
       ],
       "volets": "exde",
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "&comment_eco_krugman": "--- Indice de spécialisation Krugman ---",
     "eco_krugman_a38": {
@@ -1462,7 +1573,8 @@ const DDICT = {
       ],
       "interpretation": "12=très diversifié, 75=très spécialisé",
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_krugman_a21": {
       "rawObsvACT": "krugman_a21",
@@ -1487,7 +1599,8 @@ const DDICT = {
         60
       ],
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "&comment_eco_gini": "--- Indice de concentration Gini ---",
     "eco_gini_a38": {
@@ -1514,7 +1627,8 @@ const DDICT = {
       ],
       "interpretation": "0.5=diversifié, 0.85=très concentré",
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_gini_a21": {
       "rawObsvACT": "gini_a21",
@@ -1539,7 +1653,8 @@ const DDICT = {
         0.75
       ],
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_krugman_a5": {
       "rawObsvACT": "krugman_a5",
@@ -1572,7 +1687,8 @@ const DDICT = {
       ],
       "interpretation": "0=identique France, plus élevé=plus spécialisé. A5 moins granulaire que A38/A21.",
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "eco_krugman_a5_vevol": {
       "rawObsvACT": "krugman_a5_vevol",
@@ -1595,7 +1711,8 @@ const DDICT = {
       "volets": ["exd", "exde"],
       "interpretation": ">0 = spécialisation accrue, <0 = diversification",
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_eco_urssaf": "--- Emploi privé URSSAF (TCAM 2014-2024) ---",
     "eco_emppriv_vtcam": {
@@ -1621,7 +1738,8 @@ const DDICT = {
       "volets": [],
       "interpretation": ">0 = création emploi, <0 = destruction emploi",
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_etabpriv_vevol": {
       "rawObsvACT": "etabpriv_vevol",
@@ -1643,7 +1761,8 @@ const DDICT = {
       "volets": [],
       "interpretation": ">0 = création établissements, <0 = fermetures nettes",
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "eco_entrcrea_tot_vevol": {
       "rawObsvACT": "entrcrea_tot_vevol",
@@ -1665,7 +1784,8 @@ const DDICT = {
       "volets": [],
       "interpretation": ">0 = dynamique entrepreneuriale, inclut EI et auto-entrepreneurs",
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_entrcrea_soc_vevol": {
       "rawObsvACT": "entrcrea_soc_vevol",
@@ -1687,7 +1807,8 @@ const DDICT = {
       "volets": [],
       "interpretation": ">0 = création structures solides, hors micro/auto-entreprises",
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "&comment_eco_secteurs": "--- Part emplois par secteur (RP 11/16/22) ---",
     "eco_sectagri_pct": {
@@ -1710,7 +1831,8 @@ const DDICT = {
       ],
       "volets": "exde",
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_sectindus_pct": {
       "rawObsvACT": "pct_sect_indus",
@@ -1732,7 +1854,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exde"],
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_sectconst_pct": {
       "rawObsvACT": "pct_sect_const",
@@ -1756,7 +1879,8 @@ const DDICT = {
       ],
       "volets": "exde",
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_sectservi_pct": {
       "rawObsvACT": "pct_sect_servi",
@@ -1780,7 +1904,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exde"],
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_sectadmin_pct": {
       "rawObsvACT": "pct_sect_admin",
@@ -1804,7 +1929,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exde"],
       "agg_dash": true,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "&comment_eco_tp": "--- Temps partiel salariés (RP 11/16/22) ---",
     "eco_emptpspart_pct": {
@@ -1829,7 +1955,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "eco_emptpspart_vdifp": {
       "rawObsvACT": "vdifp_tpspart",
@@ -1851,7 +1978,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": true
+      "agg_ecodash": true,
+      "agg_logdash": false
     },
     "&comment_soc": "══════════ SOCIAL (soc) ══════════",
     "&comment_soc_chom": "--- Chômage par âge ---",
@@ -1875,7 +2003,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exde"],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "soc_txchom_1524": {
       "rawObsvACT": "txchom_1524",
@@ -1899,7 +2028,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "soc_txchom_2554": {
       "rawObsvACT": "txchom_2554",
@@ -1923,7 +2053,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "soc_txchom_5564": {
       "rawObsvACT": "txchom_5564",
@@ -1947,7 +2078,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_soc_pauv": "--- Pauvreté (Filosofi) ---",
     "soc_txpauv_3039": {
@@ -1969,7 +2101,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "soc_txpauv_loc": {
       "rawObsvACT": "txpauv_loc",
@@ -1990,7 +2123,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_dsp": "══════════ DIPLÔMES / CSP (dsp) ══════════",
     "&comment_dsp_csp": "--- CSP Population 15+ ---",
@@ -2016,7 +2150,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_csp_artcom_pct": {
       "rawObsvACT": "pct_csp_artcom",
@@ -2038,7 +2173,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_csp_cadres_pct": {
       "rawObsvACT": "pct_csp_cadres",
@@ -2066,7 +2202,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_csp_cadres_vdifp": {
       "rawObsvACT": "evol_csp_cadres",
@@ -2088,7 +2225,8 @@ const DDICT = {
       ],
       "volets": "exd",
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_csp_profint_pct": {
       "rawObsvACT": "pct_csp_profint",
@@ -2112,7 +2250,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_csp_employes_pct": {
       "rawObsvACT": "pct_csp_employes",
@@ -2136,7 +2275,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_csp_ouvriers_pct": {
       "rawObsvACT": "pct_csp_ouvriers",
@@ -2158,7 +2298,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_csp_retraites_pct": {
       "rawObsvACT": "pct_csp_retraites",
@@ -2182,7 +2323,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_csp_inactifs_pct": {
       "rawObsvACT": "pct_csp_inactifs",
@@ -2206,7 +2348,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_dsp_dipl": "--- Diplômes 15+ non scolarisés ---",
     "dsp_dipl_aucun_pct": {
@@ -2229,7 +2372,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_dipl_bepc_pct": {
       "rawObsvACT": "pct_dipl_bepc",
@@ -2251,7 +2395,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_dipl_capbep_pct": {
       "rawObsvACT": "pct_dipl_capbep",
@@ -2273,7 +2418,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_dipl_bac_pct": {
       "rawObsvACT": "pct_dipl_bac",
@@ -2295,7 +2441,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_dipl_bac2_pct": {
       "rawObsvACT": "pct_dipl_bac2",
@@ -2317,7 +2464,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_dipl_bac34_pct": {
       "rawObsvACT": "pct_dipl_bac34",
@@ -2339,7 +2487,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_dipl_bac5p_pct": {
       "rawObsvACT": "pct_dipl_bac5p",
@@ -2361,7 +2510,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_dsp_dipl_grp": "--- Diplômes groupés ---",
     "dsp_dipl_infbac_pct": {
@@ -2386,7 +2536,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_dipl_bacbac2_pct": {
       "rawObsvACT": "pct_dipl_bacbac2",
@@ -2409,7 +2560,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_dipl_supbac2_pct": {
       "rawObsvACT": "pct_dipl_supbac2",
@@ -2432,7 +2584,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_men": "══════════ MÉNAGES (men) ══════════",
     "men_tot_stock": {
@@ -2456,7 +2609,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "men_seul_pct": {
       "rawObsvACT": "pct_men_seul",
@@ -2478,7 +2632,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "men_fam_pct": {
       "rawObsvACT": "pct_men_fam",
@@ -2500,7 +2655,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "men_coupsenf_pct": {
       "rawObsvACT": "pct_men_coupsenf",
@@ -2522,7 +2678,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "men_coupaenf_pct": {
       "rawObsvACT": "pct_men_coupaenf",
@@ -2545,7 +2702,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "men_mono_pct": {
       "rawObsvACT": "pct_men_mono",
@@ -2568,7 +2726,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_log": "══════════ LOGEMENT (log) ══════════",
     "log_tot_vtcam": {
@@ -2594,7 +2753,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "log_vac_pct": {
       "rawObsvACT": "pct_logvac",
@@ -2619,7 +2779,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "log_vac_vdifp": {
       "rawObsvACT": "var_logvac",
@@ -2639,7 +2800,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "log_ressec_pct": {
       "rawObsvACT": "pct_rsecocc",
@@ -2664,7 +2826,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "log_ressec_vdifp": {
       "rawObsvACT": "var_rsecocc",
@@ -2684,7 +2847,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "&comment_log_type": "--- Type de logement ---",
     "log_appart_pct": {
@@ -2707,7 +2871,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "log_maison_pct": {
       "rawObsvACT": "pct_maison",
@@ -2729,7 +2894,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_log_occ": "--- Occupation des RP ---",
     "log_prop_pct": {
@@ -2753,7 +2919,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "log_loc_pct": {
       "rawObsvACT": "pct_loc",
@@ -2775,7 +2942,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "&comment_bpe": "══════════ ÉQUIPEMENTS BPE (bpe) ══════════",
     "bpe_pharma_dens": {
@@ -2797,7 +2965,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "bpe_medgen_dens": {
       "rawObsvACT": "dens_medgen",
@@ -2818,7 +2987,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "bpe_infirm_dens": {
       "rawObsvACT": "dens_infirm",
@@ -2839,7 +3009,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "bpe_boulang_dens": {
       "rawObsvACT": "dens_boulang",
@@ -2860,7 +3031,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "bpe_superette_dens": {
       "rawObsvACT": "dens_superette",
@@ -2881,7 +3053,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "bpe_supermarche_dens": {
       "rawObsvACT": "dens_supermarche",
@@ -2902,7 +3075,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "bpe_biblio_dens": {
       "rawObsvACT": "dens_biblio",
@@ -2923,7 +3097,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "bpe_coiffeur_dens": {
       "rawObsvACT": "dens_coiffeur",
@@ -2944,7 +3119,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_logd": "══════════ DVF IMMOBILIER (logd) ══════════",
     "logd_px2q2_mai": {
@@ -2962,7 +3138,8 @@ const DDICT = {
       "volets": "exdc",
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "logd_px2q2_appt": {
       "short": "Prix m² apparts",
@@ -2979,7 +3156,8 @@ const DDICT = {
       "volets": "exdc",
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "logd_px2q1_mai": {
       "short": "Prix m² Q1 maisons",
@@ -2995,7 +3173,8 @@ const DDICT = {
       ],
       "volets": "exdc",
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "logd_px2q3_mai": {
       "short": "Prix m² Q3 maisons",
@@ -3011,7 +3190,8 @@ const DDICT = {
       ],
       "volets": "exdc",
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "logd_px2q1_appt": {
       "short": "Prix m² Q1 apparts",
@@ -3027,7 +3207,8 @@ const DDICT = {
       ],
       "volets": "exdc",
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "logd_px2q3_appt": {
       "short": "Prix m² Q3 apparts",
@@ -3043,7 +3224,8 @@ const DDICT = {
       ],
       "volets": "exdc",
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "logd_trans": {
       "short": "Nb transactions",
@@ -3058,8 +3240,9 @@ const DDICT = {
         "24"
       ],
       "volets": "exdc",
-      "agg_dash": false,
-      "agg_ecodash": false
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "logd_trans_mai": {
       "short": "Trans. maisons",
@@ -3074,8 +3257,9 @@ const DDICT = {
         "24"
       ],
       "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "logd_trans_appt": {
       "short": "Trans. apparts",
@@ -3090,8 +3274,9 @@ const DDICT = {
         "24"
       ],
       "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "logd_appt_trans_pct": {
       "short": "Part apparts",
@@ -3106,19 +3291,20 @@ const DDICT = {
         "24"
       ],
       "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
-    "logd_trans_vtcam": {
+    "logd_trans_vevol": {
       "short": "△ evol. trans.",
-      "medium": "△ evolution transactions (TCAM)",
-      "long": "Taux de croissance annuel moyen des transactions (DVF)",
-      "type": "vtcam",
-      "unit": "%/an",
+      "medium": "△ evolution transactions",
+      "long": "Évolution des transactions immobilières (DVF)",
+      "type": "vevol",
+      "unit": "△%",
       "theme": "logd",
       "ordre": 11,
       "source": "DVF",
-      "formula": "((trans_fin / trans_debut)^(1/n) - 1) × 100",
+      "formula": "((trans_fin - trans_debut) / trans_debut) × 100",
       "periodes": [
         "16_24",
         "19_24",
@@ -3126,18 +3312,19 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
-    "logd_px2_mai_vtcam": {
+    "logd_px2_mai_vevol": {
       "short": "△ evol. prix maisons",
-      "medium": "△ evolution prix m² maisons (TCAM)",
-      "long": "Taux de croissance annuel moyen prix m² maisons (DVF)",
-      "type": "vtcam",
-      "unit": "%/an",
+      "medium": "△ evolution prix m² maisons",
+      "long": "Évolution prix m² maisons (DVF)",
+      "type": "vevol",
+      "unit": "△%",
       "theme": "logd",
       "ordre": 12,
       "source": "DVF",
-      "formula": "((px_fin / px_debut)^(1/n) - 1) × 100",
+      "formula": "((px_fin - px_debut) / px_debut) × 100",
       "periodes": [
         "16_24",
         "19_24",
@@ -3145,18 +3332,19 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
-    "logd_px2_appt_vtcam": {
+    "logd_px2_appt_vevol": {
       "short": "△ evol. prix apparts",
-      "medium": "△ evolution prix m² appartements (TCAM)",
-      "long": "Taux de croissance annuel moyen prix m² appartements (DVF)",
-      "type": "vtcam",
-      "unit": "%/an",
+      "medium": "△ evolution prix m² appartements",
+      "long": "Évolution prix m² appartements (DVF)",
+      "type": "vevol",
+      "unit": "△%",
       "theme": "logd",
       "ordre": 13,
       "source": "DVF",
-      "formula": "((px_fin / px_debut)^(1/n) - 1) × 100",
+      "formula": "((px_fin - px_debut) / px_debut) × 100",
       "periodes": [
         "16_24",
         "19_24",
@@ -3164,7 +3352,46 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logd_px2_mai_ecfr": {
+      "short": "± écart prix maisons",
+      "medium": "± écart prix m² maisons vs France",
+      "long": "Écart en % du prix m² maisons par rapport à la médiane France (DVF)",
+      "type": "ind",
+      "unit": "%",
+      "theme": "logd",
+      "ordre": 14,
+      "source": "DVF",
+      "formula": "(prix_local - prix_France) / prix_France × 100",
+      "note": "Valeur positive = plus cher que France, négative = moins cher. Palette violet-vert divergente.",
+      "periodes": [
+        "24"
+      ],
+      "volets": ["exd", "exdc"],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logd_px2_appt_ecfr": {
+      "short": "± écart prix apparts",
+      "medium": "± écart prix m² apparts vs France",
+      "long": "Écart en % du prix m² appartements par rapport à la médiane France (DVF)",
+      "type": "ind",
+      "unit": "%",
+      "theme": "logd",
+      "ordre": 15,
+      "source": "DVF",
+      "formula": "(prix_local - prix_France) / prix_France × 100",
+      "note": "Valeur positive = plus cher que France, négative = moins cher. Palette violet-vert divergente.",
+      "periodes": [
+        "24"
+      ],
+      "volets": ["exd", "exdc"],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "&comment_rev": "══════════ REVENUS / PAUVRETÉ - Filosofi (rev) ══════════",
     "rev_med": {
@@ -3187,7 +3414,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "rev_d1": {
       "short": "Décile D1",
@@ -3208,7 +3436,8 @@ const DDICT = {
       ],
       "volets": "exdc",
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "rev_d9": {
       "short": "Décile D9",
@@ -3229,7 +3458,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "rev_ird9d1": {
       "short": "Ratio D9/D1",
@@ -3250,7 +3480,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "rev_txpauv": {
       "short": "Tx pauvreté",
@@ -3272,7 +3503,8 @@ const DDICT = {
       "volets": ["exd", "exdc"],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "rev_menimi": {
       "short": "Part imposés",
@@ -3293,7 +3525,8 @@ const DDICT = {
       ],
       "volets": "exdc",
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "rev_prestasoc": {
       "short": "Part presta. soc.",
@@ -3314,7 +3547,8 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_rev_evol": "══════════ Évolutions revenus 2019-2021 ══════════",
     "rev_med_vevol": {
@@ -3333,7 +3567,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "rev_txpauv_vevol": {
       "short": "Évol. tx pauvreté",
@@ -3351,7 +3586,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "rev_d1_vevol": {
       "short": "Évol. D1",
@@ -3368,7 +3604,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "rev_d9_vevol": {
       "short": "Évol. D9",
@@ -3385,7 +3622,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "rev_menimi_vevol": {
       "short": "Évol. part imposés",
@@ -3402,7 +3640,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "rev_prestasoc_vevol": {
       "short": "Évol. presta. soc.",
@@ -3419,7 +3658,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_dmf_tmi": "══════════ TMI - Taux Migration Interne par catégorie ══════════",
     "dmf_tmi_cscadre": {
@@ -3439,7 +3679,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_tmi_csouvrier": {
       "short": "TMI Ouvriers",
@@ -3458,7 +3699,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_tmi_a1524": {
       "short": "TMI 15-24",
@@ -3477,7 +3719,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_tmi_a2529": {
       "short": "TMI 25-29",
@@ -3495,7 +3738,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_tmi_a3039": {
       "short": "TMI 30-39",
@@ -3514,7 +3758,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_tmi_a65p": {
       "short": "TMI 65+",
@@ -3532,7 +3777,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_cscadre_es_ratio": {
       "short": "E/S Cadres",
@@ -3550,7 +3796,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_csouvrier_es_ratio": {
       "short": "E/S Ouvriers",
@@ -3568,7 +3815,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_a1524_es_ratio": {
       "short": "E/S 15-24",
@@ -3586,7 +3834,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_a2529_es_ratio": {
       "short": "E/S 25-29",
@@ -3604,7 +3853,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_a3039_es_ratio": {
       "short": "E/S 30-39",
@@ -3622,7 +3872,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmf_a65p_es_ratio": {
       "short": "E/S 65+",
@@ -3640,7 +3891,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_dmf_icm_old": "══════════ OLD ICM (deprecated) - Garder pour trace ══════════",
     "&_old_dmf_cadre_epop_ratio": {
@@ -3930,7 +4182,8 @@ const DDICT = {
       "volets": [],
       "eda": true,
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dmv_5564_seul_pct": {
       "short": "55-64 seuls %",
@@ -3948,7 +4201,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dsp_csp_artis_pct": {
       "short": "Artisans %",
@@ -3966,7 +4220,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "men_tot_stock_vtcam": {
       "short": "TCAM menages",
@@ -3984,7 +4239,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_1519_seul_pct": {
       "theme": "dm",
@@ -4000,7 +4256,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_2024_seul_pct": {
       "theme": "dm",
@@ -4016,7 +4273,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_2539_seul_pct": {
       "theme": "dm",
@@ -4032,7 +4290,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "dm_4054_seul_pct": {
       "theme": "dm",
@@ -4048,7 +4307,8 @@ const DDICT = {
       ],
       "volets": [],
       "agg_dash": true,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "log_sousocc_pct": {
       "theme": "log",
@@ -4063,8 +4323,9 @@ const DDICT = {
         "16"
       ],
       "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "log_surocc_pct": {
       "theme": "log",
@@ -4079,8 +4340,9 @@ const DDICT = {
         "16"
       ],
       "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
     },
     "log_emmenrec_pct": {
       "theme": "log",
@@ -4094,8 +4356,660 @@ const DDICT = {
         "22"
       ],
       "volets": [],
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "&comment_logv": "══════════ VACANCE PARC PRIVÉ (logv) — LOVAC/SDES ══════════",
+    "&comment_logv_note": "logv_vac_pct/vdifp NON ajoutés : doublon conceptuel de log_vac_pct (INSEE RP). Seul >2 ans est nouveau.",
+    "logv_vac2ans_pct": {
+      "short": "Tx vac >2 ans",
+      "medium": "Taux vacance >2 ans parc privé",
+      "long": "Part logements vacants >2 ans dans le parc privé (LOVAC)",
+      "type": "pct",
+      "unit": "%",
+      "theme": "logv",
+      "ordre": 1,
+      "source": "LOVAC",
+      "formula": "pp_vacant_plus_2ans / pp_total × 100",
+      "periodes": [
+        "20",
+        "24"
+      ],
+      "volets": [],
+      "eda": false,
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logv_vac2ans_vdifp": {
+      "short": "△ Vac >2 ans",
+      "medium": "△ vac >2 ans (pts)",
+      "long": "Evolution taux vacance >2 ans 2020-2024 (LOVAC, pts %)",
+      "type": "vdifp",
+      "unit": "pts %",
+      "theme": "logv",
+      "ordre": 2,
+      "source": "LOVAC",
+      "formula": "logv_vac2ans_pct_23 - logv_vac2ans_pct_20",
+      "periodes": [
+        "20_24"
+      ],
+      "volets": [],
+      "eda": false,
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "&comment_logsr": "══════════ CONSTRUCTION RÉSIDENTIELLE (logsr) — SITADEL/SDES ══════════",
+    "logsr_resbatcom_vol": {
+      "short": "Logements commencés",
+      "medium": "Logements résidentiels commencés (nb)",
+      "long": "Nombre total de logements résidentiels commencés (moy. mobile 3 ans : 2023-2024-2025)",
+      "type": "vol",
+      "unit": "nb",
+      "theme": "logsr",
+      "ordre": 1,
+      "source": "SITADEL/SDES",
+      "formula": "moyenne(LOG_COM 2023, 2024, 2025)",
+      "periodes": [
+        "24"
+      ],
+      "volets": [],
+      "eda": false,
       "agg_dash": false,
-      "agg_ecodash": false
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "logsr_resbatcom_vevol": {
+      "short": "Évol. logements commencés",
+      "medium": "Évolution logements résid. commencés (TCAM moy. mobile)",
+      "long": "TCAM des logements résidentiels commencés basé sur moyennes mobiles 3 ans",
+      "type": "vevol",
+      "unit": "%",
+      "theme": "logsr",
+      "ordre": 2,
+      "source": "SITADEL/SDES",
+      "formula": "TCAM(moy3ans_début, moy3ans_fin, n_centres)",
+      "periodes": [
+        "16_24",
+        "19_24",
+        "22_24"
+      ],
+      "volets": [],
+      "eda": false,
+      "&note": "n = distance entre centres des moy. mobiles. 16_24: moy(15,16,17)→moy(23,24,25), n=8. 19_24: moy(17,18,19)→moy(23,24,25), n=6. 22_24: moy(21,22,23)→moy(23,24,25), n=2.",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "logsr_resm2com_vol": {
+      "short": "Surface résid. commencée",
+      "medium": "Surface résidentielle commencée (m²)",
+      "long": "Surface de plancher des logements résidentiels commencés (moy. mobile 3 ans : 2023-2024-2025)",
+      "type": "vol",
+      "unit": "m²",
+      "theme": "logsr",
+      "ordre": 3,
+      "source": "SITADEL/SDES",
+      "formula": "moyenne(SDP_COM résidentiel 2023, 2024, 2025)",
+      "periodes": [
+        "24"
+      ],
+      "volets": [],
+      "eda": false,
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "logsr_resm2com_vevol": {
+      "short": "Évol. surface résid.",
+      "medium": "Évolution surface résidentielle commencée (TCAM moy. mobile)",
+      "long": "TCAM de la surface résidentielle commencée basé sur moyennes mobiles 3 ans",
+      "type": "vevol",
+      "unit": "%",
+      "theme": "logsr",
+      "ordre": 4,
+      "source": "SITADEL/SDES",
+      "formula": "TCAM(moy3ans_début, moy3ans_fin, n_centres)",
+      "periodes": [
+        "16_24",
+        "19_24",
+        "22_24"
+      ],
+      "volets": [],
+      "eda": false,
+      "&note": "n = distance entre centres des moy. mobiles. Mêmes bornes que resbatcom_vevol.",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "&comment_logsn": "══════════ CONSTRUCTION NON-RÉSIDENTIELLE (logsn) — SITADEL/SDES ══════════",
+    "&comment_logsn_note": "Pas de nresbatcom (nb locaux) : SITADEL non-résidentiel ne fournit que SDP_COM (surface), pas de comptage unitaire.",
+    "logsn_nresm2com_vol": {
+      "short": "Surface locaux commencés",
+      "medium": "Surface non résidentielle commencée (m²)",
+      "long": "Surface de plancher totale des locaux non résidentiels commencés (moy. mobile 3 ans : 2023-2024-2025)",
+      "type": "vol",
+      "unit": "m²",
+      "theme": "logsn",
+      "ordre": 1,
+      "source": "SITADEL/SDES",
+      "formula": "moyenne(SDP_COM 2023, 2024, 2025)",
+      "periodes": [
+        "24"
+      ],
+      "volets": [],
+      "eda": false,
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "logsn_nresm2com_vevol": {
+      "short": "Évol. surface locaux",
+      "medium": "Évolution surface non résid. commencée (TCAM moy. mobile)",
+      "long": "TCAM de la surface des locaux non résidentiels commencés basé sur moyennes mobiles 3 ans",
+      "type": "vevol",
+      "unit": "%",
+      "theme": "logsn",
+      "ordre": 2,
+      "source": "SITADEL/SDES",
+      "formula": "TCAM(moy3ans_début, moy3ans_fin, n_centres)",
+      "periodes": [
+        "16_24",
+        "19_24",
+        "22_24"
+      ],
+      "volets": [],
+      "eda": false,
+      "&note": "n = distance entre centres des moy. mobiles. 16_24: moy(15,16,17)→moy(23,24,25), n=8. 19_24: moy(17,18,19)→moy(23,24,25), n=6. 22_24: moy(21,22,23)→moy(23,24,25), n=2.",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "logl_app_m2": {
+      "label": "Loyer appart €/m²",
+      "theme": "logl",
+      "vartype": "prix",
+      "unit": "€/m²",
+      "source": "ANIL",
+      "description": "Loyer prédit €/m² appartements (tous types)",
+      "type": "vol",
+      "periodes": [
+        "22",
+        "25"
+      ],
+      "short": "Loyer appt",
+      "medium": "Loyer moyen appartement",
+      "long": "Loyer moyen au m² appartement (ANIL)",
+      "srcVarOpt": "loyer_app_m2",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logl_app12_m2": {
+      "label": "Loyer T1-T2 €/m²",
+      "theme": "logl",
+      "vartype": "prix",
+      "unit": "€/m²",
+      "source": "ANIL",
+      "description": "Loyer prédit €/m² appartements T1-T2",
+      "type": "vol",
+      "periodes": [
+        "22",
+        "25"
+      ],
+      "short": "Loyer 1-2p",
+      "medium": "Loyer moyen appart 1-2 pièces",
+      "long": "Loyer moyen au m² appartement 1-2 pièces (ANIL)",
+      "srcVarOpt": "loyer_app12_m2",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logl_app3_m2": {
+      "label": "Loyer T3+ €/m²",
+      "theme": "logl",
+      "vartype": "prix",
+      "unit": "€/m²",
+      "source": "ANIL",
+      "description": "Loyer prédit €/m² appartements T3 et plus",
+      "type": "vol",
+      "periodes": [
+        "22",
+        "25"
+      ],
+      "short": "Loyer 3p+",
+      "medium": "Loyer moyen appart 3 pièces et plus",
+      "long": "Loyer moyen au m² appartement 3+ pièces (ANIL)",
+      "srcVarOpt": "loyer_app3_m2",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logl_mai_m2": {
+      "label": "Loyer maison €/m²",
+      "theme": "logl",
+      "vartype": "prix",
+      "unit": "€/m²",
+      "source": "ANIL",
+      "description": "Loyer prédit €/m² maisons",
+      "type": "vol",
+      "periodes": [
+        "22",
+        "25"
+      ],
+      "short": "Loyer maison",
+      "medium": "Loyer moyen maison",
+      "long": "Loyer moyen au m² maison (ANIL)",
+      "srcVarOpt": "loyer_mai_m2",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logl_app_evol": {
+      "label": "Évol loyer appart",
+      "theme": "logl",
+      "vartype": "vevol",
+      "unit": "△%",
+      "source": "ANIL",
+      "description": "Évolution loyer appart 2022-2025",
+      "type": "vevol",
+      "periodes": [
+        "22_25"
+      ],
+      "short": "△ Loyer appt",
+      "medium": "△ evol. loyer appartement 22-25",
+      "long": "Evolution loyer moyen appartement 2022-2025 (ANIL)",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logl_app12_evol": {
+      "label": "Évol loyer T1-T2",
+      "theme": "logl",
+      "vartype": "vevol",
+      "unit": "△%",
+      "source": "ANIL",
+      "description": "Évolution loyer T1-T2 2022-2025",
+      "type": "vevol",
+      "periodes": [
+        "22_25"
+      ],
+      "short": "△ Loyer 1-2p",
+      "medium": "△ evol. loyer appart 1-2p 22-25",
+      "long": "Evolution loyer appart 1-2 pièces 2022-2025 (ANIL)",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logl_app3_evol": {
+      "label": "Évol loyer T3+",
+      "theme": "logl",
+      "vartype": "vevol",
+      "unit": "△%",
+      "source": "ANIL",
+      "description": "Évolution loyer T3+ 2022-2025",
+      "type": "vevol",
+      "periodes": [
+        "22_25"
+      ],
+      "short": "△ Loyer 3p+",
+      "medium": "△ evol. loyer appart 3p+ 22-25",
+      "long": "Evolution loyer appart 3+ pièces 2022-2025 (ANIL)",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logl_mai_evol": {
+      "label": "Évol loyer maison",
+      "theme": "logl",
+      "vartype": "vevol",
+      "unit": "△%",
+      "source": "ANIL",
+      "description": "Évolution loyer maison 2022-2025",
+      "type": "vevol",
+      "periodes": [
+        "22_25"
+      ],
+      "short": "△ Loyer maison",
+      "medium": "△ evol. loyer maison 22-25",
+      "long": "Evolution loyer moyen maison 2022-2025 (ANIL)",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logl_app_ecart_fr": {
+      "label": "Écart loyer/France",
+      "theme": "logl",
+      "vartype": "ecart",
+      "unit": "%",
+      "source": "ANIL",
+      "description": "Écart loyer appart vs moyenne France"
+    },
+    "logl_app12_ecart_fr": {
+      "label": "Écart loyer T1-T2/France",
+      "theme": "logl",
+      "vartype": "ecart",
+      "unit": "%",
+      "source": "ANIL",
+      "description": "Écart loyer T1-T2 vs moyenne France"
+    },
+    "logl_app3_ecart_fr": {
+      "label": "Écart loyer T3+/France",
+      "theme": "logl",
+      "vartype": "ecart",
+      "unit": "%",
+      "source": "ANIL",
+      "description": "Écart loyer T3+ vs moyenne France"
+    },
+    "logl_mai_ecart_fr": {
+      "label": "Écart loyer maison/France",
+      "theme": "logl",
+      "vartype": "ecart",
+      "unit": "%",
+      "source": "ANIL",
+      "description": "Écart loyer maison vs moyenne France"
+    },
+    "logl_nb_communes": {
+      "label": "Nb communes loyer",
+      "theme": "logl",
+      "vartype": "vol",
+      "unit": "nb",
+      "source": "ANIL",
+      "description": "Nombre communes avec loyer prédit (EPCI)"
+    },
+    "logs_logaut_vol": {
+      "label": "Logements autorisés",
+      "theme": "logs",
+      "vartype": "vol",
+      "unit": "nb",
+      "source": "SITADEL",
+      "description": "Nombre logements autorisés",
+      "type": "vol",
+      "periodes": [
+        "24",
+        "22_24"
+      ],
+      "short": "Logts autorisés",
+      "medium": "Logements autorisés",
+      "long": "Nombre de logements autorisés (SITADEL)",
+      "srcVarOpt": "nb_logaut",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logs_logcom_vol": {
+      "label": "Logements commencés",
+      "theme": "logs",
+      "vartype": "vol",
+      "unit": "nb",
+      "source": "SITADEL",
+      "description": "Nombre logements commencés",
+      "type": "vol",
+      "periodes": [
+        "24",
+        "22_24"
+      ],
+      "short": "Logts commencés",
+      "medium": "Logements commencés",
+      "long": "Nombre de logements commencés (SITADEL)",
+      "srcVarOpt": "nb_logcom",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logs_sdpaut_vol": {
+      "label": "Surface autorisée",
+      "theme": "logs",
+      "vartype": "vol",
+      "unit": "m²",
+      "source": "SITADEL",
+      "description": "Surface de plancher autorisée",
+      "type": "vol",
+      "periodes": [
+        "24",
+        "22_24"
+      ],
+      "short": "Surf autorisée",
+      "medium": "Surface autorisée (m²)",
+      "long": "Surface de plancher autorisée (SITADEL)",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logs_sdpcom_vol": {
+      "label": "Surface commencée",
+      "theme": "logs",
+      "vartype": "vol",
+      "unit": "m²",
+      "source": "SITADEL",
+      "description": "Surface de plancher commencée",
+      "type": "vol",
+      "periodes": [
+        "24",
+        "22_24"
+      ],
+      "short": "Surf commencée",
+      "medium": "Surface commencée (m²)",
+      "long": "Surface de plancher commencée (SITADEL)",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logs_logaut_tx1000": {
+      "label": "Taux construction autorisée",
+      "theme": "logs",
+      "vartype": "tx",
+      "unit": "‰",
+      "source": "SITADEL",
+      "description": "Logements autorisés pour 1000 hab",
+      "type": "pct",
+      "periodes": [
+        "22_24"
+      ],
+      "short": "Tx autorisés ‰",
+      "medium": "Taux logements autorisés pour 1000 hab",
+      "long": "Logements autorisés pour 1000 habitants (SITADEL)",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logs_logcom_tx1000": {
+      "label": "Taux construction commencée",
+      "theme": "logs",
+      "vartype": "tx",
+      "unit": "‰",
+      "source": "SITADEL",
+      "description": "Logements commencés pour 1000 hab",
+      "type": "pct",
+      "periodes": [
+        "22_24"
+      ],
+      "short": "Tx commencés ‰",
+      "medium": "Taux logements commencés pour 1000 hab",
+      "long": "Logements commencés pour 1000 habitants (SITADEL)",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logv_parc_vol": {
+      "label": "Parc logements",
+      "theme": "logv",
+      "vartype": "vol",
+      "unit": "nb",
+      "source": "LOVAC",
+      "description": "Parc total de logements (privés)",
+      "type": "vol",
+      "periodes": [
+        "24"
+      ],
+      "short": "Parc privé",
+      "medium": "Parc privé total",
+      "long": "Nombre de logements du parc privé (LOVAC)",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logv_vacant_vol": {
+      "label": "Logements vacants",
+      "theme": "logv",
+      "vartype": "vol",
+      "unit": "nb",
+      "source": "LOVAC",
+      "description": "Nombre logements vacants",
+      "type": "vol",
+      "periodes": [
+        "24"
+      ],
+      "short": "Vacants",
+      "medium": "Logements vacants parc privé",
+      "long": "Nombre de logements vacants du parc privé (LOVAC)",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logv_vac2ans_vol": {
+      "label": "Vacance >2 ans",
+      "theme": "logv",
+      "vartype": "vol",
+      "unit": "nb",
+      "source": "LOVAC",
+      "description": "Logements vacants depuis plus de 2 ans",
+      "type": "vol",
+      "periodes": [
+        "24"
+      ],
+      "short": "Vacants >2 ans",
+      "medium": "Logements vacants >2 ans",
+      "long": "Logements vacants depuis plus de 2 ans (LOVAC)",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logv_vac2ans_vevol": {
+      "label": "Évol vacance >2 ans",
+      "theme": "logv",
+      "vartype": "vevol",
+      "unit": "△%",
+      "source": "LOVAC",
+      "description": "Évolution volume vacance >2 ans",
+      "type": "vevol",
+      "periodes": [
+        "20_24"
+      ],
+      "short": "△ Vac >2 ans %",
+      "medium": "△ evol. vacance >2 ans",
+      "long": "Evolution volume vacance >2 ans 2020-2024 (LOVAC)",
+      "volets": [],
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logs_logaut_vtcam": {
+      "rawObsvACT": "logaut_vtcam",
+      "label": "TCAM logements autorisés",
+      "short": "△ Logts autorisés",
+      "medium": "TCAM logements autorisés",
+      "long": "TCAM logements autorisés (SITADEL)",
+      "type": "vtcam",
+      "unit": "%/an",
+      "theme": "logs",
+      "periodes": [
+        "19_24",
+        "22_24"
+      ],
+      "source": "SITADEL",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logs_logcom_vtcam": {
+      "rawObsvACT": "logcom_vtcam",
+      "label": "TCAM logements commencés",
+      "short": "△ Logts commencés",
+      "medium": "TCAM logements commencés",
+      "long": "TCAM logements commencés (SITADEL)",
+      "type": "vtcam",
+      "unit": "%/an",
+      "theme": "logs",
+      "periodes": [
+        "19_24",
+        "22_24"
+      ],
+      "source": "SITADEL",
+      "volets": "exdc",
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logd_px2_global": {
+      "type": "vol",
+      "unit": "€/m²",
+      "periodes": [
+        "24"
+      ],
+      "short": "Prix global",
+      "medium": "Prix global pondéré (mai+apt)",
+      "long": "Prix moyen au m² pondéré maisons+apparts par volume transactions (DVF)",
+      "source": "DVF",
+      "theme": "logd",
+      "volets": [],
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logd_px2_global_vevol": {
+      "type": "vevol",
+      "unit": "△%",
+      "periodes": [
+        "16_24",
+        "19_24",
+        "22_24"
+      ],
+      "short": "△ Prix global",
+      "medium": "△ evol. prix global pondéré",
+      "long": "Evolution prix moyen pondéré maisons+apparts (DVF)",
+      "source": "DVF",
+      "theme": "logd",
+      "volets": [],
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
+    },
+    "logd_px2_global_ecfr": {
+      "type": "ecfr",
+      "unit": "% écart",
+      "periodes": [
+        "24"
+      ],
+      "short": "Écart FR prix global",
+      "medium": "Écart France prix global pondéré",
+      "long": "Écart au prix moyen national pondéré (DVF)",
+      "source": "DVF",
+      "theme": "logd",
+      "volets": [],
+      "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": true
     }
   },
   "mapping_observable_to_new": {
@@ -4261,7 +5175,8 @@ for (const [key, val] of Object.entries(DDICT.indicateurs || {})) {
     periodes: val.periodes || [],
     volets: val.volets || [],
     agg_dash: val.agg_dash || false,
-    agg_ecodash: val.agg_ecodash || false
+    agg_ecodash: val.agg_ecodash || false,
+    agg_logdash: val.agg_logdash || false
   };
 }
 
@@ -4288,7 +5203,7 @@ export function getIndicateurOptions() {
 }
 
 // === DROPDOWN OPTIONS BY AGG FLAGS ===
-// aggFlag: "dash" (défaut) ou "ecodash"
+// aggFlag: "dash" (défaut), "ecodash" ou "logdash"
 // filterVolet: null = tous, "exdc" = agg_dash ET v_exdc (pour filtrage futur)
 export function getIndicOptionsByAggDash(filterVolet = null, noSeparators = false, aggFlag = "dash") {
   const options = [];
@@ -4297,8 +5212,15 @@ export function getIndicOptionsByAggDash(filterVolet = null, noSeparators = fals
     const themeIndics = Object.entries(INDICATEURS)
       .filter(([k, v]) => {
         if (v.theme !== themeKey) return false;
-        // Check agg flag (agg_dash ou agg_ecodash)
-        const aggProp = aggFlag === "ecodash" ? v.agg_ecodash : v.agg_dash;
+        // Check agg flag (agg_dash, agg_ecodash ou agg_logdash)
+        let aggProp;
+        if (aggFlag === "ecodash") {
+          aggProp = v.agg_ecodash;
+        } else if (aggFlag === "logdash") {
+          aggProp = v.agg_logdash;
+        } else {
+          aggProp = v.agg_dash;
+        }
         if (!aggProp) return false;
         // Filtrage volet optionnel (pour usage futur)
         if (filterVolet) {
@@ -4323,6 +5245,11 @@ export function getIndicOptionsByAggDash(filterVolet = null, noSeparators = fals
 // Alias pour dashboard éco
 export function getIndicOptionsByAggEcodash(filterVolet = null, noSeparators = false) {
   return getIndicOptionsByAggDash(filterVolet, noSeparators, "ecodash");
+}
+
+// Alias pour dashboard logement
+export function getIndicOptionsByAggLogdash(filterVolet = null, noSeparators = false) {
+  return getIndicOptionsByAggDash(filterVolet, noSeparators, "logdash");
 }
 
 // === DROPDOWN OPTIONS BY VOLET (filtré par page) ===
