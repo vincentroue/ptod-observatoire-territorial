@@ -310,11 +310,9 @@ const defaultIndic = _logdashVals.has("logd_px2_global") ? "logd_px2_global" : "
 const indic = view(Inputs.select(logementIndicOptions, { value: defaultIndic, label: "" }));
 ```
 
-<div class="panel-title" style="margin-top:8px;">Période</div>
-
 ```js
 const perMap = getPeriodesForIndicateur(indic);
-const periode = view(Inputs.select(perMap, { value: [...perMap.values()][0], label: "" }));
+const periode = view(Inputs.select(perMap, { value: [...perMap.values()][0], label: "Période" }));
 ```
 
 </section>
@@ -439,7 +437,7 @@ const bannerData = [frData, ...selDataB.slice(0, 5)].filter(Boolean).map(d => ({
 }));
 
 const bannerColumns = [
-  { key: "libelle", label: "Territoire", type: "text", width: 140 },
+  { key: "libelle", label: "", type: "text", width: 140 },
   ...bannerCols.map(col => {
     const indicKey = col.replace(/_\d+$/, "");
     const per = col.match(/_(\d{2,4})$/)?.[1] || "";
@@ -453,19 +451,19 @@ const bannerTable = renderTable({
   compact: true, maxHeight: 220, scrollX: true, stickyFirstCol: 1
 });
 
-// Sub-banner KPI (même classe CSS que exdeco — fond gris sidebar, sticky)
-const bannerWrap = document.createElement("div");
-bannerWrap.className = "sub-banner";
-const bannerInner = document.createElement("div");
-bannerInner.style.cssText = "padding:4px 12px 6px;";
+// Titre + tableau KPI — flush en haut (compense padding layout-main)
+const bannerBlock = document.createElement("div");
+bannerBlock.style.cssText = "margin:-8px -20px 0 -16px;padding:0;";
 const bannerTitle = document.createElement("div");
-bannerTitle.style.cssText = "font-size:12px;font-weight:600;color:#374151;padding:0 0 3px 0;font-family:Inter,system-ui,sans-serif;";
+bannerTitle.style.cssText = "background:#e8eaed;padding:5px 16px;font-size:12px;font-weight:600;color:#374151;font-family:Inter,system-ui,sans-serif;";
 bannerTitle.textContent = "Métriques clés — France et territoires sélectionnés";
-bannerInner.appendChild(bannerTitle);
-bannerTable.style.cssText = (bannerTable.style.cssText || "") + "background:#fff;border-radius:2px;";
-bannerInner.appendChild(bannerTable);
-bannerWrap.appendChild(bannerInner);
-display(bannerWrap);
+bannerBlock.appendChild(bannerTitle);
+const bannerTableWrap = document.createElement("div");
+bannerTableWrap.style.cssText = "padding:0 16px;background:#fff;";
+bannerTable.style.cssText = (bannerTable.style.cssText || "") + "background:#fff;width:100%;";
+bannerTableWrap.appendChild(bannerTable);
+bannerBlock.appendChild(bannerTableWrap);
+display(bannerBlock);
 ```
 
 ```js
@@ -562,7 +560,7 @@ const map = renderChoropleth({
   formatValue: (k, v) => formatValue(indic, v),
   indicLabel, selectedCodes: [...mapSelectionState],
   showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
-  title: indicLabel, echelon, width: 395, height: 360, maxLabelsAuto: 600,
+  title: indicLabel, echelon, width: 415, height: 380, maxLabelsAuto: 600,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 
