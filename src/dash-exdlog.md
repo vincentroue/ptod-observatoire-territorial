@@ -813,7 +813,8 @@ const commQueriesMaps = commTargetsMaps.map(tCode => {
 const commResultsMaps = await Promise.all(commQueriesMaps);
 
 const commContainerMaps = document.createElement("div");
-commContainerMaps.style.cssText = "display:flex;gap:8px;flex-wrap:nowrap;padding:0 8px;justify-content:center;";
+commContainerMaps.className = "cards-row";
+commContainerMaps.style.cssText = "width:auto;max-width:700px;margin:0 0 0 8px;gap:8px;";
 
 for (let ci = 0; ci < commTargetsMaps.length; ci++) {
   const tCode = commTargetsMaps[ci];
@@ -850,7 +851,7 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
     indicLabel, showLabels: showValuesOnMap,
     labelMode, labelBy, topN: 200,
     title: `${tLabel}`,
-    maxLabelsAuto: 80, echelon: "Commune", width: 260, height: 230
+    maxLabelsAuto: 80, echelon: "Commune", width: 320, height: 260
   });
 
   if (!cMap) continue;  // Protection si renderChoropleth retourne null
@@ -881,7 +882,7 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
 
   const card = document.createElement("div");
   card.className = "card";
-  card.style.cssText = "padding:4px;flex:0 1 auto;min-width:0;overflow:hidden;";
+  card.style.cssText = "padding:6px;display:flex;flex-direction:column;min-height:0;";
   card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), {
     exportSVGFn: exportSVG, echelon: tLabel, colKey, title: `${indicLabel} — ${tLabel}`
   }));
