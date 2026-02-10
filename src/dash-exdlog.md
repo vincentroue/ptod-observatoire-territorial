@@ -456,8 +456,8 @@ bannerWrap.style.cssText = "position:relative;top:auto;margin-left:0;width:100%;
 const bannerInner = document.createElement("div");
 bannerInner.style.cssText = "padding:0 8px;";
 const bannerTitle = document.createElement("div");
-bannerTitle.style.cssText = "font-size:11px;font-weight:600;color:#374151;padding:0 0 2px 4px;font-family:Inter,system-ui,sans-serif;";
-bannerTitle.textContent = "Métriques clés des territoires sélectionnés";
+bannerTitle.style.cssText = "font-size:13px;font-weight:600;color:#374151;padding:2px 0 3px 4px;font-family:Inter,system-ui,sans-serif;";
+bannerTitle.textContent = "Métriques clés";
 bannerInner.appendChild(bannerTitle);
 // Fond blanc cellules KPI
 bannerTable.style.cssText = (bannerTable.style.cssText || "") + "background:#fff;border-radius:2px;";
@@ -489,13 +489,20 @@ setTimeout(() => {
 }, 100);
 ```
 
-<!-- Espacement bannière / contenu -->
+<!-- Séparateur bannière / contenu -->
+<div style="border-top:1px solid #d1d5db;margin:6px 0 8px 0;"></div>
 
 <!-- &s CARTE_ET_GRAPHIQUES -->
-<div style="display:flex;gap:12px;align-items:stretch;">
+<div style="display:flex;gap:10px;align-items:flex-start;">
+
+<!-- LEFT BLOCK : carte + graphiques + cartes communes -->
+<div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0;">
+
+<!-- Row carte + graphiques -->
+<div style="display:flex;gap:10px;align-items:flex-start;">
 
 <!-- COLONNE 1 : Carte France échelon -->
-<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:8px;padding-left:8px;">
+<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:8px;padding-left:8px;align-self:flex-start;">
 
 ```js
 // Zoom state persistant et calcul zoomLabel
@@ -518,7 +525,7 @@ const map = renderChoropleth({
   formatValue: (k, v) => formatValue(indic, v),
   indicLabel, selectedCodes: [...mapSelectionState],
   showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
-  title: indicLabel, echelon, width: 425, height: 425, maxLabelsAuto: 600,
+  title: indicLabel, echelon, width: 450, height: 450, maxLabelsAuto: 600,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 
@@ -590,7 +597,7 @@ display(wrapper);
 <!-- Fin colonne 1 -->
 
 <!-- COLONNE 2 : Graphiques séries -->
-<div style="flex:1 1 400px;min-width:360px;max-width:480px;display:flex;flex-direction:column;gap:4px;align-self:flex-start;">
+<div style="flex:1 1 400px;min-width:340px;max-width:460px;display:flex;flex-direction:column;gap:4px;align-self:flex-start;">
 
 <!-- Graphique 1 : France référence STATIQUE -->
 <div class="card" style="padding:6px 10px;">
@@ -610,8 +617,8 @@ const volScale = 3000 / maxVol;  // Ajusté pour que barres soient visibles
 
 display(Plot.plot({
   style: { fontFamily: "Inter, system-ui, sans-serif" },
-  width: 430,
-  height: 210,
+  width: 420,
+  height: 200,
   marginLeft: 42,
   marginRight: 50,
   marginBottom: 22,
@@ -730,8 +737,8 @@ if (indexSeries.length > 0) {
 
   display(Plot.plot({
     style: { fontFamily: "Inter, system-ui, sans-serif" },
-    width: 430,
-    height: 210,
+    width: 420,
+    height: 200,
     marginLeft: 38,
     marginRight: 110,
     marginBottom: 22,
@@ -768,17 +775,24 @@ Prix global pondéré (mai+apt) | Base 100 = 2010 | — France ref | Ctrl+clic c
 </div>
 
 </div>
+</div>
+<!-- Fin colonne 2 graphiques -->
 
-<!-- Cartes communes sélectionnées (2 côte à côte) -->
+</div>
+<!-- Fin row carte + graphiques -->
+
+<!-- Cartes communes (2 côte à côte) -->
+<div style="font-size:11px;font-weight:600;color:#374151;margin:6px 0 4px 8px;font-family:Inter,system-ui,sans-serif;">Vue commune — Territoires sélectionnés</div>
 
 ```js
-// === CARTES COMMUNES (2 côte à côte) ===
-// Carte 1 = zoomCode (clic simple carte), Carte 2 = 1er sélectionné (via search/ctrl+clic)
+// === CARTES COMMUNES (2 côte à côte, sous carte+graphs) ===
 const filterKey = meta?.filterKey || "DEP";
 const isEPCI = echelon === "EPCI";
 const selCodes = [...mapSelectionState];
+
+// 2 codes : zoomCode (clic simple), 1er sélectionné (search/ctrl+clic)
 const mapCode1 = zoomCode || RENNES_CODE;
-const mapCode2 = selCodes.length > 0 && selCodes[0] !== mapCode1 ? selCodes[0] : (selCodes[1] || RENNES_CODE);
+const mapCode2 = selCodes.length > 0 && selCodes[0] !== mapCode1 ? selCodes[0] : (selCodes[1] || PARIS_CODE);
 const commTargetsMaps = mapCode1 !== mapCode2 ? [mapCode1, mapCode2] : [mapCode1];
 
 const commQueriesMaps = commTargetsMaps.map(tCode => {
@@ -794,7 +808,7 @@ const commQueriesMaps = commTargetsMaps.map(tCode => {
 const commResultsMaps = await Promise.all(commQueriesMaps);
 
 const commContainerMaps = document.createElement("div");
-commContainerMaps.style.cssText = "display:flex;gap:6px;flex-wrap:nowrap;";
+commContainerMaps.style.cssText = "display:flex;gap:8px;flex-wrap:nowrap;padding:0 8px;";
 
 for (let ci = 0; ci < commTargetsMaps.length; ci++) {
   const tCode = commTargetsMaps[ci];
@@ -819,8 +833,8 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
   const tEcart = isEcart ? computeEcartFrance(tData, colKey, ecart.ref, { sigma: ecart.sigma, indicType: INDICATEURS[indic]?.type }) : null;
   const tGetColor = isEcart ? tEcart.getColor : isGradient ? tGrad.getColor : tBins.getColor;
 
-  const mapW = 210;
-  const mapH = 180;
+  // Skip si pas de features (échelon non compatible communes)
+  if (tGeo.features.length === 0) continue;
 
   const cMap = renderChoropleth({
     geoData: tGeo, valueCol: colKey,
@@ -831,8 +845,10 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
     indicLabel, showLabels: showValuesOnMap,
     labelMode, labelBy, topN: 200,
     title: `${tLabel}`,
-    maxLabelsAuto: 80, echelon: "Commune", width: mapW, height: mapH
+    maxLabelsAuto: 80, echelon: "Commune", width: 240, height: 280
   });
+
+  if (!cMap) continue;  // Protection si renderChoropleth retourne null
 
   if (cMap._tipConfig) {
     cMap._tipConfig.frRef = frData?.[colKey];
@@ -860,7 +876,7 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
 
   const card = document.createElement("div");
   card.className = "card";
-  card.style.cssText = "padding:2px;flex:1;min-width:0;overflow:hidden;";
+  card.style.cssText = "padding:4px;flex:1;min-width:0;overflow:hidden;";
   card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), {
     exportSVGFn: exportSVG, echelon: tLabel, colKey, title: `${indicLabel} — ${tLabel}`
   }));
@@ -871,10 +887,10 @@ display(commContainerMaps);
 ```
 
 </div>
-<!-- Fin colonne 2 graphiques + communes -->
+<!-- Fin LEFT BLOCK -->
 
 <!-- COLONNE DROITE : Communes >50K habitants -->
-<div style="flex:0 0 340px;min-width:300px;display:flex;flex-direction:column;align-self:flex-start;max-height:calc(100vh - 200px);overflow:hidden;">
+<div style="flex:0 0 auto;min-width:300px;display:flex;flex-direction:column;align-self:stretch;overflow-y:auto;overflow-x:hidden;">
 
 ```js
 // === SORT STATE COMMUNES (bloc séparé pour réactivité) ===
@@ -957,7 +973,7 @@ commHeader.innerHTML = `<span style="font-size:12px;font-weight:600;color:#1e293
 
 // Container table
 const commTableWrap = document.createElement("div");
-commTableWrap.style.cssText = "flex:1;overflow-y:auto;overflow-x:auto;font-family:Inter,system-ui,sans-serif;";
+commTableWrap.style.cssText = "max-height:calc(100vh - 240px);overflow-y:auto;overflow-x:auto;font-family:Inter,system-ui,sans-serif;";
 
 // Abréviation Arrondissement → Arr.
 const shortLib = (v) => v ? v.replace(/Arrondissement/gi, "Arr.").replace(/\s+/g, " ") : "—";
@@ -987,21 +1003,21 @@ function renderCommTable() {
     return sa ? va - vb : vb - va;
   });
 
-  const thStyle = "padding:2px 4px;font-size:9.5px;font-weight:600;color:#374151;border-bottom:2px solid #d1d5db;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:#f8fafc;z-index:2;";
+  const thStyle = "padding:3px 4px;font-size:10.5px;font-weight:600;color:#374151;border-bottom:2px solid #d1d5db;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:#f8fafc;z-index:2;";
   const tdStyle = "padding:2px 4px;font-size:11px;color:#1e293b;border-bottom:1px solid #e5e7eb;white-space:nowrap;background:#fff;";
 
   let html = `<table style="width:100%;border-collapse:collapse;"><thead><tr>`;
   for (const cd of colDefs) {
     const arrow = sc === cd.key ? (sa ? " ↑" : " ↓") : "";
-    const subLine = cd.sub ? `<br><span style="font-weight:400;font-size:8px;color:#6b7280;">${cd.sub}</span>` : "";
+    const subLine = cd.sub ? `<br><span style="font-weight:400;font-size:9px;color:#6b7280;">${cd.sub}</span>` : "";
     html += `<th data-col="${cd.key}" style="${thStyle}text-align:${cd.align};min-width:${cd.w}px;">${cd.label}${arrow}${subLine}</th>`;
   }
   html += `</tr></thead><tbody>`;
   // Ligne référence France (sticky sous header)
   html += `<tr style="background:#f1f5f9;font-weight:600;position:sticky;top:32px;z-index:1;">`;
   for (const cd of colDefs) {
-    const frVal = cd.key === "libelle" ? "France" : cd.noFrRef ? "—" : (commColStats[cd.key]?.frRef != null ? cd.fmt(commColStats[cd.key].frRef) : "—");
-    html += `<td style="padding:2px 4px;font-size:9px;color:#1e293b;border-bottom:2px solid #94a3b8;white-space:nowrap;text-align:${cd.align};">${frVal}</td>`;
+    const frVal = cd.key === "libelle" ? "🇫🇷 France" : cd.noFrRef ? "—" : (commColStats[cd.key]?.frRef != null ? cd.fmt(commColStats[cd.key].frRef) : "—");
+    html += `<td style="padding:2px 4px;font-size:10px;color:#1e293b;border-bottom:2px solid #94a3b8;white-space:nowrap;text-align:${cd.align};">${frVal}</td>`;
   }
   html += `</tr>`;
   for (const d of filtered) {

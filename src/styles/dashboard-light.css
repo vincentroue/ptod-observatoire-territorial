@@ -605,14 +605,14 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .legend-title {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 600;
   color: #374151;
   margin-bottom: 2px;
 }
 
 .legend-unit {
-  font-size: 7px;
+  font-size: 9px;
   font-style: italic;
   color: #6b7280;
   margin-bottom: 3px;
@@ -772,7 +772,7 @@ td.num, th.num {
 }
 
 .legend-overlay .legend-title {
-  font-size: 8px;
+  font-size: 10px;
   font-weight: 600;
   color: #374151;
   margin-bottom: 3px;
@@ -819,10 +819,10 @@ td.num, th.num {
   z-index: 10;
 }
 
-/* Bouton export SVG en bas à droite */
+/* Bouton export SVG sous le bouton fullscreen */
 .svg-export-btn {
   position: absolute;
-  bottom: 4px;
+  top: 30px;
   right: 4px;
   width: 22px;
   height: 22px;
