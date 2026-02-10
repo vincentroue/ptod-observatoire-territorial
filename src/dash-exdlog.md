@@ -449,14 +449,20 @@ const bannerTable = renderTable({
   compact: true, maxHeight: 220, scrollX: true, stickyFirstCol: 1
 });
 
-// Construire wrapper bannière avec fond
+// Construire sub-banner pleine largeur (comme exdeco)
 const bannerWrap = document.createElement("div");
-bannerWrap.style.cssText = "padding:6px 12px 4px;margin-bottom:6px;background:#e8eaed;border-radius:4px;";
+bannerWrap.className = "sub-banner";
+bannerWrap.style.cssText = "position:relative;top:auto;margin-left:0;width:100%;padding:4px 0 2px;";
+const bannerInner = document.createElement("div");
+bannerInner.style.cssText = "padding:0 8px;";
 const bannerTitle = document.createElement("div");
-bannerTitle.style.cssText = "font-size:13px;font-weight:600;color:#374151;padding:0 0 4px 0;font-family:Inter,system-ui,sans-serif;";
+bannerTitle.style.cssText = "font-size:11px;font-weight:600;color:#374151;padding:0 0 2px 4px;font-family:Inter,system-ui,sans-serif;";
 bannerTitle.textContent = "Métriques clés des territoires sélectionnés";
-bannerWrap.appendChild(bannerTitle);
-bannerWrap.appendChild(bannerTable);
+bannerInner.appendChild(bannerTitle);
+// Fond blanc cellules KPI
+bannerTable.style.cssText = (bannerTable.style.cssText || "") + "background:#fff;border-radius:2px;";
+bannerInner.appendChild(bannerTable);
+bannerWrap.appendChild(bannerInner);
 display(bannerWrap);
 ```
 
@@ -489,7 +495,7 @@ setTimeout(() => {
 <div style="display:flex;gap:12px;align-items:stretch;">
 
 <!-- COLONNE 1 : Carte France échelon -->
-<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:8px;padding-left:12px;">
+<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:8px;padding-left:8px;">
 
 ```js
 // Zoom state persistant et calcul zoomLabel
@@ -584,7 +590,7 @@ display(wrapper);
 <!-- Fin colonne 1 -->
 
 <!-- COLONNE 2 : Graphiques séries -->
-<div style="flex:1 1 440px;min-width:380px;max-width:620px;display:flex;flex-direction:column;gap:6px;">
+<div style="flex:1 1 400px;min-width:360px;max-width:480px;display:flex;flex-direction:column;gap:4px;align-self:flex-start;">
 
 <!-- Graphique 1 : France référence STATIQUE -->
 <div class="card" style="padding:6px 10px;">
@@ -604,10 +610,10 @@ const volScale = 3000 / maxVol;  // Ajusté pour que barres soient visibles
 
 display(Plot.plot({
   style: { fontFamily: "Inter, system-ui, sans-serif" },
-  width: 500,
-  height: 225,
-  marginLeft: 46,
-  marginRight: 55,
+  width: 430,
+  height: 210,
+  marginLeft: 42,
+  marginRight: 50,
   marginBottom: 22,
   x: {
     label: null,
@@ -724,10 +730,10 @@ if (indexSeries.length > 0) {
 
   display(Plot.plot({
     style: { fontFamily: "Inter, system-ui, sans-serif" },
-    width: 500,
-    height: 225,
-    marginLeft: 40,
-    marginRight: 130,
+    width: 430,
+    height: 210,
+    marginLeft: 38,
+    marginRight: 110,
     marginBottom: 22,
     x: { label: null, tickFormat: d => String(Math.round(d)), ticks: anneesIdx.filter(y => y % 2 === 0) },
     y: { label: "Indice", grid: true },
@@ -766,11 +772,14 @@ Prix global pondéré (mai+apt) | Base 100 = 2010 | — France ref | Ctrl+clic c
 <!-- Cartes communes sélectionnées (2 côte à côte) -->
 
 ```js
-// === CARTES COMMUNES (2 sélectionnés côte à côte) ===
+// === CARTES COMMUNES (2 côte à côte) ===
+// Carte 1 = zoomCode (clic simple carte), Carte 2 = 1er sélectionné (via search/ctrl+clic)
 const filterKey = meta?.filterKey || "DEP";
 const isEPCI = echelon === "EPCI";
-const commCodesMaps = [...(mapSelectionState.value || [])].slice(0, 2);
-const commTargetsMaps = commCodesMaps.length > 0 ? commCodesMaps : [zoomCode];
+const selCodes = [...mapSelectionState];
+const mapCode1 = zoomCode || RENNES_CODE;
+const mapCode2 = selCodes.length > 0 && selCodes[0] !== mapCode1 ? selCodes[0] : (selCodes[1] || RENNES_CODE);
+const commTargetsMaps = mapCode1 !== mapCode2 ? [mapCode1, mapCode2] : [mapCode1];
 
 const commQueriesMaps = commTargetsMaps.map(tCode => {
   const tFilter = isEPCI ? null : { [filterKey]: [tCode] };
@@ -785,7 +794,7 @@ const commQueriesMaps = commTargetsMaps.map(tCode => {
 const commResultsMaps = await Promise.all(commQueriesMaps);
 
 const commContainerMaps = document.createElement("div");
-commContainerMaps.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;";
+commContainerMaps.style.cssText = "display:flex;gap:6px;flex-wrap:nowrap;";
 
 for (let ci = 0; ci < commTargetsMaps.length; ci++) {
   const tCode = commTargetsMaps[ci];
@@ -810,8 +819,8 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
   const tEcart = isEcart ? computeEcartFrance(tData, colKey, ecart.ref, { sigma: ecart.sigma, indicType: INDICATEURS[indic]?.type }) : null;
   const tGetColor = isEcart ? tEcart.getColor : isGradient ? tGrad.getColor : tBins.getColor;
 
-  const mapW = commTargetsMaps.length === 1 ? 400 : 265;
-  const mapH = commTargetsMaps.length === 1 ? 320 : 220;
+  const mapW = 210;
+  const mapH = 180;
 
   const cMap = renderChoropleth({
     geoData: tGeo, valueCol: colKey,
@@ -851,11 +860,7 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
 
   const card = document.createElement("div");
   card.className = "card";
-  card.style.cssText = "padding:4px;flex:1;min-width:240px;";
-  const cardTitle = document.createElement("div");
-  cardTitle.style.cssText = "font-size:10px;font-weight:600;color:#374151;margin-bottom:2px;";
-  cardTitle.textContent = `${indicLabel} — ${tLabel}`;
-  card.appendChild(cardTitle);
+  card.style.cssText = "padding:2px;flex:1;min-width:0;overflow:hidden;";
   card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), {
     exportSVGFn: exportSVG, echelon: tLabel, colKey, title: `${indicLabel} — ${tLabel}`
   }));
@@ -869,7 +874,7 @@ display(commContainerMaps);
 <!-- Fin colonne 2 graphiques + communes -->
 
 <!-- COLONNE DROITE : Communes >50K habitants -->
-<div style="flex:0 0 360px;min-width:320px;display:flex;flex-direction:column;overflow:hidden;">
+<div style="flex:0 0 340px;min-width:300px;display:flex;flex-direction:column;align-self:flex-start;max-height:calc(100vh - 200px);overflow:hidden;">
 
 ```js
 // === SORT STATE COMMUNES (bloc séparé pour réactivité) ===
@@ -948,7 +953,7 @@ const colorCell = (col, val) => {
 // Header avec tooltip note de lecture
 const commHeader = document.createElement("div");
 commHeader.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;";
-commHeader.innerHTML = `<span style="font-size:12px;font-weight:600;color:#374151;font-family:Inter,system-ui,sans-serif;">Communes >50K hab. <span class="panel-tooltip-wrap" style="margin-left:2px;"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text" style="width:220px;left:0;transform:none;">Communes >50 000 hab. Prix DVF pondéré (maisons+appart). Fond vert = supérieur à la réf. France, fond violet = inférieur. Seuls les extrêmes (>1.5 écart-type) sont colorés.</span></span></span><span style="font-size:10px;color:#9ca3af;font-family:Inter,system-ui,sans-serif;">${commData50k.length} villes</span>`;
+commHeader.innerHTML = `<span style="font-size:12px;font-weight:600;color:#1e293b;font-family:Inter,system-ui,sans-serif;">Communes >50K hab. <span class="panel-tooltip-wrap" style="margin-left:2px;"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text" style="width:220px;left:0;transform:none;">Communes >50 000 hab. Prix DVF pondéré (maisons+appart). Fond vert = supérieur à la réf. France, fond violet = inférieur. Seuls les extrêmes (>1.5 écart-type) sont colorés.</span></span></span><span style="font-size:10px;color:#9ca3af;font-family:Inter,system-ui,sans-serif;">${commData50k.length} villes</span>`;
 
 // Container table
 const commTableWrap = document.createElement("div");
@@ -982,8 +987,8 @@ function renderCommTable() {
     return sa ? va - vb : vb - va;
   });
 
-  const thStyle = "padding:2px 4px;font-size:9px;font-weight:600;color:#374151;border-bottom:2px solid #d1d5db;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:#f8fafc;z-index:2;";
-  const tdStyle = "padding:2px 4px;font-size:10px;color:#374151;border-bottom:1px solid #f0f0f0;white-space:nowrap;";
+  const thStyle = "padding:2px 4px;font-size:9.5px;font-weight:600;color:#374151;border-bottom:2px solid #d1d5db;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:#f8fafc;z-index:2;";
+  const tdStyle = "padding:2px 4px;font-size:11px;color:#1e293b;border-bottom:1px solid #e5e7eb;white-space:nowrap;background:#fff;";
 
   let html = `<table style="width:100%;border-collapse:collapse;"><thead><tr>`;
   for (const cd of colDefs) {
