@@ -6,10 +6,9 @@ style: styles/dashboard-light.css
 ---
 
 <!-- ============================================================
-     Volet Économie ZE — Carte + Courbe + Tableau indicateurs
-     Date: 2026-01-20 | v0.3: Refonte indicateurs spécialisation
-     Layout: Gauche (carte + courbe) | Droite (tableau secteurs)
-     Dessous: Tableau indicateurs éco (style exdtc)
+     Volet Économie ZE — Refactoré architecture exdlog
+     Date: 2026-02-10 | v0.5: Flex left/right (cartes|table), sans KPI banner
+     Layout: Sidebar duplex | Flex[cartes+butterfly | table ZE] | Analytique
      ============================================================ -->
 
 <!-- &s TODO_VOLET_ECO
@@ -59,7 +58,7 @@ import rewind from "npm:@mapbox/geojson-rewind";
 import * as Plot from "npm:@observablehq/plot";
 
 import { getEchelonMeta, getLabelMap, setLabelMap, getFranceData, getDataNoFrance } from "./helpers/0loader.js";
-import { DEFAULT_ECO_TABLE_INDICS } from "./helpers/constants.js";
+import { DEFAULT_ECO_TABLE_INDICS, getDefaultZoomCode } from "./helpers/constants.js";
 import { getIndicOptionsByVolet, getPeriodesForIndicateur, getDefaultPeriode, buildColKey, getIndicLabel, getPeriodeLabel } from "./helpers/selectindic.js";
 import { formatValue, INDICATEURS } from "./helpers/indicators-ddict-js.js";
 import { computeIndicBins, countBins, createGradientScale, GRADIENT_PALETTES, computeEcartFrance, PAL_ECART_FRANCE, ECART_FRANCE_SYMBOLS } from "./helpers/colors.js";
@@ -72,6 +71,7 @@ import { renderButterflyMulti } from "./helpers/graph-butterfly.js";
 import { renderSlopeChart, renderIndice100Chart, renderIndice100Multi, LABELS_A5 } from "./helpers/graph-slope-indice.js";
 import { renderTreemapA5A21, renderTreemapSimple } from "./helpers/graph-treemap.js";
 import { renderButterflyVertical } from "./helpers/graph-butterfly-vertical.js";
+import { createSelectionManager, createMapClickHandler } from "./helpers/selection.js";
 
 // === duckdb.js — Queries Parquet communes ===
 import {
@@ -147,75 +147,99 @@ const meta = getEchelonMeta("Zone d'emploi");
 
 // Colonnes disponibles
 const AVAILABLE_COLUMNS = new Set(Object.keys(zeData[0] || {}));
+
+// Options indicateurs éco
+const ecoIndicOptions = getIndicOptionsByVolet("ecodash");
+const _ecoVals = new Set(ecoIndicOptions.values());
+
+// Colonnes KPI/table fixes (métriques éco clés)
+const defaultTableCols = [
+  "eco_emp_vtcam_1622", "eco_emppriv_vtcam_1924", "eco_emppriv_vtcam_2224",
+  "eco_txemp_1564_22", "eco_krugman_a5_22", "eco_krugman_a38_23",
+  "eco_emp_pres_pct_23"
+].filter(c => AVAILABLE_COLUMNS.has(c));
 ```
 <!-- &e INIT -->
 
 <!-- &s STATE -->
 ```js
-// Présélection Rennes (5315) + Paris (1109) par défaut
+// Pré-sélection : Rennes (5315) + Paris (1109)
 const mapSelectionState = Mutable(new Set(["5315", "1109"]));
+const zoomTargetState = Mutable("5315");
 const sortState = Mutable({ col: "eco_krugman_a5_22", asc: false });
+const pageState = Mutable(0);
 
-const addToSelection = (code) => {
-  const s = new Set(mapSelectionState.value);
-  s.add(code);
-  mapSelectionState.value = s;
-};
+// Selection manager (centralisé depuis selection.js)
+const selectionMgr = createSelectionManager(mapSelectionState, zoomTargetState, pageState);
+const { addToSelection, removeFromSelection, setZoomOnly, toggleMapSelection, clearMapSelection } = selectionMgr;
 
-const removeFromSelection = (code) => {
-  const s = new Set(mapSelectionState.value);
-  s.delete(code);
-  mapSelectionState.value = s;
-};
-
-const toggleMapSelection = (code) => {
-  if (mapSelectionState.value.has(code)) {
-    removeFromSelection(code);
-  } else {
-    addToSelection(code);
-  }
-};
-
-const clearMapSelection = () => {
-  mapSelectionState.value = new Set();
-};
-
+// Tri
 const setSort = (col) => {
   const curr = sortState.value.col;
   const asc = sortState.value.asc;
   sortState.value = curr === col ? { col, asc: !asc } : { col, asc: false };
+  pageState.value = 0;
 };
-
 ```
 <!-- &e STATE -->
 
 <!-- &s SUB_BANNER -->
-<div class="sub-banner" style="margin-left:260px;width:calc(100% - 260px);">
-<div class="sub-banner-inner">
+<style>
+.sub-banner select { font-size: 12px !important; background: #fff !important; border: 1px solid #e2e8f0 !important; }
+/* Tooltip aide lecture tableaux */
+.table-help-wrap { display: inline-block; position: relative; vertical-align: middle; margin-left: 6px; }
+.table-help-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: #e5e7eb; color: #6b7280;
+  font-size: 11px; font-weight: 700; cursor: help;
+}
+.table-help-wrap .help-tooltip {
+  display: none; position: absolute;
+  top: 22px; left: -8px; z-index: 100;
+  background: white; border: 1px solid #d1d5db;
+  border-radius: 6px; padding: 10px 14px;
+  font-size: 12px; font-weight: 400;
+  width: 310px; line-height: 1.6;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+}
+.table-help-wrap:hover .help-tooltip { display: block; }
+</style>
+<div class="sub-banner">
+<div style="display:flex;padding:4px 16px;gap:16px;align-items:center;">
 
-<div class="sub-group">
-<div class="sub-group-title">Indicateur carte</div>
+<!-- Échelon selector -->
+<div style="min-width:120px;flex-shrink:0;">
 
 ```js
-// Sélecteur indicateurs éco pour la carte — filtre "ecodash" (22 indicateurs éco)
-const indicCarte = view(Inputs.select(getIndicOptionsByVolet("ecodash", null, true), { value: "eco_krugman_a38", label: "" }));
-```
-
-```js
-const perCarteMap = getPeriodesForIndicateur(indicCarte);
-const periodeCarte = view(Inputs.select(perCarteMap, { value: [...perCarteMap.values()][0], label: "" }));
+const echelon = view(Inputs.radio(["Zone d'emploi"], { value: "Zone d'emploi", label: "Échelon" }));
 ```
 
 </div>
-<div class="sub-sep"></div>
 
-<div class="sub-group">
-<div class="sub-group-title">Sélection</div>
+<!-- KPI Table compact : France + ZE sélectionnées -->
+<div style="flex:1;overflow-x:auto;">
 
 ```js
-display(mapSelectionState.size > 0
-  ? html`<span style="color:#2563eb;font-weight:600">${mapSelectionState.size} ZE</span> <button style="padding:1px 4px;cursor:pointer;background:#fee2e2;border:1px solid #fca5a5;border-radius:3px;color:#991b1b;" onclick=${clearMapSelection}>✕</button>`
-  : html`<span style="color:#6b7280;">Aucune</span>`);
+// Tableau KPI compact — France + ZE sélectionnées (max 5)
+const kpiSelCodes = [...mapSelectionState].slice(0, 5);
+const kpiSelData = kpiSelCodes.map(c => dataNoFrance.find(d => d.code === c)).filter(Boolean);
+const kpiData = [frData, ...kpiSelData].filter(Boolean);
+
+const kpiCols = [
+  { key: "libelle", label: "", type: "text", width: 120 },
+  ...defaultTableCols.map(col => {
+    const indicK = col.replace(/_\d+$/, "");
+    const per = col.match(/_(\d{2,4})$/)?.[1] || "";
+    return { key: col, label: getIndicLabel(indicK, "medium"), unit: getIndicUnit(col), periode: per ? getPeriodeLabel(per, "short") : "" };
+  })
+];
+
+const kpiStats = computeBarStats(kpiData, defaultTableCols);
+display(renderTable({
+  data: kpiData, columns: kpiCols, stats: kpiStats,
+  compact: true, maxHeight: 160, scrollX: true, stickyFirstCol: 1
+}));
 ```
 
 </div>
@@ -224,37 +248,85 @@ display(mapSelectionState.size > 0
 </div>
 <!-- &e SUB_BANNER -->
 
+<!-- Styles sidebar -->
+<style>
+.sidebar {
+  overflow-x: hidden !important;
+}
+.sidebar select {
+  font-size: 12px !important;
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.sidebar select[multiple] {
+  height: 280px !important;
+}
+.sidebar form {
+  width: 100% !important;
+  max-width: 230px !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+.sidebar label {
+  max-width: 220px !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+</style>
+
 <!-- &s SIDEBAR -->
 <aside class="sidebar">
 
 <section class="panel">
-<div class="panel-title">SÉLECTION ZE</div>
-<div id="search-container" style="margin-top:6px;"></div>
+<div class="panel-title">INDICATEUR CARTE 1</div>
+
+```js
+const defaultIndic1 = _ecoVals.has("eco_krugman_a38") ? "eco_krugman_a38" : "eco_krugman_a5";
+const indic1 = view(Inputs.select(ecoIndicOptions, { value: defaultIndic1, label: "" }));
+```
+
+```js
+const perMap1 = getPeriodesForIndicateur(indic1);
+const periode1 = view(Inputs.select(perMap1, { value: [...perMap1.values()][0], label: "Période" }));
+```
+
+```js
+const colorMode1 = view(Inputs.radio(["Répart.", "Écart Fr.", "Gradient"], { value: "Répart.", label: "" }));
+```
+
 </section>
 
 <section class="panel">
-<div class="panel-title">OPTIONS CARTE</div>
+<div class="panel-title">INDICATEUR CARTE 2</div>
 
 ```js
-const _colorModeInput = Inputs.radio(["Répartition", "Écart France", "Gradient"], { value: "Répartition", label: "Mode" });
-const _radioTips = {
-  "Répartition": "Découpe en classes de taille égale (quantiles). Chaque couleur contient environ le même nombre de territoires.",
-  "Écart France": "Compare chaque territoire à la valeur France. 9 niveaux symétriques autour de la référence nationale (écart-type winsorisé).",
-  "Gradient": "Dégradé continu proportionnel à la valeur brute. Outliers atténués aux percentiles P02-P98."
-};
-_colorModeInput.querySelectorAll("label").forEach(lbl => {
-  const input = lbl.querySelector("input");
-  const txt = input?.value;
-  if (_radioTips[txt]) {
-    const tip = document.createElement("span");
-    tip.className = "panel-tooltip-wrap";
-    tip.style.marginLeft = "2px";
-    tip.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">${_radioTips[txt]}</span>`;
-    lbl.appendChild(tip);
-  }
-});
-const colorMode = view(_colorModeInput);
-const showValuesOnMap = view(Inputs.toggle({ label: "Labels", value: true }));
+const defaultIndic2 = _ecoVals.has("eco_emp_vtcam") ? "eco_emp_vtcam" : "eco_emppriv_vtcam";
+const indic2 = view(Inputs.select(ecoIndicOptions, { value: defaultIndic2, label: "" }));
+```
+
+```js
+const perMap2 = getPeriodesForIndicateur(indic2);
+const periode2 = view(Inputs.select(perMap2, { value: [...perMap2.values()][0], label: "Période" }));
+```
+
+```js
+const colorMode2 = view(Inputs.radio(["Répart.", "Écart Fr.", "Gradient"], { value: "Écart Fr.", label: "" }));
+```
+
+</section>
+
+<section class="panel">
+<div class="panel-title">SÉLECTION ZE</div>
+<div id="search-container" style="margin-top:6px;min-height:100px;"></div>
+</section>
+
+<section class="panel">
+<div class="panel-title">OPTIONS CARTES</div>
+
+```js
+const showValuesOnMap = view(Inputs.toggle({ label: "Afficher labels", value: true }));
 const labelBy = view(Inputs.select(new Map([
   ["Principaux terr.", "population"],
   ["Top 20 + Bot 20", "top5_bot5"],
@@ -267,13 +339,11 @@ const labelMode = view(Inputs.radio(["values", "names", "both"], { value: "both"
 </section>
 
 <section class="panel">
-<div class="panel-title">Indicateurs tableau</div>
-<span class="panel-hint"><i>ctrl/shift click pour multi-sélection</i></span>
+<div class="panel-title">INDICATEURS TABLEAU <span class="panel-tooltip-wrap"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">ctrl/shift click pour multi-sélection</span></span></div>
 
 ```js
-// Multi-select indicateurs supplémentaires (dans sidebar) — volet ecodash
 const extraIndics = view(Inputs.select(
-  getIndicOptionsByVolet("ecodash", null, true),
+  ecoIndicOptions,
   { label: "", multiple: true, value: [], width: 230 }
 ));
 ```
@@ -284,7 +354,52 @@ const extraIndics = view(Inputs.select(
 <!-- &e SIDEBAR -->
 
 <!-- &s LAYOUT_MAIN -->
-<div class="layout-main">
+<div class="layout-main" style="margin-top:8px;">
+
+```js
+// === DONNÉES + BINDINGS ===
+// Aliases rétro-compat (colKey = carte 1 pour tableaux/bannière)
+const indic = indic1;
+const indicCarte = indic1;
+const colKey1 = buildColKey(indic1, periode1);
+const colKey2 = buildColKey(indic2, periode2);
+const colKey = colKey1;
+const colKeyCarte = colKey1;
+const indicLabel = getIndicLabel(indic1, "long");
+const indicLabel2 = getIndicLabel(indic2, "long");
+const labelCarte = indicLabel;
+
+// Joindre données aux géométries (les 2 colKeys)
+for (const f of zeGeo.features) {
+  const row = dataNoFrance.find(d => d.code === f.properties[meta.geoKey]);
+  if (row) {
+    f.properties[colKey1] = row[colKey1];
+    f.properties[colKey2] = row[colKey2];
+    f.properties.P23_POP = row.P23_POP;
+  }
+}
+
+// Bins et couleurs — CARTE 1
+const _cm1 = colorMode1;
+const indicBins = computeIndicBins(dataNoFrance, colKey1, indic1);
+const { bins, palette: PAL, isDiv, getColor: getColorBins } = indicBins;
+const gradient = createGradientScale(dataNoFrance, colKey1);
+const isGradient = _cm1 === "Gradient";
+const isEcart = _cm1 === "Écart Fr.";
+const ecart = computeEcartFrance(dataNoFrance, colKey1, frData?.[colKey1], { indicType: INDICATEURS[indic1]?.type });
+const getColor = isEcart ? ecart.getColor : isGradient ? gradient.getColor : getColorBins;
+
+// Bins et couleurs — CARTE 2
+const _cm2 = colorMode2;
+const indicBins2 = computeIndicBins(dataNoFrance, colKey2, indic2);
+const gradient2 = createGradientScale(dataNoFrance, colKey2);
+const isGradient2 = _cm2 === "Gradient";
+const isEcart2 = _cm2 === "Écart Fr.";
+const ecart2 = computeEcartFrance(dataNoFrance, colKey2, frData?.[colKey2], { indicType: INDICATEURS[indic2]?.type });
+const getColor2 = isEcart2 ? ecart2.getColor : isGradient2 ? gradient2.getColor : indicBins2.getColor;
+
+```
+
 
 ```js
 // === SIDEBAR SEARCH ===
@@ -293,74 +408,101 @@ const searchBox = createSearchBox({
   data: searchData, selection: mapSelectionState, onToggle: toggleMapSelection, onClear: clearMapSelection,
   placeholder: "Rechercher ZE...", maxResults: 8, maxChips: 4, maxWidth: 230, showClearAll: true, showCount: true
 });
-const searchContainer = document.getElementById('search-container');
-if (searchContainer) { searchContainer.innerHTML = ''; searchContainer.appendChild(searchBox); }
+
+setTimeout(() => {
+  const searchContainer = document.getElementById('search-container');
+  if (searchContainer) { searchContainer.innerHTML = ''; searchContainer.appendChild(searchBox); }
+}, 100);
 ```
 
 ```js
-// === DONNÉES CARTE ===
-const colKeyCarte = buildColKey(indicCarte, periodeCarte);
-const labelCarte = getIndicLabel(indicCarte, "long");
+// === PRE-COMPUTE : Zoom + Commune maps data ===
+if (!window._zoomStatesEco) window._zoomStatesEco = {};
+const _zoomVal = zoomTargetState;
+const zoomCode = (_zoomVal && zeLabelMap.has(_zoomVal)) ? _zoomVal : "5315";
+const zoomLabel = zeLabelMap.get(zoomCode) || zoomCode;
 
-// Bindage geo
-for (const f of zeGeo.features) {
-  const row = dataNoFrance.find(d => d.code === f.properties[meta.geoKey]);
-  if (row) {
-    f.properties[colKeyCarte] = row[colKeyCarte];
-    f.properties.P23_POP = row.P23_POP;
-  }
+// Commune maps : pre-fetch data pour ZE zoomée
+const _selCodes = [...mapSelectionState];
+const _mc1 = zoomCode || "5315";
+
+const _fetchComm = (tCode) => {
+  return queryCommunes({ conn }, {
+    tableName: "communes",
+    filter: { ZE2020: [tCode] },
+    columns: ["code", "libelle", "P23_POP", colKey1, colKey2].filter((v,i,a) => a.indexOf(v) === i),
+    limit: 2000
+  });
+};
+const _cd1 = await _fetchComm(_mc1);
+
+// Helper : crée un élément carte commune (paramétrable carte 1 ou 2 via opts)
+function buildCommMap(tCode, tData, w, h, opts = {}) {
+  const _ck = opts.colKey || colKey1;
+  const _ind = opts.indic || indic1;
+  const _ib = opts.indicBins || indicBins;
+  const _gr = opts.gradient || gradient;
+  const _isE = opts.isEcart != null ? opts.isEcart : isEcart;
+  const _ec = opts.ecart || ecart;
+  const _isG = opts.isGradient != null ? opts.isGradient : isGradient;
+  const _il = opts.indicLabel || indicLabel;
+
+  const tLabel = zeLabelMap.get(tCode) || tCode;
+  const tMap = new Map(tData.map(d => [d.code, d]));
+  const tFeats = communesGeo.features.filter(f => String(f.properties.ZE2020) === String(tCode));
+  const tGeo = { type: "FeatureCollection", features: tFeats.map(f => { const d = tMap.get(f.properties.CODGEO); return { ...f, properties: { ...f.properties, libelle: d?.libelle, P23_POP: d?.P23_POP, [_ck]: d?.[_ck] } }; }) };
+  if (tGeo.features.length === 0) return null;
+  const tBins = tData.length >= 10 ? computeIndicBins(tData, _ck, _ind) : _ib;
+  const tGrad = tData.length >= 10 ? createGradientScale(tData, _ck) : _gr;
+  const tEcart = _isE ? computeEcartFrance(tData, _ck, _ec.ref, { sigma: _ec.sigma, indicType: INDICATEURS[_ind]?.type }) : null;
+  const tGetColor = _isE ? tEcart.getColor : _isG ? tGrad.getColor : tBins.getColor;
+  const cMap = renderChoropleth({ geoData: tGeo, valueCol: _ck, getColor: tGetColor, getCode: f => f.properties.CODGEO, getLabel: ({ code }) => tMap.get(code)?.libelle || code, formatValue: (k, v) => formatValue(_ind, v), indicLabel: _il, showLabels: showValuesOnMap, labelMode, labelBy, topN: 200, title: tLabel, maxLabelsAuto: 80, echelon: "Commune", width: w, height: h });
+  if (!cMap) return null;
+  if (cMap._tipConfig) { cMap._tipConfig.frRef = frData?.[_ck]; cMap._tipConfig.frGetEcartInfo = _isE ? tEcart?.getEcartInfo : _ec.getEcartInfo; }
+  const tEcartCounts = _isE ? countBins(tData, _ck, tEcart.thresholds || []) : [];
+  const cLegend = _isE
+    ? createEcartFranceLegend({ palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS, pctLabels: tEcart.pctLabels, counts: tEcartCounts, title: "Écart France" })
+    : _isG
+    ? createGradientLegend({ colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential, min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent, decimals: 2, title: "Légende", capped: true, rawMin: tGrad.rawMin, rawMax: tGrad.rawMax })
+    : createBinsLegend({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, _ck, tBins.bins.thresholds || []), vertical: true, title: "Légende", unit: getIndicUnit(_ck), reverse: !tBins.isDiv });
+  const card = document.createElement("div");
+  card.style.cssText = "padding:4px;";
+  card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), { exportSVGFn: exportSVG, echelon: tLabel, colKey: _ck, title: `${_il} — ${tLabel}` }));
+  return card;
 }
-
-const indicBins = computeIndicBins(dataNoFrance, colKeyCarte, indicCarte);
-const { bins, palette, isDiv, getColor: getColorBins } = indicBins;
-const gradient = createGradientScale(dataNoFrance, colKeyCarte);
-const isGradient = colorMode === "Gradient";
-const isEcart = colorMode === "Écart France";
-const ecart = computeEcartFrance(dataNoFrance, colKeyCarte, frData?.[colKeyCarte], { indicType: INDICATEURS[indicCarte]?.type });
-const getColor = isEcart ? ecart.getColor : isGradient ? gradient.getColor : getColorBins;
 ```
 
-<!-- Titre aligné (~35% + ~65%) -->
-<div style="display:flex;gap:12px;margin-bottom:8px;align-items:baseline;">
-<h3 style="flex:1.3;min-width:500px;max-width:580px;margin:0;">Économie — Zones d'emploi</h3>
-<h3 style="flex:2.5;margin:0;">Tableau ZE</h3>
-</div>
-
+<!-- &s CARTES_ET_TABLEAU -->
 <div style="display:flex;gap:12px;align-items:stretch;">
 
-<!-- COLONNE GAUCHE : Carte + Courbe (~40%) -->
-<div style="flex:1.3;min-width:500px;max-width:580px;display:flex;flex-direction:column;gap:12px;">
-
-<div class="card">
-<h2>${labelCarte}</h2>
+<!-- COLONNE GAUCHE : cartes + butterfly -->
+<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:4px;padding-left:6px;">
 
 ```js
-const mapZE = renderChoropleth({
-  geoData: zeGeo, valueCol: colKeyCarte,
+display(html`<h3 style="margin:0 0 4px 0;">Économie — Zones d'emploi // Focus communes : ${zoomLabel}</h3>`);
+```
+
+<!-- Cartes nationales côte à côte -->
+<div class="cards-row">
+
+<div class="card">
+
+```js
+// === CARTE NATIONALE 1 (indic1) ===
+const map = renderChoropleth({
+  geoData: zeGeo, valueCol: colKey1,
   getColor: (v, f) => getColor(v),
   getCode: f => f.properties[meta.geoKey],
   getLabel: ({ code }) => zeLabelMap.get(code) || code,
-  formatValue: (k, v) => formatValue(indicCarte, v),
-  indicLabel: labelCarte, selectedCodes: [...mapSelectionState],
-  showLabels: showValuesOnMap, labelMode, labelBy, topN: 10,
-  title: labelCarte, echelon: "Zone d'emploi", width: 500, height: 440
+  formatValue: (k, v) => formatValue(indic1, v),
+  indicLabel, selectedCodes: [...mapSelectionState],
+  showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
+  title: indicLabel, echelon: "Zone d'emploi", width: 395, height: 365, maxLabelsAuto: 600
 });
 
-// Click = toggle sélection
-mapZE.style.cursor = "pointer";
-mapZE.addEventListener("click", (e) => {
-  const path = e.target.closest("path");
-  if (!path) return;
-  const paths = Array.from(path.parentElement.querySelectorAll("path"));
-  const idx = paths.indexOf(path);
-  if (idx >= 0 && idx < zeGeo.features.length) {
-    const code = zeGeo.features[idx].properties[meta.geoKey];
-    toggleMapSelection(code);
-  }
-});
-
-const unit = getIndicUnit(colKeyCarte);
-const ecartCounts = isEcart ? countBins(dataNoFrance, colKeyCarte, ecart.thresholds || []) : [];
+const counts = countBins(dataNoFrance, colKey1, bins.thresholds || []);
+const unit = getIndicUnit(colKey1);
+const ecartCounts = isEcart ? countBins(dataNoFrance, colKey1, ecart.thresholds || []) : [];
 const legend = isEcart
   ? createEcartFranceLegend({
       palette: ecart.palette, symbols: ECART_FRANCE_SYMBOLS,
@@ -371,38 +513,168 @@ const legend = isEcart
   ? createGradientLegend({
       colors: gradient.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient.min, max: gradient.max, showZero: gradient.divergent,
-      decimals: 2, title: `Légende${unit ? " (" + unit + ")" : ""}`
+      decimals: 2, title: `Légende${unit ? " (" + unit + ")" : ""}`,
+      capped: true, rawMin: gradient.rawMin, rawMax: gradient.rawMax
     })
   : createBinsLegend({
-      colors: palette, labels: bins.labels || [], counts: [],
+      colors: PAL, labels: bins.labels || [], counts,
       vertical: true, title: "Légende", unit, reverse: !isDiv
     });
 
-// Tooltip : toujours passer frRef + frGetEcartInfo pour symbole au survol
-if (mapZE._tipConfig) {
-  mapZE._tipConfig.frRef = frData?.[colKeyCarte];
-  mapZE._tipConfig.frGetEcartInfo = ecart.getEcartInfo;
+// Click handler : clic normal = zoom, ctrl+clic = sélection
+map.style.cursor = "pointer";
+map.addEventListener("click", (e) => {
+  const path = e.target.closest("path");
+  if (!path) return;
+  const paths = Array.from(path.parentElement.querySelectorAll("path"));
+  const idx = paths.indexOf(path);
+  if (idx >= 0 && idx < zeGeo.features.length) {
+    const code = zeGeo.features[idx].properties[meta.geoKey];
+    if (e.ctrlKey || e.metaKey) addToSelection(code);
+    else setZoomOnly(code);
+  }
+});
+
+if (map._tipConfig) {
+  map._tipConfig.frRef = frData?.[colKey1];
+  map._tipConfig.frGetEcartInfo = ecart.getEcartInfo;
 }
 
-display(createMapWrapper(mapZE, null, legend, addZoomBehavior(mapZE)));
+const wrapper = createMapWrapper(map, null, legend, addZoomBehavior(map, {
+  initialTransform: window._zoomStatesEco.map1,
+  onZoom: t => { window._zoomStatesEco.map1 = t; }
+}), { exportSVGFn: exportSVG, echelon: "Zone d'emploi", colKey: colKey1, title: indicLabel });
 
-// Valeur France sous la carte
-const frVal = frData?.[colKeyCarte];
-if (frVal != null) {
-  display(html`<div style="font-size:11px;color:#374151;margin-top:4px;">
-    France : <b style="font-style:italic;">${formatValue(indicCarte, frVal)}</b>
-  </div>`);
+const frVal = frData?.[colKey1];
+const zeZoomRow = dataNoFrance.find(d => d.code === zoomCode);
+const zeVal = zeZoomRow?.[colKey1];
+const valuesDiv = document.createElement("div");
+valuesDiv.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;line-height:1.5;";
+let valHtml = "";
+if (frVal != null) valHtml += `France : <b style="font-style:italic;">${formatValue(indic1, frVal)}</b>`;
+if (zeVal != null) valHtml += `${frVal != null ? " · " : ""}${zoomLabel} : <b style="font-style:italic;color:#1e40af;">${formatValue(indic1, zeVal)}</b>`;
+if (valHtml) { valuesDiv.innerHTML = valHtml; wrapper.appendChild(valuesDiv); }
+display(wrapper);
+```
+
+</div>
+
+<div class="card">
+
+```js
+// === CARTE NATIONALE 2 (indic2) ===
+const map2 = renderChoropleth({
+  geoData: zeGeo, valueCol: colKey2,
+  getColor: (v, f) => getColor2(v),
+  getCode: f => f.properties[meta.geoKey],
+  getLabel: ({ code }) => zeLabelMap.get(code) || code,
+  formatValue: (k, v) => formatValue(indic2, v),
+  indicLabel: indicLabel2, selectedCodes: [...mapSelectionState],
+  showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
+  title: indicLabel2, echelon: "Zone d'emploi", width: 395, height: 365, maxLabelsAuto: 600
+});
+
+const counts2 = countBins(dataNoFrance, colKey2, indicBins2.bins.thresholds || []);
+const unit2 = getIndicUnit(colKey2);
+const ecartCounts2 = isEcart2 ? countBins(dataNoFrance, colKey2, ecart2.thresholds || []) : [];
+const legend2 = isEcart2
+  ? createEcartFranceLegend({
+      palette: ecart2.palette, symbols: ECART_FRANCE_SYMBOLS,
+      pctLabels: ecart2.pctLabels,
+      counts: ecartCounts2, title: `Écart Fr. (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`
+    })
+  : isGradient2
+  ? createGradientLegend({
+      colors: gradient2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
+      min: gradient2.min, max: gradient2.max, showZero: gradient2.divergent,
+      decimals: 2, title: `Légende${unit2 ? " (" + unit2 + ")" : ""}`,
+      capped: true, rawMin: gradient2.rawMin, rawMax: gradient2.rawMax
+    })
+  : createBinsLegend({
+      colors: indicBins2.palette, labels: indicBins2.bins.labels || [], counts: counts2,
+      vertical: true, title: "Légende", unit: unit2, reverse: !indicBins2.isDiv
+    });
+
+map2.style.cursor = "pointer";
+map2.addEventListener("click", (e) => {
+  const path = e.target.closest("path");
+  if (!path) return;
+  const paths = Array.from(path.parentElement.querySelectorAll("path"));
+  const idx = paths.indexOf(path);
+  if (idx >= 0 && idx < zeGeo.features.length) {
+    const code = zeGeo.features[idx].properties[meta.geoKey];
+    if (e.ctrlKey || e.metaKey) addToSelection(code);
+    else setZoomOnly(code);
+  }
+});
+
+if (map2._tipConfig) {
+  map2._tipConfig.frRef = frData?.[colKey2];
+  map2._tipConfig.frGetEcartInfo = ecart2.getEcartInfo;
+}
+
+const wrapper2 = createMapWrapper(map2, null, legend2, addZoomBehavior(map2, {
+  initialTransform: window._zoomStatesEco.map2,
+  onZoom: t => { window._zoomStatesEco.map2 = t; }
+}), { exportSVGFn: exportSVG, echelon: "Zone d'emploi", colKey: colKey2, title: indicLabel2 });
+
+const frVal2 = frData?.[colKey2];
+const zeVal2 = zeZoomRow?.[colKey2];
+const valuesDiv2 = document.createElement("div");
+valuesDiv2.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;line-height:1.5;";
+let valHtml2 = "";
+if (frVal2 != null) valHtml2 += `France : <b style="font-style:italic;">${formatValue(indic2, frVal2)}</b>`;
+if (zeVal2 != null) valHtml2 += `${frVal2 != null ? " · " : ""}${zoomLabel} : <b style="font-style:italic;color:#1e40af;">${formatValue(indic2, zeVal2)}</b>`;
+if (valHtml2) { valuesDiv2.innerHTML = valHtml2; wrapper2.appendChild(valuesDiv2); }
+display(wrapper2);
+```
+
+</div>
+
+</div>
+<!-- Fin cartes nationales -->
+
+<!-- Cartes communes zoom (même ZE, 2 indicateurs) -->
+<div class="cards-row">
+
+<div class="card">
+
+```js
+// Carte commune — indic1 (zoom target)
+{
+  const mc1 = buildCommMap(_mc1, _cd1, 385, 320);
+  if (mc1) display(mc1);
+  else display(html`<div style="padding:40px;text-align:center;color:#6b7280;font-size:11px;">Pas de données communes pour cette ZE</div>`);
 }
 ```
 
 </div>
 
-<!-- GRAPHIQUE FLORES A21 sous la carte - BARRES HORIZONTALES -->
-<div class="card" style="margin-top:8px;padding:8px;">
+<div class="card">
+
+```js
+// Carte commune — indic2 (zoom target)
+{
+  const mc2 = buildCommMap(_mc1, _cd1, 385, 320, {
+    colKey: colKey2, indic: indic2, indicBins: indicBins2,
+    gradient: gradient2, isEcart: isEcart2, ecart: ecart2,
+    isGradient: isGradient2, indicLabel: indicLabel2
+  });
+  if (mc2) display(mc2);
+  else display(html`<div style="padding:40px;text-align:center;color:#6b7280;font-size:11px;">Pas de données communes pour cette ZE</div>`);
+}
+```
+
+</div>
+
+</div>
+
+<!-- Butterfly FLORES dans colonne gauche -->
+<div style="margin-top:8px;">
 
 ```js
 // === BUTTERFLY HORIZONTAL A21 FLORES ===
-const vbCodes = [...mapSelectionState];  // Tous les territoires sélectionnés
+const vbCodes = [...mapSelectionState];
 
 // France A21 FLORES (trié par part décroissante)
 const vbFranceData = floresFr.toArray()
@@ -419,40 +691,40 @@ const vbTerritories = vbCodes.map(code => {
   };
 });
 
-// Rendu butterfly horizontal (barres vers la droite)
 if (vbCodes.length > 0) {
+  display(html`<div class="card" style="padding:8px;">`);
   display(renderButterflyVertical({
     franceData: vbFranceData,
     territories: vbTerritories,
     options: {
-      width: 540,
+      width: 830,
       maxSectors: 12,
       barHeight: 18,
       title: "Répartition de l'emploi total par secteur d'activité (A21)"
     }
   }));
+  display(html`<p style="font-size:8px;color:#6b7280;margin:2px 0 0 0;">
+    FLORES A21 2023 — Part % + IS (violet > 1.15 = spécialisation, cyan < 0.85 = sous-représentation)
+  </p></div>`);
 } else {
-  display(html`<div style="padding:20px;text-align:center;color:#6b7280;font-size:11px;">
+  display(html`<div class="card" style="padding:20px;text-align:center;color:#6b7280;font-size:11px;">
     Sélectionnez une ZE pour voir la structure sectorielle
   </div>`);
 }
 ```
 
-<p style="font-size:8px;color:#6b7280;margin:2px 0 0 0;">
-  FLORES A21 2023 — Part % + IS (violet > 1.15 = spécialisation, cyan < 0.85 = sous-représentation)
-</p>
 </div>
-
 </div>
-<!-- Fin colonne gauche -->
+<!-- Fin COLONNE GAUCHE (cartes + butterfly) -->
 
-<!-- COLONNE DROITE : Tableau ZE (style exdtc) — 2/3 width, étendu -->
-<div class="card" style="flex:2.5;min-width:500px;padding:6px;display:flex;flex-direction:column;">
+<!-- COLONNE DROITE : search + table ZE -->
+<div style="flex:1;min-width:300px;display:flex;flex-direction:column;">
+<h3 style="margin:0 0 4px 0;">Tableau Zones d'emploi<span class="table-help-wrap"><span class="table-help-icon">?</span><span class="help-tooltip"><b>Couleurs</b> : intensit&eacute; proportionnelle &agrave; l'&eacute;cart par rapport &agrave; la moyenne.<br>&bull; <span style="color:#98cf90">&#9632;</span> Vert = au-dessus de la moyenne<br>&bull; <span style="color:#e46aa7">&#9632;</span> Violet = en-dessous de la moyenne<br>Plus la couleur est fonc&eacute;e, plus la valeur est extr&ecirc;me.<br><b>Filtre</b> : tapez un nom ou un n&deg; de ZE.</span></span></h3>
+<div class="card" style="flex:1;padding:6px;display:flex;flex-direction:column;min-height:0;">
 
 ```js
 // === STATE TABLEAU ZE ===
 const echSortState2 = Mutable({ col: colKeyCarte, asc: false });
-
 const setEchSort2 = (col) => {
   const curr = echSortState2.value.col;
   const asc = echSortState2.value.asc;
@@ -461,35 +733,30 @@ const setEchSort2 = (col) => {
 ```
 
 ```js
-// === SEARCHBAR TABLEAU (viewof pattern) ===
-const echSearchInput2 = view(Inputs.text({ placeholder: "1ers caract. territoire ou n° dép...", width: 180 }));
+// === SEARCHBAR TABLEAU ===
+const echSearchInput2 = view(Inputs.text({ placeholder: "Rechercher ZE...", width: 200 }));
 ```
 
 ```js
 // === DONNÉES TABLEAU ZE ===
-// Colonnes : indicateur carte + défauts ECO + sélection sidebar
 const selectedExtraIndics = extraIndics || [];
+const extraCols = selectedExtraIndics.filter(i => !i.startsWith("__sep_")).map(i => buildColKey(i, getDefaultPeriode(i)));
 
-// Indicateurs par défaut ECO (depuis constants.js) + sélection manuelle
-const defaultEcoCols = DEFAULT_ECO_TABLE_INDICS.map(i => buildColKey(i, getDefaultPeriode(i)));
-const extraCols = selectedExtraIndics.map(i => buildColKey(i, getDefaultPeriode(i)));
-
-// Construire clés colonnes avec période par défaut
-// Ordre: indicateur carte PUIS sélection sidebar PUIS défauts ECO
+// Ordre: indicateurs cartes → extras sidebar → défauts éco fixes
 const allEcoCols = [
-  colKeyCarte,  // Indicateur carte en premier
-  ...extraCols,  // Sélection sidebar en 2ème position
-  ...defaultEcoCols  // Indicateurs ECO par défaut ensuite
+  colKey1, colKey2,
+  ...extraCols,
+  ...defaultTableCols
 ].filter(c => AVAILABLE_COLUMNS.has(c));
 const echAllIndicCols2 = [...new Set(allEcoCols)];
 
 // Données avec France en 1ère ligne
 const echTableData2 = frData ? [frData, ...dataNoFrance] : dataNoFrance;
 
-// Filtre recherche (viewof réactif)
+// Filtre recherche
 const echSearchVal2 = (echSearchInput2 || "").toLowerCase();
 const echFiltered2 = echSearchVal2
-  ? echTableData2.filter(d => (d.libelle || "").toLowerCase().includes(echSearchVal2) || (d.code || "").includes(echSearchVal2))
+  ? echTableData2.filter(d => d.code === "00FR" || (d.libelle || "").toLowerCase().includes(echSearchVal2) || (d.code || "").includes(echSearchVal2))
   : echTableData2;
 
 // Tri
@@ -500,15 +767,15 @@ const echSorted2 = sortTableData(echFiltered2, echSortCol2, echSortAsc2);
 // Stats pour barres
 const echStats2 = computeBarStats(echFiltered2, echAllIndicCols2);
 
-// Colonnes compactes : Territoire + indicateurs
+// Colonnes avec labels medium pour homogénéité
 const echColumns2 = [
   { key: "libelle", label: "Zone d'emploi", type: "text", width: 130 },
   ...echAllIndicCols2.map(col => {
-    const indic = col.replace(/_\d+$/, "");
+    const indicK = col.replace(/_\d+$/, "");
     const per = col.match(/_(\d{2,4})$/)?.[1] || "";
     return {
       key: col,
-      label: getIndicLabel(indic, "short"),
+      label: getIndicLabel(indicK, "medium"),
       unit: getIndicUnit(col),
       periode: per ? getPeriodeLabel(per, "short") : ""
     };
@@ -521,16 +788,16 @@ display(html`<div style="display:flex;justify-content:space-between;align-items:
   <div style="display:flex;gap:4px;">
     <button style="font-size:10px;padding:2px 6px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:3px;cursor:pointer;"
       onclick=${() => exportCSV(echSorted2, echColumns2, "eco_ze_" + new Date().toISOString().slice(0,10) + ".csv")}>
-      📥
+      CSV
     </button>
     <button style="font-size:12px;padding:2px 6px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:3px;cursor:pointer;" title="Plein écran"
       onclick=${() => { const t = document.querySelector(".eco-table-fs-target"); if (t) openTableFullscreen(t); }}>
-      ⤢
+      &#x2922;
     </button>
   </div>
 </div>`);
 
-// Tableau compact avec scroll vertical (hauteur carte + courbe)
+// Tableau flex-grow pour couvrir hauteur cartes + butterfly
 const _ecoTblWrap = document.createElement("div");
 _ecoTblWrap.className = "eco-table-fs-target";
 _ecoTblWrap.style.cssText = "flex:1;display:flex;flex-direction:column;min-height:0;";
@@ -541,9 +808,8 @@ _ecoTblWrap.appendChild(renderTable({
   sortCol: echSortCol2,
   sortAsc: echSortAsc2,
   setSort: setEchSort2,
-  indicColKey: colKeyCarte,
   compact: true,
-  maxHeight: 1200,
+  maxHeight: 1800,
   scrollX: true,
   scrollbarTop: true,
   stickyFirstCol: true
@@ -552,121 +818,12 @@ display(_ecoTblWrap);
 void 0;
 ```
 
+</div><!-- card -->
 </div>
-<!-- Fin COLONNE DROITE (tableau) -->
-
-</div>
-
-<!-- &s CARTES_COMMUNES — Cartes communes par ZE sélectionnée -->
-<div style="margin-top:12px;">
-
-```js
-// === CARTES COMMUNES ZE (max 4 sélectionnées) ===
-const commCodesEco = [...mapSelectionState].slice(0, 4);
-
-if (commCodesEco.length > 0) {
-  // Query DuckDB en parallèle pour chaque ZE
-  const commQueriesEco = commCodesEco.map(code =>
-    queryCommunes({ conn }, {
-      tableName: "communes",
-      filter: { ZE2020: [code] },
-      columns: ["code", "libelle", "P23_POP", colKeyCarte],
-      limit: 2000
-    })
-  );
-  const commResultsEco = await Promise.all(commQueriesEco);
-
-  const commContainerEco = document.createElement("div");
-  commContainerEco.style.cssText = "display:flex;gap:12px;flex-wrap:wrap;";
-
-  for (let ci = 0; ci < commCodesEco.length; ci++) {
-    const tCode = commCodesEco[ci];
-    const tLabel = zeLabelMap.get(tCode) || tCode;
-    const tData = commResultsEco[ci];
-    const tMap = new Map(tData.map(d => [d.code, d]));
-
-    // Filtrer features commune par ZE2020
-    const tFeats = communesGeo.features.filter(f =>
-      String(f.properties.ZE2020) === String(tCode)
-    );
-    const tGeo = {
-      type: "FeatureCollection",
-      features: tFeats.map(f => {
-        const d = tMap.get(f.properties.CODGEO);
-        return { ...f, properties: { ...f.properties, libelle: d?.libelle, P23_POP: d?.P23_POP, [colKeyCarte]: d?.[colKeyCarte] } };
-      })
-    };
-
-    // Calcul couleurs selon mode actif
-    const tBins = tData.length >= 10 ? computeIndicBins(tData, colKeyCarte, indicCarte) : indicBins;
-    const tGrad = tData.length >= 10 ? createGradientScale(tData, colKeyCarte) : gradient;
-    const tEcart = isEcart ? computeEcartFrance(tData, colKeyCarte, ecart.ref, { sigma: ecart.sigma, indicType: INDICATEURS[indicCarte]?.type }) : null;
-    const tGetColor = isEcart ? tEcart.getColor : isGradient ? tGrad.getColor : tBins.getColor;
-
-    const mapW = commCodesEco.length === 1 ? 500 : commCodesEco.length <= 2 ? 400 : 300;
-    const mapH = commCodesEco.length === 1 ? 400 : commCodesEco.length <= 2 ? 320 : 260;
-
-    const cMap = renderChoropleth({
-      geoData: tGeo, valueCol: colKeyCarte,
-      getColor: tGetColor,
-      getCode: f => f.properties.CODGEO,
-      getLabel: ({ code }) => tMap.get(code)?.libelle || code,
-      formatValue: (k, v) => formatValue(indicCarte, v),
-      indicLabel: labelCarte, showLabels: showValuesOnMap,
-      labelMode, labelBy, topN: 200,
-      title: tLabel,
-      maxLabelsAuto: 80, echelon: "Commune", width: mapW, height: mapH
-    });
-
-    // Tooltip Écart France
-    if (cMap._tipConfig) {
-      cMap._tipConfig.frRef = frData?.[colKeyCarte];
-      cMap._tipConfig.frGetEcartInfo = isEcart ? tEcart.getEcartInfo : ecart.getEcartInfo;
-    }
-
-    // Légende adaptée au mode couleur
-    const tEcartCounts = isEcart ? countBins(tData, colKeyCarte, tEcart.thresholds || []) : [];
-    const cLegend = isEcart
-      ? createEcartFranceLegend({
-          palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS,
-          pctLabels: tEcart.pctLabels,
-          counts: tEcartCounts, title: `Écart France (en ${ecart.isAbsoluteEcart ? "pts" : "%"})`
-        })
-      : isGradient
-      ? createGradientLegend({
-          colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
-          min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent,
-          decimals: 2, title: "Légende"
-        })
-      : createBinsLegend({
-          colors: tBins.palette, labels: tBins.bins.labels || [],
-          counts: countBins(tData, colKeyCarte, tBins.bins.thresholds || []),
-          vertical: true, title: "Légende", unit: getIndicUnit(colKeyCarte), reverse: !tBins.isDiv
-        });
-
-    const card = document.createElement("div");
-    card.className = "card";
-    card.style.cssText = "padding:6px;flex:1;min-width:260px;";
-    const cardTitle = document.createElement("div");
-    cardTitle.style.cssText = "font-size:11px;font-weight:600;color:#374151;margin-bottom:4px;";
-    cardTitle.textContent = `${labelCarte} — ${tLabel}`;
-    card.appendChild(cardTitle);
-    card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), {
-      exportSVGFn: exportSVG, echelon: tLabel, colKey: colKeyCarte, title: `${labelCarte} — ${tLabel}`
-    }));
-    commContainerEco.appendChild(card);
-  }
-
-  display(commContainerEco);
-} else {
-  display(html`<div style="padding:20px;text-align:center;color:#6b7280;font-size:11px;border:1px dashed #d1d5db;border-radius:8px;">
-    Sélectionnez des ZE pour voir le détail communal
-  </div>`);
-}
-```
+<!-- Fin COLONNE DROITE (search + table ZE) -->
 
 </div>
-<!-- &e CARTES_COMMUNES -->
+<!-- &e CARTES_ET_TABLEAU -->
 
 <!-- &s INDICES_100_MULTI — Indice 100 France + territoires sélectionnés -->
 <h3 style="margin-top:24px;font-size:16px;text-align:left;">Emploi salarié total — Évolution par secteur (indice base 100)</h3>
@@ -704,13 +861,8 @@ const indice100FixedScale = view(Inputs.toggle({ label: "Échelle fixe 90-130", 
 
 ```js
 // Graph indice 100 : France + territoires sélectionnés côte à côte
-const indice100Codes = [...mapSelectionState];  // Tous les territoires sélectionnés
+const indice100Codes = [...mapSelectionState];
 
-// Parser le filtre secteurs
-// "noAZT" = tous sauf agriculture ET total via excludeSectors
-// "noAZ" = tous sauf agriculture via excludeSectors
-// "all" = tout
-// autres = sectorFilter explicite
 const filterValue = indice100SectorFilter.value;
 const parsedSectorFilter = (filterValue === "all" || filterValue === "noAZ" || filterValue === "noAZT")
   ? null
@@ -719,14 +871,11 @@ const parsedExcludeSectors = filterValue === "noAZT" ? ["TAZ", "T"]
   : filterValue === "noAZ" ? ["TAZ"]
   : null;
 
-// Échelle fixe ou auto
 const yDomain = indice100FixedScale ? [90, 130] : null;
 
-// Container flex - resserré pour meilleur alignement
 const indice100Container = document.createElement('div');
 indice100Container.style.cssText = 'display:flex;align-items:flex-start;gap:8px;overflow-x:auto;';
 
-// Fonction calcul indice100 depuis effectifs bruts
 const computeIndice100 = (data, baseYr) => {
   const baseVals = {};
   data.filter(d => d.year === baseYr).forEach(d => {
@@ -735,58 +884,41 @@ const computeIndice100 = (data, baseYr) => {
   return data
     .filter(d => d.year >= baseYr)
     .map(d => ({
-      year: d.year,
-      na5: d.na5,
-      lib: d.lib,
-      lib_short: d.lib_short,
-      eff: d.eff,
+      year: d.year, na5: d.na5, lib: d.lib, lib_short: d.lib_short, eff: d.eff,
       indice100: baseVals[d.na5] ? Math.round(d.eff / baseVals[d.na5] * 10000) / 100 : null
     }))
     .filter(d => d.indice100 != null);
 };
 
-// France (EAE205 - avec détail secteurs)
+// France
 const franceIndiceData = computeIndice100(eae205FranceSerie, baseYear);
-
 const franceIndiceChart = renderIndice100Chart(franceIndiceData, {
-  baseYear: baseYear,
-  width: 320,
-  height: 240,
-  title: "France métro",
-  showTotal: true,
-  showSectors: true,
-  sectorFilter: parsedSectorFilter,
-  excludeSectors: parsedExcludeSectors,
+  baseYear, width: 320, height: 240, title: "France métro",
+  showTotal: true, showSectors: true,
+  sectorFilter: parsedSectorFilter, excludeSectors: parsedExcludeSectors,
   fixedYDomain: yDomain
 });
 indice100Container.appendChild(franceIndiceChart);
 
-// Territoires sélectionnés : EAE205 ZE (AVEC SECTEURS !)
-// Fonction pour construire données indice 100 pour une ZE depuis EAE205
+// Territoires sélectionnés (EAE205 ZE)
 const buildZeIndice100EAE205 = (code) => {
-  // Chercher le code avec et sans padding (0051 vs 51)
-  const zeData = eae205ZeSerie.filter(d =>
+  const zeD = eae205ZeSerie.filter(d =>
     d.code_ze === code || d.code_ze === code.padStart(4, '0')
   );
-  if (!zeData.length) return null;
-  return computeIndice100(zeData.map(d => ({
+  if (!zeD.length) return null;
+  return computeIndice100(zeD.map(d => ({
     year: d.year, na5: d.na5, lib: d.lib, lib_short: d.lib_short, eff: d.eff
   })), baseYear);
 };
 
-// Afficher graphiques territoires avec SECTEURS (EAE205)
 indice100Codes.forEach(code => {
   const zeIndiceData = buildZeIndice100EAE205(code);
   if (zeIndiceData && zeIndiceData.length > 0) {
     const zeChart = renderIndice100Chart(zeIndiceData, {
-      baseYear: baseYear,
-      width: 320,
-      height: 240,
+      baseYear, width: 320, height: 240,
       title: zeLabelMap.get(code) || code,
-      showTotal: true,
-      showSectors: true,  // Maintenant AVEC secteurs !
-      sectorFilter: parsedSectorFilter,
-      excludeSectors: parsedExcludeSectors,
+      showTotal: true, showSectors: true,
+      sectorFilter: parsedSectorFilter, excludeSectors: parsedExcludeSectors,
       fixedYDomain: yDomain
     });
     zeChart.style.cssText = 'border-left:1px solid #e5e7eb;padding-left:8px;';
@@ -794,7 +926,6 @@ indice100Codes.forEach(code => {
   }
 });
 
-// Message si aucune sélection
 if (indice100Codes.length === 0) {
   const hint = document.createElement('div');
   hint.style.cssText = 'padding:15px;background:#f0f9ff;border:1px dashed #93c5fd;border-radius:6px;min-width:200px;height:200px;display:flex;align-items:center;justify-content:center;text-align:center;color:#2563eb;font-size:11px;';
@@ -844,65 +975,41 @@ const bfPeriode = view(Inputs.radio([...periodOptions.keys()], {
 </div>
 
 ```js
-// Pour 22-24, EAE205 utilise 22-23 (arrêt en 2023)
 const eaePeriodeLabel = bfPeriode === "22-24" ? "22-23" : bfPeriode;
-const eaeNote = bfPeriode === "22-24" ? " (EAE s'arrête en 2023)" : "";
 ```
 
 ```js
 // === EAE205 A5 (5 grands secteurs) ===
-// Années selon période sélectionnée
-const eaeYearStart = bfPeriode === "16-23" ? 2016
-  : bfPeriode === "22-24" ? 2022
-  : 2019;
+const eaeYearStart = bfPeriode === "16-23" ? 2016 : bfPeriode === "22-24" ? 2022 : 2019;
 const eaeYearEnd = 2023;
 
-// Calculer parts et évolutions depuis EAE205 France (sans Total)
 const eaeFranceParts = (() => {
-  // Exclure le Total (na5 = "T")
   const startData = eae205FranceSerie.filter(d => d.year === eaeYearStart && d.na5 !== "T");
   const endData = eae205FranceSerie.filter(d => d.year === eaeYearEnd && d.na5 !== "T");
-
   const endTotal = endData.reduce((s, d) => s + (d.eff || 0), 0);
-
   return endData.map(d => {
     const startEff = startData.find(s => s.na5 === d.na5)?.eff || d.eff;
     const evol = startEff > 0 ? ((d.eff - startEff) / startEff) * 100 : 0;
-    return {
-      secteur: d.lib_short || d.lib,
-      pct: (d.eff / endTotal) * 100,
-      evol: evol,
-      is: 1.0
-    };
+    return { secteur: d.lib_short || d.lib, pct: (d.eff / endTotal) * 100, evol, is: 1.0 };
   }).sort((a, b) => b.pct - a.pct);
 })();
 
-// Territoires EAE205 A5 (sans Total)
 const eaeTerrParts = [...mapSelectionState].map(code => {
   const codePadded = code.padStart(4, '0');
-  // Exclure le Total (na5 = "T")
   const zeStartData = eae205ZeSerie.filter(d =>
     (d.code_ze === code || d.code_ze === codePadded) && d.year === eaeYearStart && d.na5 !== "T"
   );
   const zeEndData = eae205ZeSerie.filter(d =>
     (d.code_ze === code || d.code_ze === codePadded) && d.year === eaeYearEnd && d.na5 !== "T"
   );
-
   const zeEndTotal = zeEndData.reduce((s, d) => s + (d.eff || 0), 0);
-
   const data = zeEndData.map(d => {
     const startEff = zeStartData.find(s => s.na5 === d.na5)?.eff || d.eff;
     const evol = startEff > 0 ? ((d.eff - startEff) / startEff) * 100 : 0;
     const localPct = zeEndTotal > 0 ? (d.eff / zeEndTotal) * 100 : 0;
     const frPct = eaeFranceParts.find(f => f.secteur === (d.lib_short || d.lib))?.pct || 1;
-    return {
-      secteur: d.lib_short || d.lib,
-      pct: localPct,
-      evol: evol,
-      is: frPct > 0 ? localPct / frPct : 1
-    };
+    return { secteur: d.lib_short || d.lib, pct: localPct, evol, is: frPct > 0 ? localPct / frPct : 1 };
   }).sort((a, b) => b.pct - a.pct);
-
   return { label: zeLabelMap.get(code) || code, data };
 });
 
@@ -931,7 +1038,6 @@ const eaeTerrParts = [...mapSelectionState].map(code => {
 <div class="card" style="padding:12px;">
 
 ```js
-// Mapper période vers URSSAF : 16-23/19-23 → évol 5 ans (19-24), 22-24 → évol 2 ans (22-24)
 const urssafPeriode = bfPeriode === "22-24" ? "22-24" : "19-24";
 const urssafNote = bfPeriode === "16-23" ? " (URSSAF démarre en 2019)" : "";
 display(html`<h4 style="margin:0 0 10px 0;font-size:14px;color:#1e40af;">Emploi privé URSSAF — ${bfNiveauUrssaf}${urssafNote}</h4>`);
@@ -941,19 +1047,14 @@ display(html`<h4 style="margin:0 0 10px 0;font-size:14px;color:#1e40af;">Emploi 
 // === PRÉPARATION DONNÉES BUTTERFLY URSSAF ===
 const bfUrssafData = bfNiveauUrssaf === "A21" ? urssafA21 : urssafA38;
 const bfUrssafFrData = urssafFr;
-
-// Colonne évolution selon période synchronisée (urssafPeriode)
 const evolColUrssaf = urssafPeriode === "22-24" ? "evol_2224" : "evol_1924";
 
-// France référence - A21 depuis parquet, A38 calculé depuis ZE
 const bfFranceDataUrssaf = (() => {
   if (bfNiveauUrssaf === "A21") {
-    // A21 disponible dans urssaf_france
     return bfUrssafFrData.toArray()
       .filter(d => d.a21 && d.a21 !== "")
       .map(d => ({ secteur: d.lib, pct: d.pct_24, evol: d[evolColUrssaf], is: 1.0 }));
   } else {
-    // A38 : agréger effectifs ZE pour calculer France evol
     const a38Data = bfUrssafData.toArray();
     const secteurs = new Map();
     for (const d of a38Data) {
@@ -977,15 +1078,12 @@ const bfFranceDataUrssaf = (() => {
   }
 })();
 
-// Territoires URSSAF (inline pour éviter problème closure)
 const bfTerritoriesUrssaf = [...mapSelectionState].map(code => {
   const rows = bfUrssafData.toArray().filter(d => d.code_ze === code);
   return {
     label: zeLabelMap.get(code) || code,
     data: rows.map(d => ({
-      secteur: d.lib,
-      pct: d.pct_24,
-      evol: d[evolColUrssaf],
+      secteur: d.lib, pct: d.pct_24, evol: d[evolColUrssaf],
       is: d.is_24 || (d.pct_24 / (bfFranceDataUrssaf.find(f => f.secteur === d.lib)?.pct || 1))
     }))
   };
@@ -994,14 +1092,13 @@ const bfTerritoriesUrssaf = [...mapSelectionState].map(code => {
 
 ```js
 // === RENDU BUTTERFLY CHART URSSAF ===
-const evolLabelMap = { "22-24": "Évol. 22→24 (%)", "19-24": "Évol. 19→24 (5 ans)" };
+const evolLabelMap = { "22-24": "Évol. 22-24 (%)", "19-24": "Évol. 19-24 (5 ans)" };
 const bfOptionsUrssaf = {
-  barHeight: bfNiveauUrssaf === "A21" ? 16 : 12,  // Tassé pour A21/A38
-  widthPart: 120,
-  widthEvol: 120,
-  widthLabels: bfNiveauUrssaf === "A21" ? 100 : 95,  // Labels élargis
+  barHeight: bfNiveauUrssaf === "A21" ? 16 : 12,
+  widthPart: 120, widthEvol: 120,
+  widthLabels: bfNiveauUrssaf === "A21" ? 100 : 95,
   evolLabel: evolLabelMap[urssafPeriode],
-  capEvol: 30  // Cap barres à ±30% (évite qu'un outlier écrase tout en A38)
+  capEvol: 30
 };
 
 {
@@ -1036,7 +1133,6 @@ const bfOptionsUrssaf = {
 const SEUIL_SUREP = 1.2;
 const SEUIL_SOUSREP = 0.8;
 
-// Utilise mapSelectionState directement
 const zeStrategique = [...mapSelectionState][0];
 const zeStrategData = zeStrategique ? floresA21.toArray()
   .filter(d => d.code_ze === zeStrategique)
@@ -1047,7 +1143,6 @@ const zeStrategData = zeStrategique ? floresA21.toArray()
 const secteursSurRep = zeStrategData.filter(d => d.is >= SEUIL_SUREP).sort((a, b) => b.is - a.is);
 const secteursSousRep = zeStrategData.filter(d => d.is <= SEUIL_SOUSREP).sort((a, b) => a.is - b.is);
 
-// Fonction rendu tableau simple
 const renderStratTable = (data, isColor) => {
   const tbl = document.createElement('table');
   tbl.style.cssText = 'width:100%;font-size:11px;border-collapse:collapse;';
@@ -1055,7 +1150,7 @@ const renderStratTable = (data, isColor) => {
     <td style="padding:4px;">Secteur</td>
     <td style="padding:4px;text-align:right;">Part %</td>
     <td style="padding:4px;text-align:right;">IS</td>
-    <td style="padding:4px;text-align:right;">Évol.</td>
+    <td style="padding:4px;text-align:right;">Evol.</td>
   </tr>` + data.slice(0, 6).map(d => {
     const evolCol = d.evol > 0 ? '#15803d' : d.evol < 0 ? '#b91c1c' : '#6b7280';
     return `<tr style="border-top:1px solid #e5e7eb;">
@@ -1068,29 +1163,26 @@ const renderStratTable = (data, isColor) => {
   return tbl;
 };
 
-// Conteneur flex
 const stratContainer = document.createElement('div');
 stratContainer.style.cssText = 'display:flex;gap:16px;flex-wrap:wrap;';
 
 const surDiv = document.createElement('div');
 surDiv.style.cssText = 'flex:1;min-width:280px;';
-surDiv.innerHTML = `<h5 style="margin:0 0 8px 0;color:#7c3aed;">🔺 Sur-représentés (IS ≥ ${SEUIL_SUREP})</h5>`;
+surDiv.innerHTML = `<h5 style="margin:0 0 8px 0;color:#7c3aed;">Sur-repr. (IS >= ${SEUIL_SUREP})</h5>`;
 surDiv.appendChild(renderStratTable(secteursSurRep, '#7c3aed'));
 
 const sousDiv = document.createElement('div');
 sousDiv.style.cssText = 'flex:1;min-width:280px;';
-sousDiv.innerHTML = `<h5 style="margin:0 0 8px 0;color:#0891b2;">🔻 Sous-représentés (IS ≤ ${SEUIL_SOUSREP})</h5>`;
+sousDiv.innerHTML = `<h5 style="margin:0 0 8px 0;color:#0891b2;">Sous-repr. (IS <= ${SEUIL_SOUSREP})</h5>`;
 sousDiv.appendChild(renderStratTable(secteursSousRep, '#0891b2'));
 
 stratContainer.appendChild(surDiv);
 stratContainer.appendChild(sousDiv);
 display(stratContainer);
 
-// Footer
-const zeName = zeLabelMap.get(zeStrategique) || zeStrategique || "Sélectionnez une ZE";
+const zeName = zeLabelMap.get(zeStrategique) || zeStrategique || "Selectionnez une ZE";
 display(html`<p style="font-size:10px;color:#6b7280;margin-top:8px;">
-  <strong>${zeName}</strong> — IS = Indice Spécialisation (part locale / part France).
-  🔺 Secteurs moteurs locaux | 🔻 Potentiel de développement.
+  <strong>${zeName}</strong> — IS = Indice Specialisation (part locale / part France).
 </p>`);
 ```
 
@@ -1107,58 +1199,37 @@ display(html`<p style="font-size:10px;color:#6b7280;margin-top:8px;">
 <h5 style="margin:0 0 8px 0;">France — FLORES 2023</h5>
 
 ```js
-// Préparer données treemap France
 const treemapFrData = floresFr.toArray()
-  .filter(d => d.a21)  // Uniquement A21 (qui ont aussi a5)
-  .map(d => ({
-    a5: d.a5,
-    a21: d.a21,
-    lib: d.lib,
-    pct: d.pct_23,
-    evol_2223: d.evol_2223
-  }));
+  .filter(d => d.a21)
+  .map(d => ({ a5: d.a5, a21: d.a21, lib: d.lib, pct: d.pct_23, evol_2223: d.evol_2223 }));
 
 display(renderTreemapA5A21(treemapFrData, {
-  width: 500,
-  height: 350,
-  title: "",
-  valueField: "pct"
+  width: 500, height: 350, title: "", valueField: "pct"
 }));
 ```
 
 </div>
 
-<!-- Treemap ZE sélectionnée (si sélection) -->
+<!-- Treemap ZE sélectionnée -->
 <div class="card" style="flex:1;min-width:400px;padding:12px;">
 
 ```js
-// Treemap territoire sélectionné (utilise mapSelectionState directement)
 const treemapZeCode = [...mapSelectionState][0];
 
 if (treemapZeCode) {
   const treemapZeDataRaw = floresA21.toArray().filter(d => d.code_ze === treemapZeCode);
   const treemapZeData = treemapZeDataRaw.map(d => ({
-    a5: d.a5,
-    a21: d.a21,
-    lib: d.lib,
-    pct: d.pct_23,
-    evol_2223: d.evol_2223,
-    is_23: d.is_23
+    a5: d.a5, a21: d.a21, lib: d.lib, pct: d.pct_23, evol_2223: d.evol_2223, is_23: d.is_23
   }));
-
   const treemapZeTitle = zeLabelMap.get(treemapZeCode) || treemapZeCode;
-
   display(html`<h5 style="margin:0 0 8px 0;">${treemapZeTitle} — FLORES 2023</h5>`);
   display(renderTreemapA5A21(treemapZeData, {
-    width: 500,
-    height: 350,
-    title: "",
-    valueField: "pct"
+    width: 500, height: 350, title: "", valueField: "pct"
   }));
 } else {
   display(html`<h5 style="margin:0 0 8px 0;">Territoire</h5>
     <div style="padding:40px;background:#f0f9ff;border:1px dashed #93c5fd;border-radius:8px;text-align:center;color:#2563eb;font-size:11px;height:280px;display:flex;align-items:center;justify-content:center;">
-      <span>Sélectionnez une ZE pour voir sa structure sectorielle</span>
+      <span>Selectionnez une ZE pour voir sa structure sectorielle</span>
     </div>`);
 }
 ```
@@ -1168,7 +1239,7 @@ if (treemapZeCode) {
 </div>
 
 <p style="font-size:9px;color:#6b7280;margin:4px 0 0 0;">
-  Treemap : taille des rectangles = part dans l'emploi total. Couleurs par grands secteurs A5. Survoler pour détails.
+  Treemap : taille des rectangles = part dans l'emploi total. Couleurs par grands secteurs A5. Survoler pour details.
 </p>
 <!-- &e TREEMAP_SECTEURS -->
 
@@ -1176,39 +1247,35 @@ if (treemapZeCode) {
 <!-- &e LAYOUT_MAIN -->
 
 <!-- &s SLOPE_CHART_BOTTOM — Structure sectorielle France 2000-2023 -->
-<h3 style="margin-top:24px;text-align:left;">Structure emploi — Évolution sectorielle France</h3>
+<details style="margin-top:24px;">
+<summary style="cursor:pointer;font-weight:600;color:#6b7280;">Structure emploi — Evolution sectorielle France</summary>
 
-<div class="card" style="max-width:500px;padding:12px;">
+<div class="card" style="max-width:500px;padding:12px;margin-top:8px;">
 
 ```js
-// Slope chart: parts sectorielles France métro (EAE205)
 display(renderSlopeChart(eae205FranceSlope, {
-  yearStart: 2000,
-  yearEnd: 2023,
-  width: 450,
-  height: 250
+  yearStart: 2000, yearEnd: 2023, width: 450, height: 250
 }));
 ```
 
 <p style="font-size:9px;color:#6b7280;margin:4px 0 0 0;">
-  Source: INSEE Estimations d'emploi (salariés) — France métro. Montre l'évolution de la part de chaque grand secteur (A5) dans l'emploi total.
+  Source: INSEE Estimations d'emploi (salaries) — France metro. Evolution de la part de chaque grand secteur (A5) dans l'emploi total.
 </p>
 
 </div>
+</details>
 <!-- &e SLOPE_CHART_BOTTOM -->
 
 <!-- &s RESERVE_URSSAF — Ancien graph indice URSSAF (réserve) -->
 <details style="margin-top:24px;">
-<summary style="cursor:pointer;font-weight:600;color:#6b7280;">▼ Réserve — Emploi privé URSSAF (indice 2014)</summary>
+<summary style="cursor:pointer;font-weight:600;color:#6b7280;">Reserve — Emploi prive URSSAF (indice 2014)</summary>
 
 <div class="card" style="margin-top:12px;padding:12px;">
-<h4 style="margin:0 0 8px 0;">Emploi privé — Indice base 100 (2014) — URSSAF</h4>
+<h4 style="margin:0 0 8px 0;">Emploi prive — Indice base 100 (2014) — URSSAF</h4>
 
 ```js
-// Préparer données série URSSAF
 const selectedCodesUrssaf = [...mapSelectionState];
 
-// France
 const franceSerie = urssafSerie
   .filter(d => d.echelon === "ze")
   .reduce((acc, d) => {
@@ -1222,7 +1289,6 @@ const franceDataUrssaf = Object.entries(franceSerie).map(([year, eff]) => ({
   year: +year, value: 100 * eff / franceBase, code: "France", label: "France"
 }));
 
-// ZE sélectionnées
 const zeSerieDataUrssaf = selectedCodesUrssaf.flatMap(code => {
   const zeSerie = urssafSerie.filter(d => d.code === code);
   const base = zeSerie.find(d => d.year === 2014)?.eff_total || 1;
@@ -1250,17 +1316,18 @@ display(courbeUrssaf);
 ```
 
 <p style="font-size:9px;color:#6b7280;margin:4px 0 0 0;">
-  Source: URSSAF 2014-2024 — Emploi privé
+  Source: URSSAF 2014-2024 — Emploi prive
 </p>
 </div>
 
 </details>
 <!-- &e RESERVE_URSSAF -->
 
-<!-- &s PIVOTS_SECTEURS — FLORES + URSSAF côte à côte (déplacé en bas) -->
-<h3 style="margin-top:24px;text-align:left;">Structure sectorielle — Emploi total (FLORES) vs Emploi privé (URSSAF)</h3>
+<!-- &s PIVOTS_SECTEURS — FLORES + URSSAF cote a cote -->
+<details style="margin-top:24px;">
+<summary style="cursor:pointer;font-weight:600;color:#6b7280;">Structure sectorielle — Emploi total (FLORES) vs Emploi prive (URSSAF)</summary>
 
-<div style="margin-bottom:12px;">
+<div style="margin-top:12px;margin-bottom:12px;">
 
 ```js
 const groupingLevel = view(Inputs.radio(["A5", "A21"], { value: "A21", label: "Niveau" }));
@@ -1275,22 +1342,18 @@ const groupingLevel = view(Inputs.radio(["A5", "A21"], { value: "A21", label: "N
 <h4 style="margin:0 0 8px 0;">FLORES — Emploi total (2022-2023)</h4>
 
 ```js
-// Données FLORES selon niveau
 const isA5Pivot = groupingLevel === "A5";
 const floresDataPivot = isA5Pivot ? floresA5 : floresA21;
 const floresFrDataPivot = floresFr;
 
-// ZE sélectionnées pour FLORES
 const floresCodesPivot = [...mapSelectionState];
 const hasFloresSelectionPivot = floresCodesPivot.length > 0;
 
-// France comme référence
 const frSectorsPivot = floresFrDataPivot.toArray().map(d => ({
   a5: d.a5, a21: d.a21, lib: d.lib, ord: d.ord_a21 || d.ord_a5,
   fr_pct: d.pct_23, fr_evol: d.evol_2223
 }));
 
-// Construire tableau pivot
 const floresPivotData = (() => {
   const sectors = new Map();
   for (const s of frSectorsPivot) {
@@ -1313,8 +1376,7 @@ const floresPivotData = (() => {
   return [...sectors.values()].sort((a, b) => (a.ord || 0) - (b.ord || 0));
 })();
 
-// Rendu tableau FLORES
-const floresHeadersPivot = ['Secteur', 'FR %', 'Évol.'];
+const floresHeadersPivot = ['Secteur', 'FR %', 'Evol.'];
 if (hasFloresSelectionPivot) floresCodesPivot.forEach(c => {
   floresHeadersPivot.push(zeLabelMap.get(c)?.slice(0, 12) || c);
   floresHeadersPivot.push('IS');
@@ -1355,25 +1417,22 @@ display(floresDivPivot);
 
 </div>
 
-<!-- URSSAF (Emploi privé) -->
+<!-- URSSAF (Emploi prive) -->
 <div class="card" style="flex:1;min-width:420px;padding:8px;">
-<h4 style="margin:0 0 8px 0;">URSSAF — Emploi privé (2019-2024)</h4>
+<h4 style="margin:0 0 8px 0;">URSSAF — Emploi prive (2019-2024)</h4>
 
 ```js
-// Données URSSAF selon niveau
 const isA5Upivot = groupingLevel === "A5";
 const pivotCodesUpivot = [...mapSelectionState];
 const hasSelectionUpivot = pivotCodesUpivot.length > 0;
 const urssafDataUpivot = isA5Upivot ? urssafA5 : urssafA21;
 const urssafFrDataPivot = urssafFr;
 
-// France référence
 const frSectorsUpivot = urssafFrDataPivot.toArray().map(d => ({
   a5: d.a5, a21: d.a21, lib: d.lib, ord: d.ord_a21 || d.ord_a5,
   fr_pct: d.pct_24, fr_evol_1924: d.evol_1924, fr_evol_2224: d.evol_2224
 }));
 
-// Construire tableau pivot
 const urssafPivotData = (() => {
   const sectors = new Map();
   for (const s of frSectorsUpivot) {
@@ -1398,7 +1457,6 @@ const urssafPivotData = (() => {
   return [...sectors.values()].sort((a, b) => (a.ord || 0) - (b.ord || 0));
 })();
 
-// Rendu tableau URSSAF
 const urssafHeadersPivot = ['Secteur', 'FR %', '19-24', '22-24'];
 if (hasSelectionUpivot) pivotCodesUpivot.forEach(c => {
   urssafHeadersPivot.push(zeLabelMap.get(c)?.slice(0, 12) || c);
@@ -1430,7 +1488,7 @@ const urssafRowsPivot = urssafPivotData.map((row, i) => {
 const urssafTableHtmlPivot = `
 <table style="width:100%;border-collapse:collapse;font-size:11px;">
   <thead><tr style="background:#f8fafc;border-bottom:2px solid #e2e8f0;">
-    ${urssafHeadersPivot.map((h, i) => `<th style="text-align:${i === 0 ? 'left' : 'right'};padding:4px 6px;${i > 3 && i % 2 === 0 ? 'border-left:1px solid #e2e8f0;' : ''}" title="${i === 2 ? 'Évolution 2019-2024' : i === 3 ? 'Évolution 2022-2024' : ''}">${h}</th>`).join('')}
+    ${urssafHeadersPivot.map((h, i) => `<th style="text-align:${i === 0 ? 'left' : 'right'};padding:4px 6px;${i > 3 && i % 2 === 0 ? 'border-left:1px solid #e2e8f0;' : ''}" title="${i === 2 ? 'Evolution 2019-2024' : i === 3 ? 'Evolution 2022-2024' : ''}">${h}</th>`).join('')}
   </tr></thead>
   <tbody>${urssafRowsPivot.join('')}</tbody>
 </table>`;
@@ -1446,6 +1504,8 @@ display(urssafDivPivot);
 </div>
 
 <p style="font-size:10px;color:#6b7280;margin-top:8px;">
-  <strong>IS</strong> = Indice de Spécialisation (part ZE / part France). IS > 1 = surreprésentation (violet), IS < 1 = sous-représentation (vert).
+  <strong>IS</strong> = Indice de Specialisation (part ZE / part France). IS > 1 = surrepresentation (violet), IS < 1 = sous-representation (vert).
 </p>
+
+</details>
 <!-- &e PIVOTS_SECTEURS -->
