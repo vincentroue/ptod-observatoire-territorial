@@ -58,8 +58,7 @@ import { formatValue, getColLabel, getIndicOptionsByAggDash, getIndicOptionsByAg
 // === colors.js ===
 import {
   computeIndicBins, countBins, createGradientScale, GRADIENT_PALETTES,
-  computeEcartFrance, PAL_ECART_FRANCE, ECART_FRANCE_SYMBOLS,
-  PAL_IND_DIVERGENT
+  computeEcartFrance, PAL_ECART_FRANCE, ECART_FRANCE_SYMBOLS
 } from "./helpers/colors.js";
 
 // === legend.js ===
@@ -496,11 +495,8 @@ setTimeout(() => {
 <!-- &s CARTE_ET_GRAPHIQUES -->
 <div style="display:flex;gap:10px;align-items:flex-start;">
 
-<!-- LEFT BLOCK : carte + graphiques + cartes communes -->
-<div style="flex:1;display:flex;flex-direction:column;gap:8px;min-width:0;">
-
-<!-- Row carte + graphiques -->
-<div style="display:flex;gap:10px;align-items:flex-start;">
+<!-- Row carte + graphiques + communes -->
+<div style="flex:1;display:flex;gap:10px;align-items:flex-start;min-width:0;">
 
 <!-- COLONNE 1 : Carte France échelon -->
 <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:8px;padding-left:8px;align-self:flex-start;">
@@ -619,7 +615,7 @@ const volScale = 3000 / maxVol;  // Ajusté pour que barres soient visibles
 display(Plot.plot({
   style: { fontFamily: "Inter, system-ui, sans-serif" },
   width: 420,
-  height: 200,
+  height: 175,
   marginLeft: 42,
   marginRight: 50,
   marginBottom: 22,
@@ -742,7 +738,7 @@ if (indexSeries.length > 0) {
   display(Plot.plot({
     style: { fontFamily: "Inter, system-ui, sans-serif" },
     width: 420,
-    height: 200,
+    height: 215,
     marginLeft: 38,
     marginRight: 50,
     marginBottom: 22,
@@ -780,22 +776,16 @@ Prix global pondéré (mai+apt) | Base 100 = 2010 | — France ref | Ctrl+clic c
 </div>
 
 </div>
-</div>
-<!-- Fin colonne 2 graphiques -->
 
-</div>
-<!-- Fin row carte + graphiques -->
-
-<!-- Cartes communes (2 côte à côte) -->
-<div style="font-size:11px;font-weight:600;color:#374151;margin:6px 0 4px 8px;font-family:Inter,system-ui,sans-serif;">Vue commune — Territoires sélectionnés</div>
+<!-- Cartes communes (sous graph 2, dans Col2) -->
+<div style="font-size:10px;font-weight:600;color:#374151;margin:6px 0 2px 0;font-family:Inter,system-ui,sans-serif;">Vue commune — Sélection</div>
 
 ```js
-// === CARTES COMMUNES (2 côte à côte, sous carte+graphs) ===
+// === CARTES COMMUNES (2 côte à côte, dans Col2 sous graph 2) ===
 const filterKey = meta?.filterKey || "DEP";
 const isEPCI = echelon === "EPCI";
 const selCodes = [...mapSelectionState];
 
-// 2 codes : zoomCode (clic simple), 1er sélectionné (search/ctrl+clic)
 const mapCode1 = zoomCode || RENNES_CODE;
 const mapCode2 = selCodes.length > 0 && selCodes[0] !== mapCode1 ? selCodes[0] : (selCodes[1] || PARIS_CODE);
 const commTargetsMaps = mapCode1 !== mapCode2 ? [mapCode1, mapCode2] : [mapCode1];
@@ -814,7 +804,7 @@ const commResultsMaps = await Promise.all(commQueriesMaps);
 
 const commContainerMaps = document.createElement("div");
 commContainerMaps.className = "cards-row";
-commContainerMaps.style.cssText = "width:auto;max-width:700px;margin:0 0 0 8px;gap:8px;";
+commContainerMaps.style.cssText = "width:auto;max-width:460px;margin:0;gap:6px;";
 
 for (let ci = 0; ci < commTargetsMaps.length; ci++) {
   const tCode = commTargetsMaps[ci];
@@ -839,7 +829,6 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
   const tEcart = isEcart ? computeEcartFrance(tData, colKey, ecart.ref, { sigma: ecart.sigma, indicType: INDICATEURS[indic]?.type }) : null;
   const tGetColor = isEcart ? tEcart.getColor : isGradient ? tGrad.getColor : tBins.getColor;
 
-  // Skip si pas de features (échelon non compatible communes)
   if (tGeo.features.length === 0) continue;
 
   const cMap = renderChoropleth({
@@ -851,10 +840,10 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
     indicLabel, showLabels: showValuesOnMap,
     labelMode, labelBy, topN: 200,
     title: `${tLabel}`,
-    maxLabelsAuto: 80, echelon: "Commune", width: 320, height: 260
+    maxLabelsAuto: 80, echelon: "Commune", width: 215, height: 180
   });
 
-  if (!cMap) continue;  // Protection si renderChoropleth retourne null
+  if (!cMap) continue;
 
   if (cMap._tipConfig) {
     cMap._tipConfig.frRef = frData?.[colKey];
@@ -882,7 +871,7 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
 
   const card = document.createElement("div");
   card.className = "card";
-  card.style.cssText = "padding:6px;display:flex;flex-direction:column;min-height:0;";
+  card.style.cssText = "padding:4px;display:flex;flex-direction:column;min-height:0;";
   card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), {
     exportSVGFn: exportSVG, echelon: tLabel, colKey, title: `${indicLabel} — ${tLabel}`
   }));
@@ -893,7 +882,10 @@ display(commContainerMaps);
 ```
 
 </div>
-<!-- Fin LEFT BLOCK -->
+<!-- Fin colonne 2 graphiques + communes -->
+
+</div>
+<!-- Fin row carte + graphiques + communes -->
 
 <!-- COLONNE DROITE : Communes >50K habitants -->
 <div style="flex:0 0 auto;min-width:300px;display:flex;flex-direction:column;align-self:stretch;overflow-y:auto;overflow-x:hidden;">
@@ -916,7 +908,7 @@ const commCols50k = [
 const commColsSql = commCols50k.map(c => `CAST("${c}" AS DOUBLE) AS "${c}"`).join(", ");
 
 const commResult50k = await conn.query(`
-  SELECT CAST(code AS VARCHAR) AS code, libelle,
+  SELECT CAST(code AS VARCHAR) AS code, libelle, regdep,
     CAST("P23_POP" AS DOUBLE) AS P23_POP, ${commColsSql}
   FROM 'communes.parquet'
   WHERE CAST("P23_POP" AS DOUBLE) >= 50000
@@ -925,15 +917,15 @@ const commResult50k = await conn.query(`
 `);
 const commData50k = commResult50k.toArray().map(r => {
   const d = r.toJSON();
-  const out = { code: String(d.code), libelle: d.libelle, P23_POP: Number(d.P23_POP) };
+  const out = { code: String(d.code), libelle: d.libelle, regdep: d.regdep || "", P23_POP: Number(d.P23_POP) };
   for (const c of commCols50k) out[c] = d[c] != null ? Number(d[c]) : null;
   return out;
 });
 
-// Filtre recherche
+// Filtre recherche (commune + regdep)
 const commSearchEl = document.createElement("input");
 commSearchEl.type = "text";
-commSearchEl.placeholder = "Recherche commune...";
+commSearchEl.placeholder = "Recherche commune, dept (ex: hdf/59)...";
 commSearchEl.style.cssText = "width:100%;padding:3px 6px;font-size:11px;border:1px solid #d1d5db;border-radius:3px;margin-bottom:4px;font-family:Inter,system-ui,sans-serif;";
 let commSearchVal = "";
 commSearchEl.addEventListener("input", () => {
@@ -941,67 +933,92 @@ commSearchEl.addEventListener("input", () => {
   renderCommTable();
 });
 
-// Tri
-const sortCol = commSortState.col;
-const sortAsc = commSortState.asc;
-
-// Stats par colonne : France ref + écart-type pour colorisation
+// Stats par colonne : France ref + écart-type pour colorisation z-score
 const commColStats = {};
 for (const col of commCols50k) {
   const vals = commData50k.map(d => d[col]).filter(v => v != null);
   const n = vals.length;
   const mean = n > 0 ? vals.reduce((s, v) => s + v, 0) / n : 0;
   const std = n > 1 ? Math.sqrt(vals.reduce((s, v) => s + (v - mean) ** 2, 0) / n) : 0;
-  // France ref via frData
   const frRef = frData?.[col];
-  commColStats[col] = { mean, std, frRef: frRef != null ? frRef : mean };
+  // Max pour barre proportionnelle (prix global)
+  const max = n > 0 ? Math.max(...vals) : 1;
+  commColStats[col] = { mean, std, max, frRef: frRef != null ? frRef : mean };
 }
 
-// Colorisation 4 classes écart France (palette PAL_IND_DIVERGENT) + rouge pour négatifs
-// PAL_IND_DIVERGENT = [violet foncé, violet moyen, rose clair, vert clair, vert moyen, vert foncé]
-const colorCell = (col, val) => {
-  if (val == null || !commColStats[col]) return "";
-  if (col.includes("trans") && !col.includes("vevol")) return "";
-  const { std, frRef } = commColStats[col];
-  if (std === 0) return "";
-  const z = (val - frRef) / std;
-  let bg = "";
-  if (z >= 2) bg = `background:${PAL_IND_DIVERGENT[4]};`;       // vert moyen
-  else if (z >= 1) bg = `background:${PAL_IND_DIVERGENT[3]};`;  // vert clair
-  else if (z <= -2) bg = `background:${PAL_IND_DIVERGENT[1]};`; // violet moyen
-  else if (z <= -1) bg = `background:${PAL_IND_DIVERGENT[2]};`; // rose clair
-  return bg;
+// Médiane pondérée pop communes >50K
+const popWeightedMedian = (data, col) => {
+  const valid = data.filter(d => d[col] != null && d.P23_POP > 0).sort((a, b) => a[col] - b[col]);
+  if (!valid.length) return null;
+  const totalPop = valid.reduce((s, d) => s + d.P23_POP, 0);
+  let cum = 0;
+  for (const d of valid) { cum += d.P23_POP; if (cum >= totalPop / 2) return d[col]; }
+  return valid[valid.length - 1][col];
 };
-// Police rouge pour valeurs négatives
-const fmtColor = (val) => val != null && val < 0 ? "color:#dc2626;" : "";
+const commMedian = {};
+for (const col of commCols50k) commMedian[col] = popWeightedMedian(commData50k, col);
 
-// Header avec tooltip note de lecture
-const commHeader = document.createElement("div");
-commHeader.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;";
-commHeader.innerHTML = `<span style="font-size:12px;font-weight:600;color:#1e293b;font-family:Inter,system-ui,sans-serif;">Communes >50K hab. <span class="panel-tooltip-wrap" style="margin-left:2px;"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text" style="width:220px;left:0;transform:none;">Communes >50 000 hab. Prix DVF pondéré (maisons+appart). Fond vert = supérieur à la réf. France, fond violet = inférieur. Zone neutre ±1σ autour de la réf.</span></span></span><span style="font-size:10px;color:#9ca3af;font-family:Inter,system-ui,sans-serif;">${commData50k.length} villes</span>`;
+// Palette pastel 4 classes z-score vs France (variations uniquement)
+const PASTEL_GREEN_STRONG = "#b7e4c7";
+const PASTEL_GREEN_LIGHT = "#e6f4ea";
+const PASTEL_ROSE_LIGHT = "#fce8f3";
+const PASTEL_ROSE_STRONG = "#f0c6e0";
 
-// Container table
-const commTableWrap = document.createElement("div");
-commTableWrap.style.cssText = "max-height:calc(100vh - 240px);overflow-y:auto;overflow-x:auto;font-family:Inter,system-ui,sans-serif;";
+// colorCell : fond pastel + bold pour ±2σ (variations seulement, pas prix brut ni transactions brutes)
+const colorCell = (col, val) => {
+  if (val == null || !commColStats[col]) return { bg: "", bold: false };
+  // Pas de fond couleur sur prix brut et transactions brutes
+  if (col === "logd_px2_global_24" || (col.includes("trans") && !col.includes("vevol"))) return { bg: "", bold: false };
+  const { std, frRef } = commColStats[col];
+  if (std === 0) return { bg: "", bold: false };
+  const z = (val - frRef) / std;
+  if (z >= 2) return { bg: `background:${PASTEL_GREEN_STRONG};`, bold: true };
+  if (z >= 1) return { bg: `background:${PASTEL_GREEN_LIGHT};`, bold: false };
+  if (z <= -2) return { bg: `background:${PASTEL_ROSE_STRONG};`, bold: true };
+  if (z <= -1) return { bg: `background:${PASTEL_ROSE_LIGHT};`, bold: false };
+  return { bg: "", bold: false };
+};
+
+// Barre proportionnelle grise pour prix global (40px max width)
+const barHtml = (val) => {
+  if (val == null) return "";
+  const maxVal = commColStats["logd_px2_global_24"]?.max || 1;
+  const pct = Math.min(100, (val / maxVal) * 100);
+  return `<div style="position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:#94a3b8;opacity:0.18;border-radius:1px;"></div>`;
+};
 
 // Abréviation Arrondissement → Arr.
 const shortLib = (v) => v ? v.replace(/Arrondissement/gi, "Arr.").replace(/\s+/g, " ") : "—";
+const fmtPrix = v => v != null ? Math.round(v).toLocaleString("fr") : "—";
+const fmtPct = v => v != null ? (v > 0 ? "+" : "") + v.toFixed(1) + "%" : "—";
+const fmtVol = v => v != null ? Math.round(v).toLocaleString("fr") : "—";
 
 const colDefs = [
-  { key: "libelle", label: "Commune", sub: "", w: 115, align: "left", fmt: shortLib, noFrRef: false },
-  { key: "logd_px2_global_24", label: "Prix global", sub: "€/m² — 2024", w: 58, align: "right", fmt: v => v != null ? Math.round(v).toLocaleString("fr") : "—" },
-  { key: "logd_px2_global_vevol_1924", label: "Δ Prix", sub: "% — 19-24", w: 50, align: "right", fmt: v => v != null ? (v > 0 ? "+" : "") + v.toFixed(1) + "%" : "—" },
-  { key: "logd_px2_global_vevol_2224", label: "Δ Prix", sub: "% — 22-24", w: 50, align: "right", fmt: v => v != null ? (v > 0 ? "+" : "") + v.toFixed(1) + "%" : "—" },
-  { key: "logd_trans_24", label: "Transactions", sub: "nb — 2024", w: 62, align: "right", fmt: v => v != null ? Math.round(v).toLocaleString("fr") : "—", noFrRef: true },
-  { key: "logd_trans_vevol_1924", label: "Δ Trans.", sub: "% — 19-24", w: 52, align: "right", fmt: v => v != null ? (v > 0 ? "+" : "") + v.toFixed(1) + "%" : "—" }
+  { key: "libelle", label: "Commune", sub: "", w: 115, align: "left", fmt: shortLib, type: "text" },
+  { key: "logd_px2_global_24", label: "Prix global", sub: "€/m² 2024", w: 62, align: "right", fmt: fmtPrix, type: "bar" },
+  { key: "logd_px2_global_vevol_1924", label: "Δ Prix", sub: "% 19-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" },
+  { key: "logd_px2_global_vevol_2224", label: "Δ Prix", sub: "% 22-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" },
+  { key: "logd_trans_24", label: "Trans.", sub: "nb 2024", w: 52, align: "right", fmt: fmtVol, type: "plain" },
+  { key: "logd_trans_vevol_1924", label: "Δ Trans.", sub: "% 19-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" }
 ];
+
+// Header
+const commHeader = document.createElement("div");
+commHeader.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;";
+commHeader.innerHTML = `<span style="font-size:12px;font-weight:600;color:#1e293b;font-family:Inter,system-ui,sans-serif;">Communes >50K hab. <span class="panel-tooltip-wrap" style="margin-left:2px;"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text" style="width:220px;left:0;transform:none;">Prix DVF pondéré (maisons+appart). Barre grise = niveau prix. Fond vert/rose = écart vs France (variations). Gras = extrêmes (±2σ).</span></span></span><span style="font-size:10px;color:#9ca3af;font-family:Inter,system-ui,sans-serif;">${commData50k.length} villes</span>`;
+
+// Container table
+const commTableWrap = document.createElement("div");
+commTableWrap.style.cssText = "max-height:calc(100vh - 240px);overflow-y:auto;overflow-x:auto;font-family:Inter,system-ui,sans-serif;position:relative;";
 
 function renderCommTable() {
   let filtered = commData50k;
   if (commSearchVal) {
-    filtered = commData50k.filter(d => (d.libelle || "").toLowerCase().includes(commSearchVal));
+    filtered = commData50k.filter(d =>
+      (d.libelle || "").toLowerCase().includes(commSearchVal) ||
+      (d.regdep || "").toLowerCase().includes(commSearchVal)
+    );
   }
-  // Tri
   const sc = commSortState.col, sa = commSortState.asc;
   filtered = [...filtered].sort((a, b) => {
     const va = a[sc], vb = b[sc];
@@ -1012,36 +1029,56 @@ function renderCommTable() {
     return sa ? va - vb : vb - va;
   });
 
-  const thStyle = "padding:3px 4px;font-size:10.5px;font-weight:600;color:#374151;border-bottom:2px solid #d1d5db;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:#f8fafc;z-index:2;";
-  const tdStyle = "padding:2px 4px;font-size:11px;color:#1e293b;border-bottom:1px solid #e5e7eb;white-space:nowrap;background:#fff;";
+  const thStyle = "padding:3px 4px;font-size:10.5px;font-weight:600;color:#374151;border-bottom:2px solid #d1d5db;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:#f8fafc;z-index:3;";
+  const tdStyle = "padding:2px 4px;font-size:11px;color:#1e293b;border-bottom:1px solid #e5e7eb;white-space:nowrap;";
 
-  let html = `<table style="width:100%;border-collapse:collapse;"><thead><tr>`;
+  let h = `<table style="width:100%;border-collapse:collapse;"><thead><tr>`;
   for (const cd of colDefs) {
     const arrow = sc === cd.key ? (sa ? " ↑" : " ↓") : "";
     const subLine = cd.sub ? `<br><span style="font-weight:400;font-size:9px;color:#6b7280;">${cd.sub}</span>` : "";
-    html += `<th data-col="${cd.key}" style="${thStyle}text-align:${cd.align};min-width:${cd.w}px;">${cd.label}${arrow}${subLine}</th>`;
+    h += `<th data-col="${cd.key}" style="${thStyle}text-align:${cd.align};min-width:${cd.w}px;">${cd.label}${arrow}${subLine}</th>`;
   }
-  html += `</tr></thead><tbody>`;
-  // Ligne référence France (sticky sous header)
-  html += `<tr style="background:#f1f5f9;font-weight:600;position:sticky;top:36px;z-index:1;">`;
-  for (const cd of colDefs) {
-    const frVal = cd.key === "libelle" ? "🇫🇷 France" : cd.noFrRef ? "—" : (commColStats[cd.key]?.frRef != null ? cd.fmt(commColStats[cd.key].frRef) : "—");
-    html += `<td style="padding:2px 4px;font-size:10px;color:#1e293b;border-bottom:2px solid #94a3b8;white-space:nowrap;text-align:${cd.align};">${frVal}</td>`;
-  }
-  html += `</tr>`;
-  for (const d of filtered) {
-    html += `<tr style="cursor:default;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background=''">`;
-    for (const cd of colDefs) {
-      const bgStyle = cd.key !== "libelle" ? colorCell(cd.key, d[cd.key]) : "";
-      const txtColor = cd.key !== "libelle" ? fmtColor(d[cd.key]) : "";
-      html += `<td style="${tdStyle}text-align:${cd.align};${bgStyle}${txtColor}">${cd.fmt(d[cd.key])}</td>`;
-    }
-    html += `</tr>`;
-  }
-  html += `</tbody></table>`;
-  commTableWrap.innerHTML = html;
+  h += `</tr></thead><tbody>`;
 
-  // Bind sort handlers
+  // Ligne France (sticky sous header)
+  h += `<tr style="background:#f1f5f9;font-weight:600;position:sticky;top:40px;z-index:2;">`;
+  for (const cd of colDefs) {
+    const frVal = cd.key === "libelle" ? "🇫🇷 France" : cd.type === "plain" ? "—" : (commColStats[cd.key]?.frRef != null ? cd.fmt(commColStats[cd.key].frRef) : "—");
+    h += `<td style="padding:2px 4px;font-size:10px;color:#1e293b;border-bottom:2px solid #94a3b8;white-space:nowrap;text-align:${cd.align};">${frVal}</td>`;
+  }
+  h += `</tr>`;
+
+  // Ligne médiane pondérée >50K (sticky sous France)
+  h += `<tr style="background:#f5f5f5;font-style:italic;position:sticky;top:64px;z-index:1;">`;
+  for (const cd of colDefs) {
+    const medVal = cd.key === "libelle" ? "<span style='font-size:10px;'>Méd. >50K</span>" : cd.type === "plain" ? "—" : (commMedian[cd.key] != null ? cd.fmt(commMedian[cd.key]) : "—");
+    h += `<td style="padding:2px 4px;font-size:10px;color:#6b7280;border-bottom:1px solid #d1d5db;white-space:nowrap;text-align:${cd.align};">${medVal}</td>`;
+  }
+  h += `</tr>`;
+
+  for (const d of filtered) {
+    h += `<tr style="cursor:default;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background=''">`;
+    for (const cd of colDefs) {
+      if (cd.key === "libelle") {
+        // Commune + regdep en italique dessous
+        const regdepShort = d.regdep || "";
+        h += `<td style="${tdStyle}text-align:left;background:#fff;"><span>${shortLib(d.libelle)}</span>${regdepShort ? `<br><span style="font-size:8.5px;color:#9ca3af;font-style:italic;">${regdepShort}</span>` : ""}</td>`;
+      } else if (cd.type === "bar") {
+        // Prix global : barre grise proportionnelle
+        h += `<td style="${tdStyle}text-align:right;position:relative;background:#fff;">${barHtml(d[cd.key])}<span style="position:relative;z-index:1;">${cd.fmt(d[cd.key])}</span></td>`;
+      } else if (cd.type === "zscore") {
+        const { bg, bold } = colorCell(cd.key, d[cd.key]);
+        h += `<td style="${tdStyle}text-align:right;${bg}${bold ? "font-weight:700;" : ""}">${cd.fmt(d[cd.key])}</td>`;
+      } else {
+        // plain
+        h += `<td style="${tdStyle}text-align:right;background:#fff;">${cd.fmt(d[cd.key])}</td>`;
+      }
+    }
+    h += `</tr>`;
+  }
+  h += `</tbody></table>`;
+  commTableWrap.innerHTML = h;
+
   commTableWrap.querySelectorAll("th[data-col]").forEach(th => {
     th.addEventListener("click", () => setCommSort(th.dataset.col));
   });
