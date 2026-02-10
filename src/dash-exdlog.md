@@ -525,7 +525,7 @@ const map = renderChoropleth({
   formatValue: (k, v) => formatValue(indic, v),
   indicLabel, selectedCodes: [...mapSelectionState],
   showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
-  title: indicLabel, echelon, width: 450, height: 450, maxLabelsAuto: 600,
+  title: indicLabel, echelon, width: 450, height: 400, maxLabelsAuto: 600,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 
@@ -735,12 +735,15 @@ if (indexSeries.length > 0) {
     labelPositions.push({ ...lbl, dy });
   }
 
+  // Labels positionnés sur les courbes (dernière année)
+  const lastLabels = indexSeries.filter(d => d.annee === maxYearIdx);
+
   display(Plot.plot({
     style: { fontFamily: "Inter, system-ui, sans-serif" },
     width: 420,
     height: 200,
     marginLeft: 38,
-    marginRight: 110,
+    marginRight: 50,
     marginBottom: 22,
     x: { label: null, tickFormat: d => String(Math.round(d)), ticks: anneesIdx.filter(y => y % 2 === 0) },
     y: { label: "Indice", grid: true },
@@ -757,9 +760,10 @@ if (indexSeries.length > 0) {
         x: "annee", y: "value", fill: "terr", r: 2.5,
         tip: true, title: d => `${d.terr}\n${Math.round(d.annee)}: indice ${d.value?.toFixed(1)} (${d.raw?.toFixed(0)}€/m²)`
       }),
+      // Labels sur la courbe (à la dernière année, décalés vers le haut)
       Plot.text(labelPositions, {
-        x: "annee", y: d => d.value + d.dy, text: d => `${d.terr.length > 20 ? d.terr.slice(0, 18) + "…" : d.terr} ${d.value?.toFixed(0)}`,
-        dx: 8, textAnchor: "start", fontSize: 9, fill: "terr"
+        x: "annee", y: d => d.value + d.dy, text: d => `${d.terr.length > 18 ? d.terr.slice(0, 16) + "…" : d.terr} ${d.value?.toFixed(0)}`,
+        dx: 4, dy: -8, textAnchor: "end", fontSize: 9, fill: "terr", fontWeight: 600
       })
     ]
   }));
@@ -808,7 +812,7 @@ const commQueriesMaps = commTargetsMaps.map(tCode => {
 const commResultsMaps = await Promise.all(commQueriesMaps);
 
 const commContainerMaps = document.createElement("div");
-commContainerMaps.style.cssText = "display:flex;gap:8px;flex-wrap:nowrap;padding:0 8px;";
+commContainerMaps.style.cssText = "display:flex;gap:8px;flex-wrap:nowrap;padding:0 8px;justify-content:center;";
 
 for (let ci = 0; ci < commTargetsMaps.length; ci++) {
   const tCode = commTargetsMaps[ci];
@@ -876,7 +880,7 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
 
   const card = document.createElement("div");
   card.className = "card";
-  card.style.cssText = "padding:4px;flex:1;min-width:0;overflow:hidden;";
+  card.style.cssText = "padding:4px;flex:0 1 auto;min-width:0;overflow:hidden;";
   card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), {
     exportSVGFn: exportSVG, echelon: tLabel, colKey, title: `${indicLabel} — ${tLabel}`
   }));
@@ -951,20 +955,25 @@ for (const col of commCols50k) {
   commColStats[col] = { mean, std, frRef: frRef != null ? frRef : mean };
 }
 
-// Colorisation vert (au-dessus France) / violet (en-dessous) — seulement extrêmes prix
+// Colorisation 6 classes écart France (green-purple palette) + rouge pour négatifs
 const colorCell = (col, val) => {
   if (val == null || !commColStats[col]) return "";
-  // Pas de coloration sur volumes bruts (transactions)
-  if (col.includes("trans")) return "";
+  if (col.includes("trans") && !col.includes("vevol")) return "";  // Pas de fond sur volumes bruts
   const { std, frRef } = commColStats[col];
   if (std === 0) return "";
   const z = (val - frRef) / std;
-  if (z >= 2) return "background:#bbf7d0;";      // vert fort (au-dessus France)
-  if (z >= 1.5) return "background:#dcfce7;";    // vert léger
-  if (z <= -2) return "background:#ddd6fe;";      // violet fort (en-dessous France)
-  if (z <= -1.5) return "background:#ede9fe;";    // violet léger
-  return "";
+  // Fond 6 classes (3 vert au-dessus, 3 violet en-dessous, blanc autour)
+  let bg = "";
+  if (z >= 2) bg = "background:#86efac;";          // vert foncé (très au-dessus)
+  else if (z >= 1) bg = "background:#bbf7d0;";     // vert moyen
+  else if (z >= 0.4) bg = "background:#dcfce7;";   // vert léger
+  else if (z <= -2) bg = "background:#c4b5fd;";    // violet foncé (très en-dessous)
+  else if (z <= -1) bg = "background:#ddd6fe;";    // violet moyen
+  else if (z <= -0.4) bg = "background:#ede9fe;";  // violet léger
+  return bg;
 };
+// Police rouge pour valeurs négatives
+const fmtColor = (val) => val != null && val < 0 ? "color:#dc2626;" : "";
 
 // Header avec tooltip note de lecture
 const commHeader = document.createElement("div");
@@ -1014,7 +1023,7 @@ function renderCommTable() {
   }
   html += `</tr></thead><tbody>`;
   // Ligne référence France (sticky sous header)
-  html += `<tr style="background:#f1f5f9;font-weight:600;position:sticky;top:32px;z-index:1;">`;
+  html += `<tr style="background:#f1f5f9;font-weight:600;position:sticky;top:36px;z-index:1;">`;
   for (const cd of colDefs) {
     const frVal = cd.key === "libelle" ? "🇫🇷 France" : cd.noFrRef ? "—" : (commColStats[cd.key]?.frRef != null ? cd.fmt(commColStats[cd.key].frRef) : "—");
     html += `<td style="padding:2px 4px;font-size:10px;color:#1e293b;border-bottom:2px solid #94a3b8;white-space:nowrap;text-align:${cd.align};">${frVal}</td>`;
@@ -1024,7 +1033,8 @@ function renderCommTable() {
     html += `<tr style="cursor:default;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background=''">`;
     for (const cd of colDefs) {
       const bgStyle = cd.key !== "libelle" ? colorCell(cd.key, d[cd.key]) : "";
-      html += `<td style="${tdStyle}text-align:${cd.align};${bgStyle}">${cd.fmt(d[cd.key])}</td>`;
+      const txtColor = cd.key !== "libelle" ? fmtColor(d[cd.key]) : "";
+      html += `<td style="${tdStyle}text-align:${cd.align};${bgStyle}${txtColor}">${cd.fmt(d[cd.key])}</td>`;
     }
     html += `</tr>`;
   }
