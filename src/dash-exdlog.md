@@ -40,7 +40,8 @@ import {
 
 // === constants.js ===
 import {
-  PARIS_CODES, getDefaultZoomCode, ECHELONS_SIDEBAR
+  PARIS_CODES, getDefaultZoomCode, ECHELONS_SIDEBAR,
+  MIN_POP_DEFAULT, PAGE_SIZE_DEFAULT
 } from "./helpers/constants.js";
 
 // === selection.js ===
@@ -297,12 +298,15 @@ const echelon = view(Inputs.radio(
 
 </section>
 
+<a href="#vue-communes-detail" style="display:block;font-size:11.5px;color:#0369a1;text-decoration:none;font-family:Inter,system-ui,sans-serif;font-weight:600;padding:0 0 4px 0;margin:0;">↓ Vue Tab. communes détail</a>
+
 <section class="panel">
 <div class="panel-title">INDICATEUR CARTE</div>
 
 ```js
-// Défaut: prix m² maison (fallback si ecfr pas dispo)
-const defaultIndic = logementIndicOptions.has("logd_px2_global") ? "logd_px2_global" : "logd_px2q2_mai";
+// Défaut: prix global pondéré (fallback px2q2_mai)
+const _logdashVals = new Set(logementIndicOptions.values());
+const defaultIndic = _logdashVals.has("logd_px2_global") ? "logd_px2_global" : "logd_px2q2_mai";
 const indic = view(Inputs.select(logementIndicOptions, { value: defaultIndic, label: "" }));
 ```
 
@@ -449,17 +453,15 @@ const bannerTable = renderTable({
   compact: true, maxHeight: 220, scrollX: true, stickyFirstCol: 1
 });
 
-// Construire sub-banner pleine largeur (comme exdeco)
+// Sub-banner KPI (même classe CSS que exdeco — fond gris sidebar, sticky)
 const bannerWrap = document.createElement("div");
 bannerWrap.className = "sub-banner";
-bannerWrap.style.cssText = "position:relative;top:auto;margin-left:0;width:100%;padding:4px 0 2px;";
 const bannerInner = document.createElement("div");
-bannerInner.style.cssText = "padding:0 8px;";
+bannerInner.style.cssText = "padding:4px 12px 6px;";
 const bannerTitle = document.createElement("div");
-bannerTitle.style.cssText = "font-size:13px;font-weight:600;color:#374151;padding:2px 0 3px 4px;font-family:Inter,system-ui,sans-serif;";
-bannerTitle.textContent = "Métriques clés";
+bannerTitle.style.cssText = "font-size:12px;font-weight:600;color:#374151;padding:0 0 3px 0;font-family:Inter,system-ui,sans-serif;";
+bannerTitle.textContent = "Métriques clés — France et territoires sélectionnés";
 bannerInner.appendChild(bannerTitle);
-// Fond blanc cellules KPI
 bannerTable.style.cssText = (bannerTable.style.cssText || "") + "background:#fff;border-radius:2px;";
 bannerInner.appendChild(bannerTable);
 bannerWrap.appendChild(bannerInner);
@@ -489,26 +491,64 @@ setTimeout(() => {
 }, 100);
 ```
 
-<!-- Séparateur bannière / contenu -->
-<div style="border-top:1px solid #d1d5db;margin:6px 0 8px 0;"></div>
-
-<!-- &s CARTE_ET_GRAPHIQUES -->
-<div style="display:flex;gap:10px;align-items:flex-start;">
-
-<!-- Row carte + graphiques + communes -->
-<div style="flex:1;display:flex;gap:10px;align-items:flex-start;min-width:0;">
-
-<!-- COLONNE 1 : Carte France échelon -->
-<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:8px;padding-left:8px;align-self:flex-start;">
-
 ```js
-// Zoom state persistant et calcul zoomLabel
+// === PRE-COMPUTE : Zoom + Commune maps data ===
 if (!window._zoomStatesLog) window._zoomStatesLog = {};
 const _zoomVal = zoomTargetState;
 const labelMap = getLabelMap(echelon);
 const zoomCode = (_zoomVal && labelMap?.has(_zoomVal)) ? _zoomVal : getDefaultZoomCode(echelon);
 const zoomLabel = labelMap?.get(zoomCode) || zoomCode;
+
+// Commune maps : pre-fetch data pour les 2 cibles
+const _fk = meta?.filterKey || "DEP";
+const _isEPCI = echelon === "EPCI";
+const _selCodes = [...mapSelectionState];
+const _mc1 = zoomCode || RENNES_CODE;
+const _mc2 = _selCodes.length > 0 && _selCodes[0] !== _mc1 ? _selCodes[0] : (_selCodes[1] || PARIS_CODE);
+
+const _fetchComm = (tCode) => {
+  const tFilter = _isEPCI ? null : { [_fk]: [tCode] };
+  const tWhere = _isEPCI ? `(CAST("EPCI_EPT" AS VARCHAR) = '${tCode}' OR CAST("EPCI" AS VARCHAR) = '${tCode}')` : null;
+  return queryCommunes({ conn }, { tableName: "communes", filter: tFilter, customWhere: tWhere, columns: ["code", "libelle", "P23_POP", colKey], limit: 2000 });
+};
+const [_cd1, _cd2] = await Promise.all([_fetchComm(_mc1), _fetchComm(_mc2)]);
+
+// Helper : crée un élément carte commune
+function buildCommMap(tCode, tData, w, h) {
+  const tLabel = getLabelMap(echelon)?.get(tCode) || tCode;
+  const tMap = new Map(tData.map(d => [d.code, d]));
+  const tFeats = communesGeo.features.filter(f => _isEPCI ? tMap.has(f.properties.CODGEO) : String(f.properties[_fk]) === String(tCode));
+  const tGeo = { type: "FeatureCollection", features: tFeats.map(f => { const d = tMap.get(f.properties.CODGEO); return { ...f, properties: { ...f.properties, libelle: d?.libelle, P23_POP: d?.P23_POP, [colKey]: d?.[colKey] } }; }) };
+  if (tGeo.features.length === 0) return null;
+  const tBins = tData.length >= 10 ? computeIndicBins(tData, colKey, indic) : indicBins;
+  const tGrad = tData.length >= 10 ? createGradientScale(tData, colKey) : gradient;
+  const tEcart = isEcart ? computeEcartFrance(tData, colKey, ecart.ref, { sigma: ecart.sigma, indicType: INDICATEURS[indic]?.type }) : null;
+  const tGetColor = isEcart ? tEcart.getColor : isGradient ? tGrad.getColor : tBins.getColor;
+  const cMap = renderChoropleth({ geoData: tGeo, valueCol: colKey, getColor: tGetColor, getCode: f => f.properties.CODGEO, getLabel: ({ code }) => tMap.get(code)?.libelle || code, formatValue: (k, v) => formatValue(indic, v), indicLabel, showLabels: showValuesOnMap, labelMode, labelBy, topN: 200, title: tLabel, maxLabelsAuto: 80, echelon: "Commune", width: w, height: h });
+  if (!cMap) return null;
+  if (cMap._tipConfig) { cMap._tipConfig.frRef = frData?.[colKey]; cMap._tipConfig.frGetEcartInfo = isEcart ? tEcart?.getEcartInfo : ecart.getEcartInfo; }
+  const tEcartCounts = isEcart ? countBins(tData, colKey, tEcart.thresholds || []) : [];
+  const cLegend = isEcart
+    ? createEcartFranceLegend({ palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS, pctLabels: tEcart.pctLabels, counts: tEcartCounts, title: "Écart France" })
+    : isGradient
+    ? createGradientLegend({ colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential, min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent, decimals: 2, title: "Légende", capped: true, rawMin: tGrad.rawMin, rawMax: tGrad.rawMax })
+    : createBinsLegend({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, colKey, tBins.bins.thresholds || []), vertical: true, title: "Légende", unit: getIndicUnit(colKey), reverse: !tBins.isDiv });
+  const card = document.createElement("div");
+  card.className = "card";
+  card.style.cssText = "padding:4px;";
+  card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), { exportSVGFn: exportSVG, echelon: tLabel, colKey, title: `${indicLabel} — ${tLabel}` }));
+  return card;
+}
 ```
+
+<!-- &s CARTE_ET_GRAPHIQUES -->
+<div style="display:flex;gap:10px;align-items:flex-start;margin-top:10px;">
+
+<!-- Row carte + graphiques -->
+<div style="flex:1;display:flex;gap:10px;align-items:stretch;min-width:0;">
+
+<!-- COLONNE 1 : Carte France + commune map 1 -->
+<div style="flex:0 0 auto;max-width:420px;display:flex;flex-direction:column;gap:6px;padding-left:8px;">
 
 <div class="card">
 
@@ -522,7 +562,7 @@ const map = renderChoropleth({
   formatValue: (k, v) => formatValue(indic, v),
   indicLabel, selectedCodes: [...mapSelectionState],
   showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
-  title: indicLabel, echelon, width: 450, height: 400, maxLabelsAuto: 600,
+  title: indicLabel, echelon, width: 395, height: 360, maxLabelsAuto: 600,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 
@@ -590,11 +630,23 @@ display(wrapper);
 
 </div>
 
+<div style="margin-top:auto;">
+
+```js
+// Carte commune 1 (zoom target)
+{
+  const m1 = buildCommMap(_mc1, _cd1, 390, 290);
+  if (m1) display(m1);
+}
+```
+
+</div>
+
 </div>
 <!-- Fin colonne 1 -->
 
 <!-- COLONNE 2 : Graphiques séries -->
-<div style="flex:1 1 400px;min-width:340px;max-width:460px;display:flex;flex-direction:column;gap:4px;align-self:flex-start;">
+<div style="flex:1 1 390px;min-width:330px;max-width:430px;display:flex;flex-direction:column;gap:4px;">
 
 <!-- Graphique 1 : France référence STATIQUE -->
 <div class="card" style="padding:6px 10px;">
@@ -614,8 +666,8 @@ const volScale = 3000 / maxVol;  // Ajusté pour que barres soient visibles
 
 display(Plot.plot({
   style: { fontFamily: "Inter, system-ui, sans-serif" },
-  width: 420,
-  height: 175,
+  width: 400,
+  height: 160,
   marginLeft: 42,
   marginRight: 50,
   marginBottom: 22,
@@ -737,8 +789,8 @@ if (indexSeries.length > 0) {
 
   display(Plot.plot({
     style: { fontFamily: "Inter, system-ui, sans-serif" },
-    width: 420,
-    height: 215,
+    width: 400,
+    height: 185,
     marginLeft: 38,
     marginRight: 50,
     marginBottom: 22,
@@ -777,109 +829,17 @@ Prix global pondéré (mai+apt) | Base 100 = 2010 | — France ref | Ctrl+clic c
 
 </div>
 
-<!-- Cartes communes (sous graph 2, dans Col2) -->
-<div style="font-size:10px;font-weight:600;color:#374151;margin:6px 0 2px 0;font-family:Inter,system-ui,sans-serif;">Vue commune — Sélection</div>
+<div style="margin-top:auto;">
 
 ```js
-// === CARTES COMMUNES (2 côte à côte, dans Col2 sous graph 2) ===
-const filterKey = meta?.filterKey || "DEP";
-const isEPCI = echelon === "EPCI";
-const selCodes = [...mapSelectionState];
-
-const mapCode1 = zoomCode || RENNES_CODE;
-const mapCode2 = selCodes.length > 0 && selCodes[0] !== mapCode1 ? selCodes[0] : (selCodes[1] || PARIS_CODE);
-const commTargetsMaps = mapCode1 !== mapCode2 ? [mapCode1, mapCode2] : [mapCode1];
-
-const commQueriesMaps = commTargetsMaps.map(tCode => {
-  const tFilter = isEPCI ? null : { [filterKey]: [tCode] };
-  const tWhere = isEPCI
-    ? `(CAST("EPCI_EPT" AS VARCHAR) = '${tCode}' OR CAST("EPCI" AS VARCHAR) = '${tCode}')`
-    : null;
-  return queryCommunes({ conn }, {
-    tableName: "communes", filter: tFilter, customWhere: tWhere,
-    columns: ["code", "libelle", "P23_POP", colKey], limit: 2000
-  });
-});
-const commResultsMaps = await Promise.all(commQueriesMaps);
-
-const commContainerMaps = document.createElement("div");
-commContainerMaps.className = "cards-row";
-commContainerMaps.style.cssText = "width:auto;max-width:460px;margin:0;gap:6px;";
-
-for (let ci = 0; ci < commTargetsMaps.length; ci++) {
-  const tCode = commTargetsMaps[ci];
-  const tLabel = getLabelMap(echelon)?.get(tCode) || tCode;
-  const tData = commResultsMaps[ci];
-  const tMap = new Map(tData.map(d => [d.code, d]));
-
-  const tFeats = communesGeo.features.filter(f => {
-    if (isEPCI) return tMap.has(f.properties.CODGEO);
-    return String(f.properties[filterKey]) === String(tCode);
-  });
-  const tGeo = {
-    type: "FeatureCollection",
-    features: tFeats.map(f => {
-      const d = tMap.get(f.properties.CODGEO);
-      return { ...f, properties: { ...f.properties, libelle: d?.libelle, P23_POP: d?.P23_POP, [colKey]: d?.[colKey] } };
-    })
-  };
-
-  const tBins = tData.length >= 10 ? computeIndicBins(tData, colKey, indic) : indicBins;
-  const tGrad = tData.length >= 10 ? createGradientScale(tData, colKey) : gradient;
-  const tEcart = isEcart ? computeEcartFrance(tData, colKey, ecart.ref, { sigma: ecart.sigma, indicType: INDICATEURS[indic]?.type }) : null;
-  const tGetColor = isEcart ? tEcart.getColor : isGradient ? tGrad.getColor : tBins.getColor;
-
-  if (tGeo.features.length === 0) continue;
-
-  const cMap = renderChoropleth({
-    geoData: tGeo, valueCol: colKey,
-    getColor: tGetColor,
-    getCode: f => f.properties.CODGEO,
-    getLabel: ({ code }) => tMap.get(code)?.libelle || code,
-    formatValue: (k, v) => formatValue(indic, v),
-    indicLabel, showLabels: showValuesOnMap,
-    labelMode, labelBy, topN: 200,
-    title: `${tLabel}`,
-    maxLabelsAuto: 80, echelon: "Commune", width: 215, height: 180
-  });
-
-  if (!cMap) continue;
-
-  if (cMap._tipConfig) {
-    cMap._tipConfig.frRef = frData?.[colKey];
-    cMap._tipConfig.frGetEcartInfo = isEcart ? tEcart.getEcartInfo : ecart.getEcartInfo;
-  }
-
-  const tEcartCounts = isEcart ? countBins(tData, colKey, tEcart.thresholds || []) : [];
-  const cLegend = isEcart
-    ? createEcartFranceLegend({
-        palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS,
-        pctLabels: tEcart.pctLabels,
-        counts: tEcartCounts, title: `Écart France`
-      })
-    : isGradient
-    ? createGradientLegend({
-        colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
-        min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent,
-        decimals: 2, title: "Légende", capped: true, rawMin: tGrad.rawMin, rawMax: tGrad.rawMax
-      })
-    : createBinsLegend({
-        colors: tBins.palette, labels: tBins.bins.labels || [],
-        counts: countBins(tData, colKey, tBins.bins.thresholds || []),
-        vertical: true, title: "Légende", unit: getIndicUnit(colKey), reverse: !tBins.isDiv
-      });
-
-  const card = document.createElement("div");
-  card.className = "card";
-  card.style.cssText = "padding:4px;display:flex;flex-direction:column;min-height:0;";
-  card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), {
-    exportSVGFn: exportSVG, echelon: tLabel, colKey, title: `${indicLabel} — ${tLabel}`
-  }));
-  commContainerMaps.appendChild(card);
+// Carte commune 2 (territoire sélectionné)
+{
+  const m2 = buildCommMap(_mc2, _cd2, 400, 290);
+  if (m2) display(m2);
 }
-
-display(commContainerMaps);
 ```
+
+</div>
 
 </div>
 <!-- Fin colonne 2 graphiques + communes -->
@@ -888,7 +848,7 @@ display(commContainerMaps);
 <!-- Fin row carte + graphiques + communes -->
 
 <!-- COLONNE DROITE : Communes >50K habitants -->
-<div style="flex:0 0 auto;min-width:300px;display:flex;flex-direction:column;align-self:stretch;overflow-y:auto;overflow-x:hidden;">
+<div style="flex:0 0 auto;min-width:280px;display:flex;flex-direction:column;align-self:stretch;overflow-y:auto;overflow-x:hidden;">
 
 ```js
 // === SORT STATE COMMUNES (bloc séparé pour réactivité) ===
@@ -1029,30 +989,30 @@ function renderCommTable() {
     return sa ? va - vb : vb - va;
   });
 
-  const thStyle = "padding:3px 4px;font-size:10.5px;font-weight:600;color:#374151;border-bottom:2px solid #d1d5db;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:#f8fafc;z-index:3;";
-  const tdStyle = "padding:2px 4px;font-size:11px;color:#1e293b;border-bottom:1px solid #e5e7eb;white-space:nowrap;";
+  const thStyle = "padding:4px 3px;font-size:11px;font-weight:600;color:#374151;border-bottom:2px solid #d1d5db;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:#e5e7eb;z-index:3;";
+  const tdStyle = "padding:3px 3px;font-size:11.5px;color:#1e293b;border-bottom:1px solid #e5e7eb;white-space:nowrap;";
 
   let h = `<table style="width:100%;border-collapse:collapse;"><thead><tr>`;
   for (const cd of colDefs) {
     const arrow = sc === cd.key ? (sa ? " ↑" : " ↓") : "";
-    const subLine = cd.sub ? `<br><span style="font-weight:400;font-size:9px;color:#6b7280;">${cd.sub}</span>` : "";
+    const subLine = cd.sub ? `<br><span style="font-weight:400;font-size:9px;color:#4b5563;">${cd.sub}</span>` : "";
     h += `<th data-col="${cd.key}" style="${thStyle}text-align:${cd.align};min-width:${cd.w}px;">${cd.label}${arrow}${subLine}</th>`;
   }
   h += `</tr></thead><tbody>`;
 
-  // Ligne France (sticky sous header)
-  h += `<tr style="background:#f1f5f9;font-weight:600;position:sticky;top:40px;z-index:2;">`;
+  // Ligne France (sticky — top ajusté dynamiquement après render)
+  h += `<tr class="sticky-fr" style="background:#f1f5f9;font-weight:600;position:sticky;top:0;z-index:2;box-shadow:0 1px 0 #94a3b8;">`;
   for (const cd of colDefs) {
     const frVal = cd.key === "libelle" ? "🇫🇷 France" : cd.type === "plain" ? "—" : (commColStats[cd.key]?.frRef != null ? cd.fmt(commColStats[cd.key].frRef) : "—");
-    h += `<td style="padding:2px 4px;font-size:10px;color:#1e293b;border-bottom:2px solid #94a3b8;white-space:nowrap;text-align:${cd.align};">${frVal}</td>`;
+    h += `<td style="padding:2px 4px;font-size:10px;color:#1e293b;background:#f1f5f9;border-bottom:1px solid #94a3b8;white-space:nowrap;text-align:${cd.align};">${frVal}</td>`;
   }
   h += `</tr>`;
 
   // Ligne médiane pondérée >50K (sticky sous France)
-  h += `<tr style="background:#f5f5f5;font-style:italic;position:sticky;top:64px;z-index:1;">`;
+  h += `<tr class="sticky-med" style="background:#f5f5f5;font-style:italic;position:sticky;top:0;z-index:1;">`;
   for (const cd of colDefs) {
     const medVal = cd.key === "libelle" ? "<span style='font-size:10px;'>Méd. >50K</span>" : cd.type === "plain" ? "—" : (commMedian[cd.key] != null ? cd.fmt(commMedian[cd.key]) : "—");
-    h += `<td style="padding:2px 4px;font-size:10px;color:#6b7280;border-bottom:1px solid #d1d5db;white-space:nowrap;text-align:${cd.align};">${medVal}</td>`;
+    h += `<td style="padding:2px 4px;font-size:10px;color:#6b7280;background:#f5f5f5;border-bottom:1px solid #d1d5db;white-space:nowrap;text-align:${cd.align};">${medVal}</td>`;
   }
   h += `</tr>`;
 
@@ -1060,9 +1020,9 @@ function renderCommTable() {
     h += `<tr style="cursor:default;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background=''">`;
     for (const cd of colDefs) {
       if (cd.key === "libelle") {
-        // Commune + regdep en italique dessous
+        // Commune + regdep inline en italique
         const regdepShort = d.regdep || "";
-        h += `<td style="${tdStyle}text-align:left;background:#fff;"><span>${shortLib(d.libelle)}</span>${regdepShort ? `<br><span style="font-size:8.5px;color:#9ca3af;font-style:italic;">${regdepShort}</span>` : ""}</td>`;
+        h += `<td style="${tdStyle}text-align:left;background:#fff;"><span>${shortLib(d.libelle)}</span>${regdepShort ? ` <span style="font-size:8.5px;color:#9ca3af;font-style:italic;">${regdepShort}</span>` : ""}</td>`;
       } else if (cd.type === "bar") {
         // Prix global : barre grise proportionnelle
         h += `<td style="${tdStyle}text-align:right;position:relative;background:#fff;">${barHtml(d[cd.key])}<span style="position:relative;z-index:1;">${cd.fmt(d[cd.key])}</span></td>`;
@@ -1078,6 +1038,18 @@ function renderCommTable() {
   }
   h += `</tbody></table>`;
   commTableWrap.innerHTML = h;
+
+  // Ajuster sticky top dynamiquement selon hauteur réelle du header
+  requestAnimationFrame(() => {
+    const thead = commTableWrap.querySelector("thead");
+    const frRow = commTableWrap.querySelector(".sticky-fr");
+    const medRow = commTableWrap.querySelector(".sticky-med");
+    if (thead && frRow) {
+      const hH = thead.getBoundingClientRect().height;
+      frRow.style.top = hH + "px";
+      if (medRow) medRow.style.top = (hH + frRow.getBoundingClientRect().height) + "px";
+    }
+  });
 
   commTableWrap.querySelectorAll("th[data-col]").forEach(th => {
     th.addEventListener("click", () => setCommSort(th.dataset.col));
@@ -1228,6 +1200,151 @@ display(tableWrapper);
 </div>
 </div>
 <!-- &e TABLEAU -->
+
+<!-- &s TABLEAU_COMMUNES -->
+<div id="vue-communes-detail" style="margin-top:16px;padding-left:12px;">
+<h3 style="margin:0 0 8px 0;">Vue commune — Logement (>10K hab.)</h3>
+
+<div class="card" style="padding:8px;">
+
+```js
+// === STATE TABLEAU COMMUNES ===
+const commDetailSortState = Mutable({ col: null, asc: false });
+const setCommDetailSort = (col) => {
+  const cur = commDetailSortState.value;
+  commDetailSortState.value = cur.col === col ? { col, asc: !cur.asc } : { col, asc: false };
+  commDetailPageState.value = 0;
+};
+const commDetailPageState = Mutable(0);
+const setCommDetailPage = (p) => { commDetailPageState.value = p; };
+```
+
+```js
+const commDetailSearch = view(Inputs.text({
+  placeholder: "Recherche commune, dept (ex: hdf/59)...",
+  width: 240
+}));
+```
+
+```js
+// === DONNÉES COMMUNES >10K — DuckDB parquet ===
+const filterCodesComm = [...mapSelectionState];
+const hasCommSelection = filterCodesComm.length > 0;
+const commDetailFilter = hasCommSelection ? { [meta?.filterKey || "DEP"]: filterCodesComm } : null;
+const commDetailWhere = (hasCommSelection && echelon === "EPCI")
+  ? `(${filterCodesComm.map(c => `CAST("EPCI_EPT" AS VARCHAR) = '${c}' OR CAST("EPCI" AS VARCHAR) = '${c}'`).join(" OR ")})`
+  : null;
+
+// Colonnes logement pour communes
+const commDetailBaseCols = [
+  colKey,
+  "logd_px2_global_24", "logd_px2_global_vevol_1924", "logd_px2_global_vevol_2224",
+  "logd_px2q2_mai_24", "logd_px2q2_appt_24",
+  "logd_trans_24", "logd_trans_vevol_1924",
+  "log_vac_pct_22", "logv_vac2ans_pct_24"
+];
+const commDetailExtraCols = (extraIndics || []).filter(i => !i.startsWith("__sep_")).map(i => buildColKey(i, getDefaultPeriode(i)));
+const commDetailAllCols = [...new Set([...commDetailExtraCols, ...commDetailBaseCols])];
+
+const communesDetailData = await queryCommunes({ conn }, {
+  tableName: "communes",
+  filter: (echelon === "EPCI" && hasCommSelection) ? null : commDetailFilter,
+  customWhere: commDetailWhere,
+  columns: ["code", "libelle", "regdep", "P23_POP", ...commDetailAllCols],
+  limit: hasCommSelection ? 500 : undefined,
+  minPop: hasCommSelection ? 0 : MIN_POP_DEFAULT
+});
+
+// Filtrer communes avec au moins 1 valeur logement non-null
+const communesDetailClean = communesDetailData.filter(d =>
+  commDetailAllCols.some(c => d[c] != null)
+);
+
+// France reference row
+const frRowComm = await queryFrance({ conn }, "communes", commDetailAllCols);
+const commDetailTableData = (frRowComm ? [frRowComm, ...communesDetailClean] : communesDetailClean).map(d => ({
+  ...d, regshort: d.regdep ? d.regdep.split("/")[0] : ""
+}));
+
+// Filtre texte
+const commDetailSearchVal = (commDetailSearch || "").toLowerCase();
+const commDetailFiltered = commDetailSearchVal
+  ? commDetailTableData.filter(d => d.code === "00FR" || (d.regshort || "").toLowerCase().includes(commDetailSearchVal) || (d.libelle || "").toLowerCase().includes(commDetailSearchVal) || (d.regdep || "").toLowerCase().includes(commDetailSearchVal))
+  : commDetailTableData;
+
+// Tri : France toujours premier
+const _cdSortCol = commDetailSortState.col;
+const _cdSortAsc = commDetailSortState.asc;
+const _cdFrRow = commDetailFiltered.find(d => d.code === "00FR");
+const _cdOthers = commDetailFiltered.filter(d => d.code !== "00FR");
+const _cdSorted = _cdFrRow ? [_cdFrRow, ...sortTableData(_cdOthers, _cdSortCol, _cdSortAsc)] : sortTableData(_cdOthers, _cdSortCol, _cdSortAsc);
+
+// Pagination
+const _cdPage = Math.min(commDetailPageState, Math.max(0, Math.ceil(_cdSorted.length / PAGE_SIZE_DEFAULT) - 1));
+const _cdPaged = _cdSorted.slice(_cdPage * PAGE_SIZE_DEFAULT, (_cdPage + 1) * PAGE_SIZE_DEFAULT);
+const _cdStats = computeBarStats(commDetailFiltered, ["P23_POP", ...commDetailAllCols]);
+
+// Colonnes
+const _cdColumns = [
+  { key: "regshort", label: "Rég", type: "text", width: 45 },
+  { key: "libelle", label: "Commune", type: "text", width: 170 },
+  { key: "P23_POP", label: "Pop 2023", unit: "hab" },
+  ...commDetailAllCols.map(col => {
+    const indicK = col.replace(/_\d+$/, "");
+    const per = col.match(/_(\d{2,4})$/)?.[1] || "";
+    return {
+      key: col,
+      label: getIndicLabel(indicK, "short"),
+      unit: getIndicUnit(col),
+      periode: per ? getPeriodeLabel(per, "short") : ""
+    };
+  })
+];
+
+// Header export + fullscreen
+display(html`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+  <span style="font-size:10px;color:#6b7280;">${commDetailFiltered.length} communes${hasCommSelection ? " (sélection)" : " (>10k hab)"}</span>
+  <div style="display:flex;gap:4px;">
+    <button style="font-size:10px;padding:2px 6px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:3px;cursor:pointer;"
+      onclick=${() => exportCSV(_cdSorted, _cdColumns, "communes_logement_" + new Date().toISOString().slice(0,10) + ".csv")}>
+      📥
+    </button>
+    <button style="font-size:12px;padding:2px 6px;background:#f3f4f6;border:1px solid #d1d5db;border-radius:3px;cursor:pointer;" title="Plein écran"
+      onclick=${() => { const t = document.querySelector(".commlog-table-fs-target"); if (t) openTableFullscreen(t); }}>
+      ⤢
+    </button>
+  </div>
+</div>`);
+
+// Pagination
+display(renderPagination(_cdSorted.length, _cdPage, setCommDetailPage, PAGE_SIZE_DEFAULT,
+  ` | ${hasCommSelection ? filterCodesComm.length + " terr. sélect." : "pop > 10k"}${commDetailSearchVal ? ` | "${commDetailSearchVal}"` : ""}`));
+
+// Tableau
+const _cdTableWrap = document.createElement("div");
+_cdTableWrap.className = "commlog-table-fs-target";
+_cdTableWrap.appendChild(renderTable({
+  data: _cdPaged,
+  columns: _cdColumns,
+  stats: _cdStats,
+  sortCol: _cdSortCol,
+  sortAsc: _cdSortAsc,
+  setSort: setCommDetailSort,
+  indicColKey: colKey,
+  stickyFirstCol: 2,
+  scrollX: true,
+  scrollbarTop: true,
+  maxHeight: 800
+}));
+// Override max-height pour pleine page
+const _cdScrollDiv = _cdTableWrap.querySelector("[style*='max-height']");
+if (_cdScrollDiv) _cdScrollDiv.style.maxHeight = "calc(100vh - 180px)";
+display(_cdTableWrap);
+```
+
+</div>
+</div>
+<!-- &e TABLEAU_COMMUNES -->
 
 <!-- &s PERF_PANEL -->
 ```js
