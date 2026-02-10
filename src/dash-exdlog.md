@@ -58,7 +58,8 @@ import { formatValue, getColLabel, getIndicOptionsByAggDash, getIndicOptionsByAg
 // === colors.js ===
 import {
   computeIndicBins, countBins, createGradientScale, GRADIENT_PALETTES,
-  computeEcartFrance, PAL_ECART_FRANCE, ECART_FRANCE_SYMBOLS
+  computeEcartFrance, PAL_ECART_FRANCE, ECART_FRANCE_SYMBOLS,
+  PAL_IND_DIVERGENT
 } from "./helpers/colors.js";
 
 // === legend.js ===
@@ -849,7 +850,7 @@ for (let ci = 0; ci < commTargetsMaps.length; ci++) {
     indicLabel, showLabels: showValuesOnMap,
     labelMode, labelBy, topN: 200,
     title: `${tLabel}`,
-    maxLabelsAuto: 80, echelon: "Commune", width: 240, height: 280
+    maxLabelsAuto: 80, echelon: "Commune", width: 260, height: 230
   });
 
   if (!cMap) continue;  // Protection si renderChoropleth retourne null
@@ -955,21 +956,19 @@ for (const col of commCols50k) {
   commColStats[col] = { mean, std, frRef: frRef != null ? frRef : mean };
 }
 
-// Colorisation 6 classes écart France (green-purple palette) + rouge pour négatifs
+// Colorisation 4 classes écart France (palette PAL_IND_DIVERGENT) + rouge pour négatifs
+// PAL_IND_DIVERGENT = [violet foncé, violet moyen, rose clair, vert clair, vert moyen, vert foncé]
 const colorCell = (col, val) => {
   if (val == null || !commColStats[col]) return "";
-  if (col.includes("trans") && !col.includes("vevol")) return "";  // Pas de fond sur volumes bruts
+  if (col.includes("trans") && !col.includes("vevol")) return "";
   const { std, frRef } = commColStats[col];
   if (std === 0) return "";
   const z = (val - frRef) / std;
-  // Fond 6 classes (3 vert au-dessus, 3 violet en-dessous, blanc autour)
   let bg = "";
-  if (z >= 2) bg = "background:#86efac;";          // vert foncé (très au-dessus)
-  else if (z >= 1) bg = "background:#bbf7d0;";     // vert moyen
-  else if (z >= 0.4) bg = "background:#dcfce7;";   // vert léger
-  else if (z <= -2) bg = "background:#c4b5fd;";    // violet foncé (très en-dessous)
-  else if (z <= -1) bg = "background:#ddd6fe;";    // violet moyen
-  else if (z <= -0.4) bg = "background:#ede9fe;";  // violet léger
+  if (z >= 2) bg = `background:${PAL_IND_DIVERGENT[4]};`;       // vert moyen
+  else if (z >= 1) bg = `background:${PAL_IND_DIVERGENT[3]};`;  // vert clair
+  else if (z <= -2) bg = `background:${PAL_IND_DIVERGENT[1]};`; // violet moyen
+  else if (z <= -1) bg = `background:${PAL_IND_DIVERGENT[2]};`; // rose clair
   return bg;
 };
 // Police rouge pour valeurs négatives
@@ -978,7 +977,7 @@ const fmtColor = (val) => val != null && val < 0 ? "color:#dc2626;" : "";
 // Header avec tooltip note de lecture
 const commHeader = document.createElement("div");
 commHeader.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;";
-commHeader.innerHTML = `<span style="font-size:12px;font-weight:600;color:#1e293b;font-family:Inter,system-ui,sans-serif;">Communes >50K hab. <span class="panel-tooltip-wrap" style="margin-left:2px;"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text" style="width:220px;left:0;transform:none;">Communes >50 000 hab. Prix DVF pondéré (maisons+appart). Fond vert = supérieur à la réf. France, fond violet = inférieur. Seuls les extrêmes (>1.5 écart-type) sont colorés.</span></span></span><span style="font-size:10px;color:#9ca3af;font-family:Inter,system-ui,sans-serif;">${commData50k.length} villes</span>`;
+commHeader.innerHTML = `<span style="font-size:12px;font-weight:600;color:#1e293b;font-family:Inter,system-ui,sans-serif;">Communes >50K hab. <span class="panel-tooltip-wrap" style="margin-left:2px;"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text" style="width:220px;left:0;transform:none;">Communes >50 000 hab. Prix DVF pondéré (maisons+appart). Fond vert = supérieur à la réf. France, fond violet = inférieur. Zone neutre ±1σ autour de la réf.</span></span></span><span style="font-size:10px;color:#9ca3af;font-family:Inter,system-ui,sans-serif;">${commData50k.length} villes</span>`;
 
 // Container table
 const commTableWrap = document.createElement("div");
