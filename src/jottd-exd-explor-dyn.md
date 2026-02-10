@@ -94,6 +94,7 @@ import {
   createTypologieLegend,
   createGradientLegend,
   createBinsLegend,
+  createEcartFranceLegend,
   getGradientColors
 } from "./helpers/legend.js";
 
@@ -114,7 +115,10 @@ import {
   getDens3Color,
   getDens7Color,
   getTypeEpciColor,
-  countBins
+  countBins,
+  computeEcartFrance,
+  PAL_ECART_FRANCE,
+  ECART_FRANCE_SYMBOLS
 } from "./helpers/colors.js";
 ```
 
@@ -652,7 +656,24 @@ document.getElementById("btn-clear-sel")?.addEventListener("click", () => {
 <div class="panel-title">OPTIONS CARTES</div>
 
 ```js
-const colorMode = view(Inputs.radio(["8 catégories", "Gradient"], {value: "8 catégories", label: "Mode représ."}));
+const _colorModeInput = Inputs.radio(["Répartition", "Écart France", "Gradient"], {value: "Répartition", label: "Mode représ."});
+const _radioTips = {
+  "Répartition": "Découpe en classes de taille égale (quantiles). Chaque couleur contient environ le même nombre de territoires.",
+  "Écart France": "Compare chaque territoire à la valeur France. 9 niveaux symétriques autour de la référence nationale (écart-type winsorisé).",
+  "Gradient": "Dégradé continu proportionnel à la valeur brute. Outliers atténués aux percentiles P02-P98."
+};
+_colorModeInput.querySelectorAll("label").forEach(lbl => {
+  const input = lbl.querySelector("input");
+  const txt = input?.value;
+  if (_radioTips[txt]) {
+    const tip = document.createElement("span");
+    tip.className = "panel-tooltip-wrap";
+    tip.style.marginLeft = "2px";
+    tip.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">${_radioTips[txt]}</span>`;
+    lbl.appendChild(tip);
+  }
+});
+const colorMode = view(_colorModeInput);
 const paletteChoice = view(Inputs.radio(["Violet-Vert", "Bleu-Jaune"], {value: "Violet-Vert", label: "Palette"}));
 const colorBy = view(Inputs.radio(["Indicateur", "Rur/Urb 3"], {value: "Indicateur", label: "Couleur par"}));
 ```
@@ -935,10 +956,14 @@ function getColorGradient(v) {
   }
 }
 
-// Coloration indicateur (gradient ou bins)
-const getColorIndic = (v) => colorMode === "Gradient" ? getColorGradient(v) : getColorBins(v);
+// Mode Écart France : bins sigma autour de la valeur 00FR
+const isEcart = colorMode === "Écart France";
+const ecartL = computeEcartFrance(tableData, col1622, frX_1622, { indicType: INDICATEURS[indicX_L]?.type });
 
-// Coloration finale : typo catégoriel OU indicateur gradient
+// Coloration indicateur (écart / gradient / bins)
+const getColorIndic = (v) => isEcart ? ecartL.getColor(v) : colorMode === "Gradient" ? getColorGradient(v) : getColorBins(v);
+
+// Coloration finale : typo catégoriel OU indicateur
 const getColor = (v, d = null) => {
   if (isTypoMode && d) {
     return getTypoColor(d);
@@ -975,7 +1000,10 @@ function getColorGradientR(v) {
   }
 }
 
-const getColorIndicR = (v) => colorMode === "Gradient" ? getColorGradientR(v) : getColorBinsR(v);
+// Mode Écart France carte droite
+const ecartR = computeEcartFrance(tableData, col1116, frX_1116, { indicType: INDICATEURS[indicX_R]?.type });
+
+const getColorIndicR = (v) => isEcart ? ecartR.getColor(v) : colorMode === "Gradient" ? getColorGradientR(v) : getColorBinsR(v);
 
 const getColorR = (v, d = null) => {
   if (isTypoMode && d) {
@@ -1120,13 +1148,20 @@ if (map1622) {
   // P4.7: Ajouter zoom AVANT wrapper pour récupérer les contrôles
   const zoomControls1622 = addZoomBehavior(map1622, { minScale: 1, maxScale: 8 });
 
-  // P4.8: Légende intégrée carte gauche - bins OU gradient selon mode
+  // P4.8: Légende intégrée carte gauche - écart / gradient / bins selon mode
   const binCountsL = countBins(tableData, col1622, BINS);
   const legendTitleL = indicUnit ? `Légende (${indicUnit})` : "Légende";
   const isGradientMode = colorMode === "Gradient";
   let mapLegend1622 = null;
   if (!isTypoMode) {
-    if (isGradientMode) {
+    if (isEcart) {
+      const ecartCountsL = countBins(tableData, col1622, ecartL.thresholds || []);
+      mapLegend1622 = createEcartFranceLegend({
+        palette: ecartL.palette, symbols: ECART_FRANCE_SYMBOLS,
+        pctLabels: ecartL.pctLabels,
+        counts: ecartCountsL, title: `Écart France (en ${ecartL.isAbsoluteEcart ? "pts" : "%"})`
+      });
+    } else if (isGradientMode) {
       mapLegend1622 = createGradientLegend({
         colors: gradientColors,
         min: gradientDomainL[0],
@@ -1147,6 +1182,11 @@ if (map1622) {
     }
   }
   // P4.7: Passer zoomControls au wrapper pour boutons +/-/reset
+  // Tooltip : toujours passer frRef + frGetEcartInfo
+  if (map1622._tipConfig) {
+    map1622._tipConfig.frRef = frX_1622;
+    map1622._tipConfig.frGetEcartInfo = ecartL.getEcartInfo;
+  }
   const wrapper = createMapWrapper(map1622, statsOverlay1622, mapLegend1622, zoomControls1622);
   addMapClickHandlers(map1622, geoData, getCodeFromFeature, (code) => {
     // toggleSelection(code); // Désactivé
@@ -1260,13 +1300,20 @@ if (map1116) {
   // P4.7: Ajouter zoom AVANT wrapper pour récupérer les contrôles
   const zoomControls1116 = addZoomBehavior(map1116, { minScale: 1, maxScale: 8 });
 
-  // P4.8: Légende intégrée carte droite - bins OU gradient selon mode
+  // P4.8: Légende intégrée carte droite - écart / gradient / bins selon mode
   const binCountsR = countBins(tableData, col1116, BINS_R);
   const legendTitleR = indicUnitR ? `Légende (${indicUnitR})` : "Légende";
   const isGradientModeR = colorMode === "Gradient";
   let mapLegend1116 = null;
   if (!isTypoMode) {
-    if (isGradientModeR) {
+    if (isEcart) {
+      const ecartCountsR = countBins(tableData, col1116, ecartR.thresholds || []);
+      mapLegend1116 = createEcartFranceLegend({
+        palette: ecartR.palette, symbols: ECART_FRANCE_SYMBOLS,
+        pctLabels: ecartR.pctLabels,
+        counts: ecartCountsR, title: `Écart France (en ${ecartR.isAbsoluteEcart ? "pts" : "%"})`
+      });
+    } else if (isGradientModeR) {
       mapLegend1116 = createGradientLegend({
         colors: gradientColorsR,
         min: gradientDomainR[0],
@@ -1285,6 +1332,11 @@ if (map1116) {
         title: legendTitleR
       });
     }
+  }
+  // Tooltip : toujours passer frRef + frGetEcartInfo
+  if (map1116._tipConfig) {
+    map1116._tipConfig.frRef = frX_1116;
+    map1116._tipConfig.frGetEcartInfo = ecartR.getEcartInfo;
   }
   // P4.7: Passer zoomControls au wrapper pour boutons +/-/reset
   const wrapper = createMapWrapper(map1116, statsOverlay1116, mapLegend1116, zoomControls1116);

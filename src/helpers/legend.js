@@ -126,6 +126,58 @@ export function createGradientLegend(config) {
 // &e
 
 // ============================================================
+// &s ECART_FRANCE — Légende écart à la valeur France
+// ============================================================
+
+/**
+ * Crée une légende compacte pour mode "Écart France" (9 bins)
+ * Format par ligne : [■] ▲▲  +23%  (12)
+ * Symboles : ▼▼ ▼ ↘ ~- ≈ ~+ ↗ ▲ ▲▲
+ * Pas de ligne ref France (affichée sous la carte)
+ *
+ * @param {Object} config
+ * @param {string[]} config.palette - 9 couleurs écart
+ * @param {string[]} config.symbols - 9 symboles courts (▼▼..▲▲)
+ * @param {string[]} config.pctLabels - 9 labels % écart
+ * @param {number[]} [config.counts=[]] - Comptages par bin
+ * @param {string} [config.unit=""] - Unité indicateur
+ * @param {string} [config.title="Écart France"] - Titre légende
+ * @param {boolean} [config.reverse=true] - Inverser ordre (haut=au-dessus)
+ * @returns {Object} HTML element
+ */
+export function createEcartFranceLegend(config) {
+  const {
+    palette,
+    symbols = [],
+    pctLabels,
+    counts = [],
+    title = "Écart France",
+    reverse = true
+  } = config;
+
+  const items = palette.map((color, i) => ({
+    color,
+    symbol: symbols[i] || "",
+    pctLabel: pctLabels[i] || "",
+    count: counts[i] || 0
+  }));
+
+  const orderedItems = reverse ? [...items].reverse() : items;
+
+  return html`<div class="legend-vertical">
+    ${title ? html`<div class="legend-title">${title}</div>` : ''}
+    ${orderedItems.map(item => html`<div style="display:flex;align-items:center;gap:2px;line-height:1.1;">
+      <span class="legend-color-v" style="background:${item.color}"></span>
+      <span style="font-size:10px;width:16px;text-align:center;font-weight:600;">${item.symbol}</span>
+      <span style="font-size:9px;color:#6b7280;">${item.pctLabel}</span>
+      <span style="font-size:8px;color:#888;margin-left:1px;">(${item.count})</span>
+    </div>`)}
+  </div>`;
+}
+
+// &e
+
+// ============================================================
 // &s BINS — Légende bins quantiles (8 catégories)
 // ============================================================
 

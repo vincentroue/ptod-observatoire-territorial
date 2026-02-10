@@ -3,7 +3,7 @@
 // AUTO-GÉNÉRÉ depuis config/ddict_indicateurs_ottd.json + CSV volets (v_*)
 // NE PAS MODIFIER - Relancer: Rscript scripts/util-gen-indicators-js.R
 // Volets: source CSV ddict-validation-light_ottd.csv (colonnes v_*)
-// Généré: 2026-02-09 18:53:26.015257
+// Généré: 2026-02-09 19:28:19.856832
 // =======================================================================
 
 import * as d3 from "npm:d3";

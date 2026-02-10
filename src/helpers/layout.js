@@ -197,7 +197,7 @@ export const OTTD_PAGES = [
   { id: 'comm-bis', label: 'Comm-bis', href: './jottd-exdc-comm-bis' },
   { id: 'exdeco', label: 'Éco ZE', href: './dash-exdeco-ze' },
   { id: 'exdf', label: 'Flux', href: './dash-exdf-flux-migr', disabled: true },
-  { id: 'exdl', label: 'Logement', href: './dash-exdl-logement', disabled: true }
+  { id: 'exdlog', label: 'Logement', href: './dash-exdlog' }
 ];
 
 // &e PAGES_CONFIG

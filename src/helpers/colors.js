@@ -455,10 +455,167 @@ export function makeDivQuantileBins6(data, col, options = {}) {
 }
 
 // ============================================================
-// &s GRADIENT_SCALE — Échelle continue pour mode gradient
+// &s ECART_FRANCE — Mode écart à la valeur France
 // ============================================================
 
 import * as d3 from "npm:d3";
+
+/**
+ * Palette divergente 9 couleurs RdBu pour mode "Écart France"
+ * Bleu foncé (très au-dessus) → blanc neutre → rouge foncé (très en-dessous)
+ * Source: ColorBrewer RdBu 9-class
+ */
+export const PAL_ECART_FRANCE = [
+  "#67001f", "#b2182b", "#d6604d", "#f4a582",  // En-dessous (rouge)
+  "#f7f7f7",                                     // Neutre (autour de la ref)
+  "#92c5de", "#4393c3", "#2166ac", "#053061"     // Au-dessus (bleu)
+];
+
+/**
+ * Labels qualitatifs pour les 9 bins écart France (tooltip)
+ */
+export const ECART_FRANCE_LABELS = [
+  "Très en-dessous", "Nettement en-dessous", "En-dessous", "Légèrement en-dessous",
+  "Autour de la réf.",
+  "Légèrement au-dessus", "Au-dessus", "Nettement au-dessus", "Très au-dessus"
+];
+
+/**
+ * Symboles courts pour légende compacte (9 bins)
+ */
+export const ECART_FRANCE_SYMBOLS = [
+  "▼▼", "▼", "↓", "↘", "≈", "↗", "↑", "▲", "▲▲"
+];
+
+/**
+ * Calcule bins d'écart à la valeur France pour carte choroplèthe
+ * 8 seuils → 9 bins symétriques autour de la référence, basés sur σ winsorisé P2/P98
+ *
+ * @param {Object[]} data - Données (sans France)
+ * @param {string} colKey - Colonne indicateur
+ * @param {number} refValue - Valeur France (00FR)
+ * @param {Object} [options={}]
+ * @param {number} [options.sigma] - Sigma externe (pour zoom maps, garder sigma national)
+ * @param {string} [options.indicType] - Type indicateur ("pct", "vtcam", "vol"...) pour écart absolu vs relatif
+ * @returns {Object} { thresholds, labels, qualLabels, pctLabels, ref, sigma, palette, isAbsoluteEcart, getColor, getEcartInfo }
+ */
+export function computeEcartFrance(data, colKey, refValue, options = {}) {
+  const values = data.map(d => d[colKey]).filter(v => v != null && !isNaN(v));
+
+  // Référence : valeur France ou fallback moyenne
+  const ref = (refValue != null && !isNaN(refValue)) ? refValue : d3.mean(values);
+
+  // Détection type → écart absolu (pts) vs relatif (%)
+  const indicKey = colKey.replace(/_\d+$/, "");
+  const isEvolution = indicKey.includes("vtcam") || indicKey.includes("vevol") || indicKey.includes("vdifp");
+  const isPct = (options.indicType === "pct") || false;
+  // Écart absolu pour évolutions ET indicateurs en % (sinon % relatif = confus pour pct)
+  const isAbsoluteEcart = isEvolution || isPct;
+
+  if (values.length === 0 || ref == null) {
+    return {
+      thresholds: [], labels: [], qualLabels: ECART_FRANCE_LABELS,
+      pctLabels: [], ref: 0, sigma: 0, palette: PAL_ECART_FRANCE,
+      isAbsoluteEcart,
+      getColor: () => "#e0e0e0",
+      getEcartInfo: () => ({ label: "—", pct: "—", binIdx: 4, symbol: "≈", color: "#b0b0b0" })
+    };
+  }
+
+  // Sigma winsorisé P2/P98 (ou sigma externe pour zoom)
+  let sigma = options.sigma;
+  if (sigma == null) {
+    const sorted = [...values].sort((a, b) => a - b);
+    const p02 = sorted[Math.floor(sorted.length * 0.02)] ?? sorted[0];
+    const p98 = sorted[Math.min(Math.floor(sorted.length * 0.98), sorted.length - 1)] ?? sorted[sorted.length - 1];
+    const winsorised = values.map(v => Math.max(p02, Math.min(p98, v)));
+    sigma = d3.deviation(winsorised) || 0;
+  }
+
+  if (sigma === 0) {
+    return {
+      thresholds: [], labels: [], qualLabels: ECART_FRANCE_LABELS,
+      pctLabels: [], ref, sigma: 0, palette: PAL_ECART_FRANCE,
+      isAbsoluteEcart,
+      getColor: () => "#e0e0e0",
+      getEcartInfo: (v) => ({ label: "Autour de la réf.", pct: "0", binIdx: 4, symbol: "≈", color: "#b0b0b0" })
+    };
+  }
+
+  // 8 seuils : ref ± [0.5, 1, 1.5, 2] × σ → 9 bins
+  const multipliers = [2, 1.5, 1, 0.5, 0.5, 1, 1.5, 2];
+  const signs       = [-1, -1, -1, -1, 1, 1, 1, 1];
+  const thresholds = multipliers.map((m, i) => ref + signs[i] * m * sigma);
+
+  // Formatage valeurs
+  const fmt = (v) => {
+    const dec = Math.abs(v) < 1 ? 2 : Math.abs(v) < 10 ? 1 : 0;
+    return v.toFixed(dec).replace(/\.?0+$/, "");
+  };
+  const labels = [];
+  labels.push(`< ${fmt(thresholds[0])}`);
+  for (let i = 0; i < thresholds.length - 1; i++) {
+    labels.push(`${fmt(thresholds[i])} à ${fmt(thresholds[i + 1])}`);
+  }
+  labels.push(`> ${fmt(thresholds[thresholds.length - 1])}`);
+
+  // Écart labels par bin (milieu de chaque bin vs ref) — sans unité (unité dans le titre légende)
+  const pctLabels = PAL_ECART_FRANCE.map((_, i) => {
+    if (ref === 0) return "";
+    let mid;
+    if (i === 0) mid = thresholds[0] - 0.5 * sigma;
+    else if (i === thresholds.length) mid = thresholds[thresholds.length - 1] + 0.5 * sigma;
+    else mid = (thresholds[i - 1] + thresholds[i]) / 2;
+    if (isAbsoluteEcart) {
+      // Points absolus pour évolutions ET pourcentages
+      const diff = mid - ref;
+      return `${diff >= 0 ? "+" : ""}${fmt(diff)}`;
+    }
+    const pct = ((mid - ref) / Math.abs(ref)) * 100;
+    return `${pct >= 0 ? "+" : ""}${Math.round(pct)}`;
+  });
+
+  // getColor : même logique que getColorByBins
+  const getColor = (v) => {
+    if (v == null || isNaN(v)) return "#e0e0e0";
+    const idx = thresholds.findIndex(t => v < t);
+    return PAL_ECART_FRANCE[idx === -1 ? PAL_ECART_FRANCE.length - 1 : idx];
+  };
+
+  // getEcartInfo : pour tooltip (symbol coloré + écart formaté)
+  const getEcartInfo = (v) => {
+    if (v == null || isNaN(v)) return { label: "—", pct: "—", binIdx: 4, symbol: "≈", color: "#b0b0b0" };
+    const idx = thresholds.findIndex(t => v < t);
+    const binIdx = idx === -1 ? PAL_ECART_FRANCE.length - 1 : idx;
+    const label = ECART_FRANCE_LABELS[binIdx];
+    const symbol = ECART_FRANCE_SYMBOLS[binIdx];
+    // Couleur tooltip-safe (lisible sur fond sombre)
+    const color = binIdx < 4 ? "#f4a582" : binIdx === 4 ? "#b0b0b0" : "#92c5de";
+    let pct;
+    if (isAbsoluteEcart) {
+      const diff = v - ref;
+      pct = `${diff >= 0 ? "+" : ""}${fmt(diff)} pts`;
+    } else if (ref === 0) {
+      pct = "—";
+    } else {
+      const p = ((v - ref) / Math.abs(ref)) * 100;
+      pct = `${p >= 0 ? "+" : ""}${Math.round(p)}%`;
+    }
+    return { label, pct, binIdx, symbol, color };
+  };
+
+  return {
+    thresholds, labels, qualLabels: ECART_FRANCE_LABELS,
+    pctLabels, ref, sigma, palette: PAL_ECART_FRANCE,
+    isEvolution, isAbsoluteEcart, getColor, getEcartInfo
+  };
+}
+
+// &e
+
+// ============================================================
+// &s GRADIENT_SCALE — Échelle continue pour mode gradient
+// ============================================================
 
 /**
  * Calcule P02 et P98 pour capper les outliers

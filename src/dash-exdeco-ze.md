@@ -61,9 +61,9 @@ import * as Plot from "npm:@observablehq/plot";
 import { getEchelonMeta, getLabelMap, setLabelMap, getFranceData, getDataNoFrance } from "./helpers/0loader.js";
 import { DEFAULT_ECO_TABLE_INDICS } from "./helpers/constants.js";
 import { getIndicOptionsByVolet, getPeriodesForIndicateur, getDefaultPeriode, buildColKey, getIndicLabel, getPeriodeLabel } from "./helpers/selectindic.js";
-import { formatValue } from "./helpers/indicators-ddict-js.js";
-import { computeIndicBins, createGradientScale, GRADIENT_PALETTES } from "./helpers/colors.js";
-import { createBinsLegend, createGradientLegend } from "./helpers/legend.js";
+import { formatValue, INDICATEURS } from "./helpers/indicators-ddict-js.js";
+import { computeIndicBins, countBins, createGradientScale, GRADIENT_PALETTES, computeEcartFrance, PAL_ECART_FRANCE, ECART_FRANCE_SYMBOLS } from "./helpers/colors.js";
+import { createBinsLegend, createGradientLegend, createEcartFranceLegend } from "./helpers/legend.js";
 import { renderChoropleth, createMapWrapper, addZoomBehavior } from "./helpers/maps.js";
 import { createSearchBox } from "./helpers/search.js";
 import { sortTableData, computeBarStats, getIndicUnit, renderTable, renderPagination, exportCSV, createTableToolbar, openTableFullscreen } from "./helpers/0table.js";
@@ -72,6 +72,15 @@ import { renderButterflyMulti } from "./helpers/graph-butterfly.js";
 import { renderSlopeChart, renderIndice100Chart, renderIndice100Multi, LABELS_A5 } from "./helpers/graph-slope-indice.js";
 import { renderTreemapA5A21, renderTreemapSimple } from "./helpers/graph-treemap.js";
 import { renderButterflyVertical } from "./helpers/graph-butterfly-vertical.js";
+
+// === duckdb.js — Queries Parquet communes ===
+import {
+  initDuckDB, initDuckDBBackground, waitForDuckDB,
+  registerParquet, queryCommunes
+} from "./helpers/duckdb.js";
+
+// Démarrer DuckDB init en arrière-plan
+initDuckDBBackground();
 ```
 <!-- &e IMPORTS -->
 
@@ -93,6 +102,9 @@ const URSSAF_FRANCE = FileAttachment("data/exdeco_pivot_urssaf_france.parquet");
 const EAE205_FRANCE_SERIE = FileAttachment("data/EAE205_france_serie.json");
 const EAE205_FRANCE_SLOPE = FileAttachment("data/EAE205_france_slope.json");
 const EAE205_ZE_SERIE = FileAttachment("data/EAE205_ze_serie.json");
+// Communes (géo + parquet pour DuckDB)
+const COMMUNES_TOPO = FileAttachment("data/nodom_commune-ARM_MINI_2025.topojson");
+const COMMUNES_PARQUET = FileAttachment("data/agg_commARM.parquet");
 ```
 <!-- &e FILE_HANDLES -->
 
@@ -117,6 +129,12 @@ const urssafFr = await URSSAF_FRANCE.parquet();
 const eae205FranceSerie = await EAE205_FRANCE_SERIE.json();
 const eae205FranceSlope = await EAE205_FRANCE_SLOPE.json();
 const eae205ZeSerie = await EAE205_ZE_SERIE.json();
+
+// Communes geo + DuckDB
+const communesTopo = await COMMUNES_TOPO.json();
+const communesGeo = rewind(topojson.feature(communesTopo, communesTopo.objects.data), true);
+const { db: duckDb, conn } = await initDuckDB();
+await registerParquet(duckDb, "communes", await COMMUNES_PARQUET.url());
 
 // LabelMap ZE
 const zeLabelMap = new Map();
@@ -218,7 +236,24 @@ display(mapSelectionState.size > 0
 <div class="panel-title">OPTIONS CARTE</div>
 
 ```js
-const colorMode = view(Inputs.radio(["8 catégories", "Gradient"], { value: "8 catégories", label: "Mode" }));
+const _colorModeInput = Inputs.radio(["Répartition", "Écart France", "Gradient"], { value: "Répartition", label: "Mode" });
+const _radioTips = {
+  "Répartition": "Découpe en classes de taille égale (quantiles). Chaque couleur contient environ le même nombre de territoires.",
+  "Écart France": "Compare chaque territoire à la valeur France. 9 niveaux symétriques autour de la référence nationale (écart-type winsorisé).",
+  "Gradient": "Dégradé continu proportionnel à la valeur brute. Outliers atténués aux percentiles P02-P98."
+};
+_colorModeInput.querySelectorAll("label").forEach(lbl => {
+  const input = lbl.querySelector("input");
+  const txt = input?.value;
+  if (_radioTips[txt]) {
+    const tip = document.createElement("span");
+    tip.className = "panel-tooltip-wrap";
+    tip.style.marginLeft = "2px";
+    tip.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">${_radioTips[txt]}</span>`;
+    lbl.appendChild(tip);
+  }
+});
+const colorMode = view(_colorModeInput);
 const showValuesOnMap = view(Inputs.toggle({ label: "Labels", value: true }));
 const labelBy = view(Inputs.select(new Map([
   ["Principaux terr.", "population"],
@@ -280,7 +315,9 @@ const indicBins = computeIndicBins(dataNoFrance, colKeyCarte, indicCarte);
 const { bins, palette, isDiv, getColor: getColorBins } = indicBins;
 const gradient = createGradientScale(dataNoFrance, colKeyCarte);
 const isGradient = colorMode === "Gradient";
-const getColor = isGradient ? gradient.getColor : getColorBins;
+const isEcart = colorMode === "Écart France";
+const ecart = computeEcartFrance(dataNoFrance, colKeyCarte, frData?.[colKeyCarte], { indicType: INDICATEURS[indicCarte]?.type });
+const getColor = isEcart ? ecart.getColor : isGradient ? gradient.getColor : getColorBins;
 ```
 
 <!-- Titre aligné (~35% + ~65%) -->
@@ -323,7 +360,14 @@ mapZE.addEventListener("click", (e) => {
 });
 
 const unit = getIndicUnit(colKeyCarte);
-const legend = isGradient
+const ecartCounts = isEcart ? countBins(dataNoFrance, colKeyCarte, ecart.thresholds || []) : [];
+const legend = isEcart
+  ? createEcartFranceLegend({
+      palette: ecart.palette, symbols: ECART_FRANCE_SYMBOLS,
+      pctLabels: ecart.pctLabels,
+      counts: ecartCounts, title: `Écart France (en ${ecart.isAbsoluteEcart ? "pts" : "%"})`
+    })
+  : isGradient
   ? createGradientLegend({
       colors: gradient.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient.min, max: gradient.max, showZero: gradient.divergent,
@@ -334,7 +378,21 @@ const legend = isGradient
       vertical: true, title: "Légende", unit, reverse: !isDiv
     });
 
+// Tooltip : toujours passer frRef + frGetEcartInfo pour symbole au survol
+if (mapZE._tipConfig) {
+  mapZE._tipConfig.frRef = frData?.[colKeyCarte];
+  mapZE._tipConfig.frGetEcartInfo = ecart.getEcartInfo;
+}
+
 display(createMapWrapper(mapZE, null, legend, addZoomBehavior(mapZE)));
+
+// Valeur France sous la carte
+const frVal = frData?.[colKeyCarte];
+if (frVal != null) {
+  display(html`<div style="font-size:11px;color:#374151;margin-top:4px;">
+    France : <b style="font-style:italic;">${formatValue(indicCarte, frVal)}</b>
+  </div>`);
+}
 ```
 
 </div>
@@ -498,6 +556,117 @@ void 0;
 <!-- Fin COLONNE DROITE (tableau) -->
 
 </div>
+
+<!-- &s CARTES_COMMUNES — Cartes communes par ZE sélectionnée -->
+<div style="margin-top:12px;">
+
+```js
+// === CARTES COMMUNES ZE (max 4 sélectionnées) ===
+const commCodesEco = [...mapSelectionState].slice(0, 4);
+
+if (commCodesEco.length > 0) {
+  // Query DuckDB en parallèle pour chaque ZE
+  const commQueriesEco = commCodesEco.map(code =>
+    queryCommunes({ conn }, {
+      tableName: "communes",
+      filter: { ZE2020: [code] },
+      columns: ["code", "libelle", "P23_POP", colKeyCarte],
+      limit: 2000
+    })
+  );
+  const commResultsEco = await Promise.all(commQueriesEco);
+
+  const commContainerEco = document.createElement("div");
+  commContainerEco.style.cssText = "display:flex;gap:12px;flex-wrap:wrap;";
+
+  for (let ci = 0; ci < commCodesEco.length; ci++) {
+    const tCode = commCodesEco[ci];
+    const tLabel = zeLabelMap.get(tCode) || tCode;
+    const tData = commResultsEco[ci];
+    const tMap = new Map(tData.map(d => [d.code, d]));
+
+    // Filtrer features commune par ZE2020
+    const tFeats = communesGeo.features.filter(f =>
+      String(f.properties.ZE2020) === String(tCode)
+    );
+    const tGeo = {
+      type: "FeatureCollection",
+      features: tFeats.map(f => {
+        const d = tMap.get(f.properties.CODGEO);
+        return { ...f, properties: { ...f.properties, libelle: d?.libelle, P23_POP: d?.P23_POP, [colKeyCarte]: d?.[colKeyCarte] } };
+      })
+    };
+
+    // Calcul couleurs selon mode actif
+    const tBins = tData.length >= 10 ? computeIndicBins(tData, colKeyCarte, indicCarte) : indicBins;
+    const tGrad = tData.length >= 10 ? createGradientScale(tData, colKeyCarte) : gradient;
+    const tEcart = isEcart ? computeEcartFrance(tData, colKeyCarte, ecart.ref, { sigma: ecart.sigma, indicType: INDICATEURS[indicCarte]?.type }) : null;
+    const tGetColor = isEcart ? tEcart.getColor : isGradient ? tGrad.getColor : tBins.getColor;
+
+    const mapW = commCodesEco.length === 1 ? 500 : commCodesEco.length <= 2 ? 400 : 300;
+    const mapH = commCodesEco.length === 1 ? 400 : commCodesEco.length <= 2 ? 320 : 260;
+
+    const cMap = renderChoropleth({
+      geoData: tGeo, valueCol: colKeyCarte,
+      getColor: tGetColor,
+      getCode: f => f.properties.CODGEO,
+      getLabel: ({ code }) => tMap.get(code)?.libelle || code,
+      formatValue: (k, v) => formatValue(indicCarte, v),
+      indicLabel: labelCarte, showLabels: showValuesOnMap,
+      labelMode, labelBy, topN: 200,
+      title: tLabel,
+      maxLabelsAuto: 80, echelon: "Commune", width: mapW, height: mapH
+    });
+
+    // Tooltip Écart France
+    if (cMap._tipConfig) {
+      cMap._tipConfig.frRef = frData?.[colKeyCarte];
+      cMap._tipConfig.frGetEcartInfo = isEcart ? tEcart.getEcartInfo : ecart.getEcartInfo;
+    }
+
+    // Légende adaptée au mode couleur
+    const tEcartCounts = isEcart ? countBins(tData, colKeyCarte, tEcart.thresholds || []) : [];
+    const cLegend = isEcart
+      ? createEcartFranceLegend({
+          palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS,
+          pctLabels: tEcart.pctLabels,
+          counts: tEcartCounts, title: `Écart France (en ${ecart.isAbsoluteEcart ? "pts" : "%"})`
+        })
+      : isGradient
+      ? createGradientLegend({
+          colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
+          min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent,
+          decimals: 2, title: "Légende"
+        })
+      : createBinsLegend({
+          colors: tBins.palette, labels: tBins.bins.labels || [],
+          counts: countBins(tData, colKeyCarte, tBins.bins.thresholds || []),
+          vertical: true, title: "Légende", unit: getIndicUnit(colKeyCarte), reverse: !tBins.isDiv
+        });
+
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.cssText = "padding:6px;flex:1;min-width:260px;";
+    const cardTitle = document.createElement("div");
+    cardTitle.style.cssText = "font-size:11px;font-weight:600;color:#374151;margin-bottom:4px;";
+    cardTitle.textContent = `${labelCarte} — ${tLabel}`;
+    card.appendChild(cardTitle);
+    card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), {
+      exportSVGFn: exportSVG, echelon: tLabel, colKey: colKeyCarte, title: `${labelCarte} — ${tLabel}`
+    }));
+    commContainerEco.appendChild(card);
+  }
+
+  display(commContainerEco);
+} else {
+  display(html`<div style="padding:20px;text-align:center;color:#6b7280;font-size:11px;border:1px dashed #d1d5db;border-radius:8px;">
+    Sélectionnez des ZE pour voir le détail communal
+  </div>`);
+}
+```
+
+</div>
+<!-- &e CARTES_COMMUNES -->
 
 <!-- &s INDICES_100_MULTI — Indice 100 France + territoires sélectionnés -->
 <h3 style="margin-top:24px;font-size:16px;text-align:left;">Emploi salarié total — Évolution par secteur (indice base 100)</h3>

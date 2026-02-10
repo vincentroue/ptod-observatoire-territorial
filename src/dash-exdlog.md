@@ -7,8 +7,8 @@ style: styles/dashboard-light.css
 
 <!-- ============================================================
      EXDLOG — Volet Logement (Prix, Construction, Vacance)
-     Date: 2026-02-08 | v1.1
-     Layout: Sidebar (échelon + indic/période) | Sub-banner KPIs | Carte + Tableau
+     Date: 2026-02-10 | v2.0
+     Layout: Sidebar duplex | KPIs | 2×2 cartes (national+commune) | Graphs | Tableaux
      Sources: DVF, SITADEL, LOVAC, ANIL
      ============================================================ -->
 
@@ -301,18 +301,40 @@ const echelon = view(Inputs.radio(
 <a href="#vue-communes-detail" style="display:block;font-size:11.5px;color:#0369a1;text-decoration:none;font-family:Inter,system-ui,sans-serif;font-weight:600;padding:0 0 4px 0;margin:0;">↓ Vue Tab. communes détail</a>
 
 <section class="panel">
-<div class="panel-title">INDICATEUR CARTE</div>
+<div class="panel-title">INDICATEUR CARTE 1</div>
 
 ```js
-// Défaut: prix global pondéré (fallback px2q2_mai)
 const _logdashVals = new Set(logementIndicOptions.values());
-const defaultIndic = _logdashVals.has("logd_px2_global") ? "logd_px2_global" : "logd_px2q2_mai";
-const indic = view(Inputs.select(logementIndicOptions, { value: defaultIndic, label: "" }));
+const defaultIndic1 = _logdashVals.has("logd_px2_global") ? "logd_px2_global" : "logd_px2q2_mai";
+const indic1 = view(Inputs.select(logementIndicOptions, { value: defaultIndic1, label: "" }));
 ```
 
 ```js
-const perMap = getPeriodesForIndicateur(indic);
-const periode = view(Inputs.select(perMap, { value: [...perMap.values()][0], label: "Période" }));
+const perMap1 = getPeriodesForIndicateur(indic1);
+const periode1 = view(Inputs.select(perMap1, { value: [...perMap1.values()][0], label: "Période" }));
+```
+
+```js
+const colorMode1 = view(Inputs.radio(["Répart.", "Écart Fr.", "Gradient"], { value: "Répart.", label: "" }));
+```
+
+</section>
+
+<section class="panel">
+<div class="panel-title">INDICATEUR CARTE 2</div>
+
+```js
+const defaultIndic2 = _logdashVals.has("logd_px2_global_vevol") ? "logd_px2_global_vevol" : "log_vac_pct";
+const indic2 = view(Inputs.select(logementIndicOptions, { value: defaultIndic2, label: "" }));
+```
+
+```js
+const perMap2 = getPeriodesForIndicateur(indic2);
+const periode2 = view(Inputs.select(perMap2, { value: [...perMap2.values()][0], label: "Période" }));
+```
+
+```js
+const colorMode2 = view(Inputs.radio(["Répart.", "Écart Fr.", "Gradient"], { value: "Écart Fr.", label: "" }));
 ```
 
 </section>
@@ -323,27 +345,9 @@ const periode = view(Inputs.select(perMap, { value: [...perMap.values()][0], lab
 </section>
 
 <section class="panel">
-<div class="panel-title">OPTIONS CARTE</div>
+<div class="panel-title">OPTIONS CARTES</div>
 
 ```js
-const _colorModeInput = Inputs.radio(["Répartition", "Écart France", "Gradient"], { value: "Répartition", label: "Mode représ." });
-const _radioTips = {
-  "Répartition": "Découpe en classes de taille égale (quantiles). Chaque couleur contient environ le même nombre de territoires.",
-  "Écart France": "Compare chaque territoire à la valeur France. 9 niveaux symétriques autour de la référence nationale (écart-type winsorisé).",
-  "Gradient": "Dégradé continu proportionnel à la valeur brute. Outliers atténués aux percentiles P02-P98."
-};
-_colorModeInput.querySelectorAll("label").forEach(lbl => {
-  const input = lbl.querySelector("input");
-  const txt = input?.value;
-  if (_radioTips[txt]) {
-    const tip = document.createElement("span");
-    tip.className = "panel-tooltip-wrap";
-    tip.style.marginLeft = "2px";
-    tip.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">${_radioTips[txt]}</span>`;
-    lbl.appendChild(tip);
-  }
-});
-const colorMode = view(_colorModeInput);
 const showValuesOnMap = view(Inputs.toggle({ label: "Afficher labels", value: true }));
 const labelBy = view(Inputs.select(new Map([
   ["Principaux terr.", "population"],
@@ -373,8 +377,6 @@ const typeEpciFilter = view(Inputs.radio(
 <div class="panel-title">INDICATEURS TABLEAU <span class="panel-tooltip-wrap"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">ctrl/shift click pour multi-sélection</span></span></div>
 
 ```js
-// Multi-select indicateurs supplémentaires pour tableau
-// Utilise logementIndicOptions (filtré sur log* et rev_*)
 const extraIndics = view(Inputs.select(
   logementIndicOptions,
   { label: "", multiple: true, value: [], width: 230 }
@@ -397,26 +399,43 @@ const rawData = await getData(echelon);
 const frData = getFranceData(rawData);
 const dataNoFrance = getDataNoFrance(rawData);
 
-const colKey = buildColKey(indic, periode);
-const indicLabel = getIndicLabel(indic, "long");
+// Aliases rétro-compat (colKey = carte 1 pour tableaux/bannière)
+const indic = indic1;
+const periode = periode1;
+const colKey = buildColKey(indic1, periode1);
+const colKey1 = colKey;
+const colKey2 = buildColKey(indic2, periode2);
+const indicLabel = getIndicLabel(indic1, "long");
+const indicLabel2 = getIndicLabel(indic2, "long");
 
-// Joindre données aux géométries
+// Joindre données aux géométries (les 2 colKeys)
 for (const f of currentGeo.features) {
   const row = dataNoFrance.find(d => d.code === f.properties[meta.geoKey]);
   if (row) {
-    f.properties[colKey] = row[colKey];
+    f.properties[colKey1] = row[colKey1];
+    f.properties[colKey2] = row[colKey2];
     f.properties.P23_POP = row.P23_POP;
   }
 }
 
-// Bins et couleurs
-const indicBins = computeIndicBins(dataNoFrance, colKey, indic);
+// Bins et couleurs — CARTE 1
+const _cm1 = colorMode1;
+const indicBins = computeIndicBins(dataNoFrance, colKey1, indic1);
 const { bins, palette: PAL, isDiv, getColor: getColorBins } = indicBins;
-const gradient = createGradientScale(dataNoFrance, colKey);
-const isGradient = colorMode === "Gradient";
-const isEcart = colorMode === "Écart France";
-const ecart = computeEcartFrance(dataNoFrance, colKey, frData?.[colKey], { indicType: INDICATEURS[indic]?.type });
+const gradient = createGradientScale(dataNoFrance, colKey1);
+const isGradient = _cm1 === "Gradient";
+const isEcart = _cm1 === "Écart Fr.";
+const ecart = computeEcartFrance(dataNoFrance, colKey1, frData?.[colKey1], { indicType: INDICATEURS[indic1]?.type });
 const getColor = isEcart ? ecart.getColor : isGradient ? gradient.getColor : getColorBins;
+
+// Bins et couleurs — CARTE 2
+const _cm2 = colorMode2;
+const indicBins2 = computeIndicBins(dataNoFrance, colKey2, indic2);
+const gradient2 = createGradientScale(dataNoFrance, colKey2);
+const isGradient2 = _cm2 === "Gradient";
+const isEcart2 = _cm2 === "Écart Fr.";
+const ecart2 = computeEcartFrance(dataNoFrance, colKey2, frData?.[colKey2], { indicType: INDICATEURS[indic2]?.type });
+const getColor2 = isEcart2 ? ecart2.getColor : isGradient2 ? gradient2.getColor : indicBins2.getColor;
 
 // === COLONNES BANNIERE (simplifié : prix global + transactions) ===
 const bannerCols = [
@@ -507,46 +526,55 @@ const _mc2 = _selCodes.length > 0 && _selCodes[0] !== _mc1 ? _selCodes[0] : (_se
 const _fetchComm = (tCode) => {
   const tFilter = _isEPCI ? null : { [_fk]: [tCode] };
   const tWhere = _isEPCI ? `(CAST("EPCI_EPT" AS VARCHAR) = '${tCode}' OR CAST("EPCI" AS VARCHAR) = '${tCode}')` : null;
-  return queryCommunes({ conn }, { tableName: "communes", filter: tFilter, customWhere: tWhere, columns: ["code", "libelle", "P23_POP", colKey], limit: 2000 });
+  return queryCommunes({ conn }, { tableName: "communes", filter: tFilter, customWhere: tWhere, columns: ["code", "libelle", "P23_POP", colKey1, colKey2].filter((v,i,a) => a.indexOf(v) === i), limit: 2000 });
 };
 const [_cd1, _cd2] = await Promise.all([_fetchComm(_mc1), _fetchComm(_mc2)]);
 
-// Helper : crée un élément carte commune
-function buildCommMap(tCode, tData, w, h) {
+// Helper : crée un élément carte commune (paramétrable carte 1 ou 2 via opts)
+function buildCommMap(tCode, tData, w, h, opts = {}) {
+  const _ck = opts.colKey || colKey1;
+  const _ind = opts.indic || indic1;
+  const _ib = opts.indicBins || indicBins;
+  const _gr = opts.gradient || gradient;
+  const _isE = opts.isEcart != null ? opts.isEcart : isEcart;
+  const _ec = opts.ecart || ecart;
+  const _isG = opts.isGradient != null ? opts.isGradient : isGradient;
+  const _il = opts.indicLabel || indicLabel;
+
   const tLabel = getLabelMap(echelon)?.get(tCode) || tCode;
   const tMap = new Map(tData.map(d => [d.code, d]));
   const tFeats = communesGeo.features.filter(f => _isEPCI ? tMap.has(f.properties.CODGEO) : String(f.properties[_fk]) === String(tCode));
-  const tGeo = { type: "FeatureCollection", features: tFeats.map(f => { const d = tMap.get(f.properties.CODGEO); return { ...f, properties: { ...f.properties, libelle: d?.libelle, P23_POP: d?.P23_POP, [colKey]: d?.[colKey] } }; }) };
+  const tGeo = { type: "FeatureCollection", features: tFeats.map(f => { const d = tMap.get(f.properties.CODGEO); return { ...f, properties: { ...f.properties, libelle: d?.libelle, P23_POP: d?.P23_POP, [_ck]: d?.[_ck] } }; }) };
   if (tGeo.features.length === 0) return null;
-  const tBins = tData.length >= 10 ? computeIndicBins(tData, colKey, indic) : indicBins;
-  const tGrad = tData.length >= 10 ? createGradientScale(tData, colKey) : gradient;
-  const tEcart = isEcart ? computeEcartFrance(tData, colKey, ecart.ref, { sigma: ecart.sigma, indicType: INDICATEURS[indic]?.type }) : null;
-  const tGetColor = isEcart ? tEcart.getColor : isGradient ? tGrad.getColor : tBins.getColor;
-  const cMap = renderChoropleth({ geoData: tGeo, valueCol: colKey, getColor: tGetColor, getCode: f => f.properties.CODGEO, getLabel: ({ code }) => tMap.get(code)?.libelle || code, formatValue: (k, v) => formatValue(indic, v), indicLabel, showLabels: showValuesOnMap, labelMode, labelBy, topN: 200, title: tLabel, maxLabelsAuto: 80, echelon: "Commune", width: w, height: h });
+  const tBins = tData.length >= 10 ? computeIndicBins(tData, _ck, _ind) : _ib;
+  const tGrad = tData.length >= 10 ? createGradientScale(tData, _ck) : _gr;
+  const tEcart = _isE ? computeEcartFrance(tData, _ck, _ec.ref, { sigma: _ec.sigma, indicType: INDICATEURS[_ind]?.type }) : null;
+  const tGetColor = _isE ? tEcart.getColor : _isG ? tGrad.getColor : tBins.getColor;
+  const cMap = renderChoropleth({ geoData: tGeo, valueCol: _ck, getColor: tGetColor, getCode: f => f.properties.CODGEO, getLabel: ({ code }) => tMap.get(code)?.libelle || code, formatValue: (k, v) => formatValue(_ind, v), indicLabel: _il, showLabels: showValuesOnMap, labelMode, labelBy, topN: 200, title: tLabel, maxLabelsAuto: 80, echelon: "Commune", width: w, height: h });
   if (!cMap) return null;
-  if (cMap._tipConfig) { cMap._tipConfig.frRef = frData?.[colKey]; cMap._tipConfig.frGetEcartInfo = isEcart ? tEcart?.getEcartInfo : ecart.getEcartInfo; }
-  const tEcartCounts = isEcart ? countBins(tData, colKey, tEcart.thresholds || []) : [];
-  const cLegend = isEcart
+  if (cMap._tipConfig) { cMap._tipConfig.frRef = frData?.[_ck]; cMap._tipConfig.frGetEcartInfo = _isE ? tEcart?.getEcartInfo : _ec.getEcartInfo; }
+  const tEcartCounts = _isE ? countBins(tData, _ck, tEcart.thresholds || []) : [];
+  const cLegend = _isE
     ? createEcartFranceLegend({ palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS, pctLabels: tEcart.pctLabels, counts: tEcartCounts, title: "Écart France" })
-    : isGradient
+    : _isG
     ? createGradientLegend({ colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential, min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent, decimals: 2, title: "Légende", capped: true, rawMin: tGrad.rawMin, rawMax: tGrad.rawMax })
-    : createBinsLegend({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, colKey, tBins.bins.thresholds || []), vertical: true, title: "Légende", unit: getIndicUnit(colKey), reverse: !tBins.isDiv });
+    : createBinsLegend({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, _ck, tBins.bins.thresholds || []), vertical: true, title: "Légende", unit: getIndicUnit(_ck), reverse: !tBins.isDiv });
   const card = document.createElement("div");
-  card.className = "card";
   card.style.cssText = "padding:4px;";
-  card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), { exportSVGFn: exportSVG, echelon: tLabel, colKey, title: `${indicLabel} — ${tLabel}` }));
+  card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), { exportSVGFn: exportSVG, echelon: tLabel, colKey: _ck, title: `${_il} — ${tLabel}` }));
   return card;
 }
 ```
 
-<!-- &s CARTE_ET_GRAPHIQUES -->
-<div style="display:flex;gap:10px;align-items:flex-start;margin-top:10px;">
+<!-- &s CARTES_2x2 -->
+<div style="padding-left:6px;margin-top:10px;">
 
-<!-- Row carte + graphiques -->
-<div style="flex:1;display:flex;gap:10px;align-items:stretch;min-width:0;">
+```js
+display(html`<h3 style="margin:0 0 4px 0;">Vue France par ${echelon} // Focus communes : ${zoomLabel}</h3>`);
+```
 
-<!-- COLONNE 1 : Carte France + commune map 1 -->
-<div style="flex:0 0 auto;max-width:420px;display:flex;flex-direction:column;gap:6px;padding-left:8px;">
+<!-- Cartes nationales côte à côte -->
+<div class="cards-row">
 
 <div class="card">
 
@@ -560,7 +588,7 @@ const map = renderChoropleth({
   formatValue: (k, v) => formatValue(indic, v),
   indicLabel, selectedCodes: [...mapSelectionState],
   showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
-  title: indicLabel, echelon, width: 415, height: 380, maxLabelsAuto: 600,
+  title: indicLabel, echelon, width: 395, height: 365, maxLabelsAuto: 600,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 
@@ -626,28 +654,124 @@ if (frVal != null) {
 display(wrapper);
 ```
 
-</div>
+</div><!-- Fin carte nationale 1 -->
 
-<div style="margin-top:auto;">
+<div class="card">
 
 ```js
-// Carte commune 1 (zoom target)
+// === CARTE NATIONALE 2 (indic2) ===
+const map2 = renderChoropleth({
+  geoData: currentGeo, valueCol: colKey2,
+  getColor: (v, f) => getColor2(v),
+  getCode: f => f.properties[meta.geoKey],
+  getLabel: ({ code }) => getLabelMap(echelon)?.get(code) || code,
+  formatValue: (k, v) => formatValue(indic2, v),
+  indicLabel: indicLabel2, selectedCodes: [...mapSelectionState],
+  showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
+  title: indicLabel2, echelon, width: 395, height: 365, maxLabelsAuto: 600,
+  overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
+});
+
+const counts2 = countBins(dataNoFrance, colKey2, indicBins2.bins.thresholds || []);
+const unit2log = getIndicUnit(colKey2);
+const ecartCounts2 = isEcart2 ? countBins(dataNoFrance, colKey2, ecart2.thresholds || []) : [];
+const legend2 = isEcart2
+  ? createEcartFranceLegend({
+      palette: ecart2.palette, symbols: ECART_FRANCE_SYMBOLS,
+      pctLabels: ecart2.pctLabels,
+      counts: ecartCounts2, title: `Écart Fr. (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`
+    })
+  : isGradient2
+  ? createGradientLegend({
+      colors: gradient2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
+      min: gradient2.min, max: gradient2.max, showZero: gradient2.divergent,
+      decimals: 2, title: `Légende${unit2log ? " (" + unit2log + ")" : ""}`,
+      capped: true, rawMin: gradient2.rawMin, rawMax: gradient2.rawMax
+    })
+  : createBinsLegend({
+      colors: indicBins2.palette, labels: indicBins2.bins.labels || [], counts: counts2,
+      vertical: true, title: "Légende", unit: unit2log, reverse: !indicBins2.isDiv
+    });
+
+map2.style.cursor = "pointer";
+map2.addEventListener("click", (e) => {
+  const path = e.target.closest("path");
+  if (!path) return;
+  const paths = Array.from(path.parentElement.querySelectorAll("path"));
+  const idx = paths.indexOf(path);
+  if (idx >= 0 && idx < currentGeo.features.length) {
+    const code = currentGeo.features[idx].properties[meta.geoKey];
+    if (e.ctrlKey || e.metaKey) addToSelection(code);
+    else setZoomOnly(code);
+  }
+});
+
+if (map2._tipConfig) {
+  map2._tipConfig.frRef = frData?.[colKey2];
+  map2._tipConfig.frGetEcartInfo = ecart2.getEcartInfo;
+}
+
+const wrapper2log = createMapWrapper(map2, null, legend2, addZoomBehavior(map2, {
+  initialTransform: window._zoomStatesLog.map2,
+  onZoom: t => { window._zoomStatesLog.map2 = t; }
+}), { exportSVGFn: exportSVG, echelon, colKey: colKey2, title: indicLabel2 });
+
+const frVal2log = frData?.[colKey2];
+if (frVal2log != null) {
+  const frLbl2 = document.createElement("div");
+  frLbl2.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;";
+  frLbl2.innerHTML = `\u{1F1EB}\u{1F1F7} France : <b style="font-style:italic;">${formatValue(indic2, frVal2log)}</b>`;
+  wrapper2log.appendChild(frLbl2);
+}
+display(wrapper2log);
+```
+
+</div>
+
+</div>
+<!-- Fin cartes nationales -->
+
+<!-- Cartes communes zoom (même territoire, 2 indicateurs) -->
+<div class="cards-row">
+
+<div class="card">
+
+```js
+// Carte commune — indic1 (zoom target)
 {
-  const m1 = buildCommMap(_mc1, _cd1, 390, 290);
-  if (m1) display(m1);
+  const mc1 = buildCommMap(_mc1, _cd1, 385, 320);
+  if (mc1) display(mc1);
+}
+```
+
+</div>
+
+<div class="card">
+
+```js
+// Carte commune — indic2 (zoom target)
+{
+  const mc2 = buildCommMap(_mc1, _cd1, 385, 320, {
+    colKey: colKey2, indic: indic2, indicBins: indicBins2,
+    gradient: gradient2, isEcart: isEcart2, ecart: ecart2,
+    isGradient: isGradient2, indicLabel: indicLabel2
+  });
+  if (mc2) display(mc2);
 }
 ```
 
 </div>
 
 </div>
-<!-- Fin colonne 1 -->
 
-<!-- COLONNE 2 : Graphiques séries -->
-<div style="flex:1 1 390px;min-width:330px;max-width:430px;display:flex;flex-direction:column;gap:4px;">
+</div>
+<!-- &e CARTES_2x2 -->
 
-<!-- Graphique 1 : France référence STATIQUE -->
-<div class="card" style="padding:6px 10px;">
+<!-- &s GRAPHIQUES -->
+<div style="margin-top:16px;padding-left:6px;">
+
+<!-- Graphique 1 : France référence -->
+<div class="card" style="padding:6px 10px;max-width:520px;">
 <h4 style="margin:0 0 6px 0;font-size:11px;color:#374151;font-family:Inter,system-ui,sans-serif;">France — Volumes et Prix (2010-2024)</h4>
 
 ```js
@@ -719,7 +843,7 @@ display(Plot.plot({
 </div>
 
 <!-- Graphique 2 : Indice 100 prix global — territoires sélectionnés -->
-<div class="card" style="padding:6px 10px;">
+<div class="card" style="padding:6px 10px;max-width:520px;">
 <h4 style="margin:0 0 6px 0;font-size:11px;color:#374151;font-family:Inter,system-ui,sans-serif;">Indice prix global (base 100 = 2010) — Territoires sélectionnés</h4>
 
 ```js
@@ -827,26 +951,11 @@ Prix global pondéré (mai+apt) | Base 100 = 2010 | — France ref | Ctrl+clic c
 
 </div>
 
-<div style="margin-top:auto;">
-
-```js
-// Carte commune 2 (territoire sélectionné)
-{
-  const m2 = buildCommMap(_mc2, _cd2, 400, 290);
-  if (m2) display(m2);
-}
-```
-
 </div>
+<!-- &e GRAPHIQUES -->
 
-</div>
-<!-- Fin colonne 2 graphiques + communes -->
-
-</div>
-<!-- Fin row carte + graphiques + communes -->
-
-<!-- COLONNE DROITE : Communes >50K habitants -->
-<div style="flex:0 0 auto;min-width:280px;display:flex;flex-direction:column;align-self:stretch;overflow-y:auto;overflow-x:hidden;">
+<!-- &s TABLE_COMMUNES_50K -->
+<div style="margin-top:16px;padding-left:6px;">
 
 ```js
 // === SORT STATE COMMUNES (bloc séparé pour réactivité) ===
@@ -1061,10 +1170,7 @@ display(commTableWrap);
 ```
 
 </div>
-<!-- Fin colonne 3 Communes >50K -->
-
-</div>
-<!-- &e CARTE_ET_GRAPHIQUES -->
+<!-- &e TABLE_COMMUNES_50K -->
 
 <!-- &s TABLEAU -->
 <div style="margin-top:16px;padding-left:12px;">

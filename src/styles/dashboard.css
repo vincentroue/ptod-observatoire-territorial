@@ -1755,7 +1755,7 @@ svg [title]:hover {
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 .legend-overlay .legend-title {
-  font-size: 9px;
+  font-size: 10px;
   font-weight: 600;
   color: #444;
   margin-bottom: 4px;
@@ -1893,4 +1893,57 @@ svg [title]:hover {
 }
 .native-select-wrapper select option:hover {
   background: #f3f4f6;
+}
+
+/* === PANEL TOOLTIP (?) — Info bulle radio options === */
+.panel-tooltip-wrap {
+  position: relative;
+  display: inline-block;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+.panel-tooltip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: #d1d5db;
+  color: #374151;
+  font-size: 9px;
+  font-weight: 700;
+  font-style: normal;
+  cursor: help;
+  line-height: 1;
+}
+.panel-tooltip-text {
+  display: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: 20px;
+  width: 200px;
+  background: #1f2937;
+  color: #f3f4f6;
+  font-size: 10px;
+  font-weight: 400;
+  font-style: normal;
+  text-transform: none;
+  line-height: 1.4;
+  padding: 6px 8px;
+  border-radius: 4px;
+  z-index: 100;
+  letter-spacing: 0;
+}
+.panel-tooltip-wrap:hover .panel-tooltip-text {
+  display: block;
+}
+
+/* === LEGEND UNIT (écart France) === */
+.legend-unit {
+  font-size: 9px;
+  color: #6b7280;
+  font-style: italic;
+  margin-bottom: 2px;
 }

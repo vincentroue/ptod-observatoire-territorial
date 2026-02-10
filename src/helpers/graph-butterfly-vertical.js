@@ -66,7 +66,7 @@ export function renderButterflyVertical({ franceData, territories = [], options 
 
   if (title) {
     const titleDiv = document.createElement('div');
-    titleDiv.style.cssText = 'font-weight:600;font-size:12px;margin-bottom:6px;color:#1e40af;';
+    titleDiv.style.cssText = 'font-weight:600;font-size:14px;margin-bottom:6px;color:#1e40af;';
     titleDiv.textContent = title;
     container.appendChild(titleDiv);
   }
@@ -79,7 +79,7 @@ export function renderButterflyVertical({ franceData, territories = [], options 
     marginRight: 90,
     marginTop: 30,
     marginBottom: 20,
-    fy: { label: null, padding: 0.08 },
+    fy: { label: null, padding: 0.02 },
     y: { axis: null, padding: 0.05 },
     x: { label: "Part %", domain: [0, maxPct], grid: true, ticks: 5 },
     color: {

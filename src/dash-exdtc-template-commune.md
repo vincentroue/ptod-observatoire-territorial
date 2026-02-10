@@ -67,6 +67,7 @@ import {
 
 // === indicators-ddict-js.js — Dictionnaire auto-généré ===
 import {
+  INDICATEURS,                // Dictionnaire indicateurs {type, unit, label, ...}
   formatValue,                // (indic, val) → "1.23 %"
   getIndicOptionsByAggDash    // (filterVolet?) → options dropdown _agg_dash=x
 } from "./helpers/indicators-ddict-js.js";
@@ -76,11 +77,14 @@ import {
   computeIndicBins,      // (data, col) → {bins, palette, isDiv, getColor}
   countBins,             // (data, col, thresholds) → counts[]
   createGradientScale,   // (data, col, options) → {getColor, min, max, divergent, palette}
-  GRADIENT_PALETTES      // {divergent, sequential} pour mode gradient
+  GRADIENT_PALETTES,     // {divergent, sequential} pour mode gradient
+  computeEcartFrance,    // (data, col, ref, options) → {getColor, getEcartInfo, thresholds, ...}
+  PAL_ECART_FRANCE,      // 9 couleurs RdBu pour mode écart
+  ECART_FRANCE_SYMBOLS   // 9 symboles courts (▼▼..▲▲)
 } from "./helpers/colors.js";
 
 // === legend.js — Légendes cartes ===
-import { createBinsLegend, createGradientLegend } from "./helpers/legend.js";
+import { createBinsLegend, createGradientLegend, createEcartFranceLegend } from "./helpers/legend.js";
 
 // === maps.js — Cartes choroplèthes ===
 import {
@@ -340,7 +344,25 @@ const echelon = view(Inputs.radio(
 <div class="panel-title">OPTIONS CARTES</div>
 
 ```js
-const colorMode = view(Inputs.radio(["8 catégories", "Gradient"], { value: "8 catégories", label: "Mode représ." }));
+const _colorModeInput = Inputs.radio(["Répartition", "Écart France", "Gradient"], { value: "Répartition", label: "Mode représ." });
+// Tooltips (?) info sur chaque option radio
+const _radioTips = {
+  "Répartition": "Découpe en classes de taille égale (quantiles). Chaque couleur contient environ le même nombre de territoires.",
+  "Écart France": "Compare chaque territoire à la valeur France. 9 niveaux symétriques autour de la référence nationale (écart-type winsorisé).",
+  "Gradient": "Dégradé continu proportionnel à la valeur brute. Outliers atténués aux percentiles P02-P98."
+};
+_colorModeInput.querySelectorAll("label").forEach(lbl => {
+  const input = lbl.querySelector("input");
+  const txt = input?.value;
+  if (_radioTips[txt]) {
+    const tip = document.createElement("span");
+    tip.className = "panel-tooltip-wrap";
+    tip.style.marginLeft = "2px";
+    tip.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">${_radioTips[txt]}</span>`;
+    lbl.appendChild(tip);
+  }
+});
+const colorMode = view(_colorModeInput);
 const showValuesOnMap = view(Inputs.toggle({ label: "Afficher labels", value: true }));
 const labelBy = view(Inputs.select(new Map([
   ["Principaux terr.", "population"],
@@ -418,10 +440,15 @@ const { bins: bins2, palette: PAL2, isDiv: isDiv2, getColor: getColorBins2 } = i
 const gradient1 = createGradientScale(dataNoFrance, colKey1);
 const gradient2 = createGradientScale(dataNoFrance, colKey2);
 const isGradient = colorMode === "Gradient";
+const isEcart = colorMode === "Écart France";
 
-// getColor dynamique selon mode
-const getColor1 = isGradient ? gradient1.getColor : getColorBins1;
-const getColor2 = isGradient ? gradient2.getColor : getColorBins2;
+// Mode écart France : bins basées sur σ winsorisé autour de la valeur 00FR
+const ecart1 = computeEcartFrance(dataNoFrance, colKey1, frData?.[colKey1], { indicType: INDICATEURS[indic1]?.type });
+const ecart2 = computeEcartFrance(dataNoFrance, colKey2, frData?.[colKey2], { indicType: INDICATEURS[indic2]?.type });
+
+// getColor dynamique selon mode (3-way)
+const getColor1 = isEcart ? ecart1.getColor : isGradient ? gradient1.getColor : getColorBins1;
+const getColor2 = isEcart ? ecart2.getColor : isGradient ? gradient2.getColor : getColorBins2;
 ```
 
 ```js
@@ -479,8 +506,15 @@ const map1 = renderChoropleth({
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 const counts1 = countBins(dataNoFrance, colKey1, bins1.thresholds || []);
+const ecartCounts1 = isEcart ? countBins(dataNoFrance, colKey1, ecart1.thresholds || []) : [];
 const unit1 = getIndicUnit(colKey1);
-const legend1 = isGradient
+const legend1 = isEcart
+  ? createEcartFranceLegend({
+      palette: ecart1.palette, symbols: ECART_FRANCE_SYMBOLS,
+      pctLabels: ecart1.pctLabels,
+      counts: ecartCounts1, title: `Écart France (en ${ecart1.isAbsoluteEcart ? "pts" : "%"})`
+    })
+  : isGradient
   ? createGradientLegend({
       colors: gradient1.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient1.min, max: gradient1.max, showZero: gradient1.divergent,
@@ -491,6 +525,11 @@ const legend1 = isGradient
       colors: PAL1, labels: bins1.labels || [], counts: counts1,
       vertical: true, title: "Légende", unit: unit1, reverse: !isDiv1
     });
+// Tooltip : toujours passer la ref France + getEcartInfo pour symbole au survol
+if (map1._tipConfig) {
+  map1._tipConfig.frRef = frData?.[colKey1];
+  map1._tipConfig.frGetEcartInfo = ecart1.getEcartInfo;
+}
 // Click handler : click normal = zoom only, Ctrl+click = add to selection
 map1.style.cursor = "pointer";
 map1.addEventListener("click", (e) => {
@@ -513,12 +552,12 @@ const wrapper1 = createMapWrapper(map1, null, legend1, addZoomBehavior(map1, {
 }), {
   exportSVGFn: exportSVG, echelon, colKey: colKey1, title: label1
 });
-// Moyenne France 00FR
+// Valeur France 00FR
 const frVal1 = frData?.[colKey1];
 if (frVal1 != null) {
   const frLbl1 = document.createElement("div");
-  frLbl1.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;font-style:italic;";
-  frLbl1.textContent = `Moy. France : ${formatValue(indic1, frVal1)}`;
+  frLbl1.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;";
+  frLbl1.innerHTML = `🇫🇷 France : <b style="font-style:italic;">${formatValue(indic1, frVal1)}</b>`;
   wrapper1.appendChild(frLbl1);
 }
 display(wrapper1);
@@ -543,8 +582,15 @@ const map2 = renderChoropleth({
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 const counts2 = countBins(dataNoFrance, colKey2, bins2.thresholds || []);
+const ecartCounts2 = isEcart ? countBins(dataNoFrance, colKey2, ecart2.thresholds || []) : [];
 const unit2 = getIndicUnit(colKey2);
-const legend2 = isGradient
+const legend2 = isEcart
+  ? createEcartFranceLegend({
+      palette: ecart2.palette, symbols: ECART_FRANCE_SYMBOLS,
+      pctLabels: ecart2.pctLabels,
+      counts: ecartCounts2, title: `Écart France (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`
+    })
+  : isGradient
   ? createGradientLegend({
       colors: gradient2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient2.min, max: gradient2.max, showZero: gradient2.divergent,
@@ -555,6 +601,11 @@ const legend2 = isGradient
       colors: PAL2, labels: bins2.labels || [], counts: counts2,
       vertical: true, title: "Légende", unit: unit2, reverse: !isDiv2
     });
+// Tooltip : toujours passer la ref France + getEcartInfo pour symbole au survol
+if (map2._tipConfig) {
+  map2._tipConfig.frRef = frData?.[colKey2];
+  map2._tipConfig.frGetEcartInfo = ecart2.getEcartInfo;
+}
 // Click handler : click normal = zoom only, Ctrl+click = add to selection
 map2.style.cursor = "pointer";
 map2.addEventListener("click", (e) => {
@@ -577,12 +628,12 @@ const wrapper2 = createMapWrapper(map2, null, legend2, addZoomBehavior(map2, {
 }), {
   exportSVGFn: exportSVG, echelon, colKey: colKey2, title: label2
 });
-// Moyenne France 00FR
+// Valeur France 00FR
 const frVal2 = frData?.[colKey2];
 if (frVal2 != null) {
   const frLbl2 = document.createElement("div");
-  frLbl2.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;font-style:italic;";
-  frLbl2.textContent = `Moy. France : ${formatValue(indic2, frVal2)}`;
+  frLbl2.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;";
+  frLbl2.innerHTML = `🇫🇷 France : <b style="font-style:italic;">${formatValue(indic2, frVal2)}</b>`;
   wrapper2.appendChild(frLbl2);
 }
 display(wrapper2);
@@ -633,8 +684,13 @@ const binsC2 = zoomBins2.bins;
 // Gradient zoom : recalcule localement si assez de données
 const gradientC1 = zoomData.length >= 10 ? createGradientScale(zoomData, colKey1) : gradient1;
 const gradientC2 = zoomData.length >= 10 ? createGradientScale(zoomData, colKey2) : gradient2;
-const getColorC1 = isGradient ? gradientC1.getColor : zoomBins1.getColor;
-const getColorC2 = isGradient ? gradientC2.getColor : zoomBins2.getColor;
+
+// Écart zoom : ref + sigma nationaux (pas locaux) pour comparabilité
+const ecartC1 = isEcart ? computeEcartFrance(zoomData, colKey1, ecart1.ref, { sigma: ecart1.sigma, indicType: INDICATEURS[indic1]?.type }) : null;
+const ecartC2 = isEcart ? computeEcartFrance(zoomData, colKey2, ecart2.ref, { sigma: ecart2.sigma, indicType: INDICATEURS[indic2]?.type }) : null;
+
+const getColorC1 = isEcart ? ecartC1.getColor : isGradient ? gradientC1.getColor : zoomBins1.getColor;
+const getColorC2 = isEcart ? ecartC2.getColor : isGradient ? gradientC2.getColor : zoomBins2.getColor;
 ```
 
 <div class="cards-row">
@@ -654,7 +710,14 @@ const mapC1 = renderChoropleth({
   maxLabelsAuto: 100, echelon: "Commune", width: 385, height: 355
 });
 const countsC1 = countBins(zoomData, colKey1, binsC1.thresholds || []);
-const legendC1 = isGradient
+const ecartCountsC1 = isEcart ? countBins(zoomData, colKey1, ecartC1.thresholds || []) : [];
+const legendC1 = isEcart
+  ? createEcartFranceLegend({
+      palette: ecartC1.palette, symbols: ECART_FRANCE_SYMBOLS,
+      pctLabels: ecartC1.pctLabels,
+      counts: ecartCountsC1, title: `Écart France (en ${ecart1.isAbsoluteEcart ? "pts" : "%"})`
+    })
+  : isGradient
   ? createGradientLegend({
       colors: gradientC1.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradientC1.min, max: gradientC1.max, showZero: gradientC1.divergent,
@@ -665,6 +728,11 @@ const legendC1 = isGradient
       colors: zoomBins1.palette, labels: binsC1.labels || [], counts: countsC1,
       vertical: true, title: "Légende", unit: unit1, reverse: !zoomBins1.isDiv
     });
+// Tooltip : ref France + getEcartInfo pour symbole au survol (zoom communes)
+if (mapC1?._tipConfig) {
+  mapC1._tipConfig.frRef = frData?.[colKey1];
+  mapC1._tipConfig.frGetEcartInfo = ecart1.getEcartInfo;
+}
 display(createMapWrapper(mapC1, null, legendC1, addZoomBehavior(mapC1, {
   initialTransform: window._zoomStates.mapC1,
   onZoom: t => { window._zoomStates.mapC1 = t; }
@@ -690,7 +758,14 @@ const mapC2 = renderChoropleth({
   maxLabelsAuto: 100, echelon: "Commune", width: 385, height: 355
 });
 const countsC2 = countBins(zoomData, colKey2, binsC2.thresholds || []);
-const legendC2 = isGradient
+const ecartCountsC2 = isEcart ? countBins(zoomData, colKey2, ecartC2.thresholds || []) : [];
+const legendC2 = isEcart
+  ? createEcartFranceLegend({
+      palette: ecartC2.palette, symbols: ECART_FRANCE_SYMBOLS,
+      pctLabels: ecartC2.pctLabels,
+      counts: ecartCountsC2, title: `Écart France (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`
+    })
+  : isGradient
   ? createGradientLegend({
       colors: gradientC2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradientC2.min, max: gradientC2.max, showZero: gradientC2.divergent,
@@ -701,6 +776,11 @@ const legendC2 = isGradient
       colors: zoomBins2.palette, labels: binsC2.labels || [], counts: countsC2,
       vertical: true, title: "Légende", unit: unit2, reverse: !zoomBins2.isDiv
     });
+// Tooltip : ref France + getEcartInfo pour symbole au survol (zoom communes)
+if (mapC2?._tipConfig) {
+  mapC2._tipConfig.frRef = frData?.[colKey2];
+  mapC2._tipConfig.frGetEcartInfo = ecart2.getEcartInfo;
+}
 display(createMapWrapper(mapC2, null, legendC2, addZoomBehavior(mapC2, {
   initialTransform: window._zoomStates.mapC2,
   onZoom: t => { window._zoomStates.mapC2 = t; }

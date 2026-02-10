@@ -180,11 +180,21 @@ export function renderChoropleth(config) {
       const indicType = INDICATEURS[indic]?.type || INDICATEURS[valueCol]?.type || "";
       const isEvolution = ["vtcam", "vevol", "vdifp"].includes(indicType);
 
+      // Formatage intelligent selon type indicateur
+      const fmtVal = (val) => {
+        if (val == null) return "—";
+        if (isEvolution) return (val >= 0 ? "+" : "") + val.toFixed(1);
+        if (indicType === "pct") return val.toFixed(1);
+        if (indicType === "ind") return Math.round(val).toString();
+        if (indicType === "vol" && Math.abs(val) >= 10000) return Math.round(val / 1000) + "k";
+        if (Math.abs(val) >= 100) return Math.round(val).toLocaleString("fr-FR");
+        return val.toFixed(1);
+      };
+
       const getText = (d) => {
         const code = getCode(d);
         const val = d.properties[valueCol];
-        const prefix = isEvolution && val >= 0 ? "+" : "";
-        const valStr = prefix + val.toFixed(1);
+        const valStr = fmtVal(val);
         // 1. Chercher dans TopoJSON (noms varient selon échelon)
         const topoName = d.properties.nom_officiel      // DEP, REG
                       || d.properties.libze2020         // ZE
@@ -264,7 +274,7 @@ export function renderChoropleth(config) {
   });
 
   // Stocker config tooltip sur le plot (event delegation dans createMapWrapper)
-  plot._tipConfig = { geoData, getCode, getLabel, valueCol, formatValue };
+  plot._tipConfig = { geoData, getCode, getLabel, valueCol, formatValue, frRef: null, frGetEcartInfo: null };
 
   return plot;
 }
@@ -356,8 +366,44 @@ export function createMapWrapper(map, statsOverlay, legendElement = null, zoomCo
         const lbl = _gl({ code }) || code;
         const v = feature.properties[_vc];
         const p23 = feature.properties.P23_POP;
+        // Extraire indicateur + unité depuis colKey
+        const { indic: _ei } = parseColKey(_vc);
+        const _eType = INDICATEURS[_ei]?.type || "";
+        const _eUnit = INDICATEURS[_ei]?.unit || "";
+        // Ligne écart vs France (toujours si frRef défini)
+        const _fr = map._tipConfig.frRef;
+        const _frEI = map._tipConfig.frGetEcartInfo;
+        let ecartLine = "";
+        if (_fr != null && v != null) {
+          const _isEvol = ["vtcam", "vevol", "vdifp"].includes(_eType);
+          const _isPct = _eType === "pct";
+          // Calcul écart : absolu (pts) pour évolutions et % | relatif (%) pour le reste
+          let ecartStr;
+          if (_isEvol || _isPct) {
+            const diff = v - _fr;
+            ecartStr = `${diff >= 0 ? "+" : ""}${diff.toFixed(1)} pts`;
+          } else if (_fr !== 0) {
+            const pct = ((v - _fr) / Math.abs(_fr)) * 100;
+            ecartStr = `${pct >= 0 ? "+" : ""}${Math.round(pct)}%`;
+          }
+          if (ecartStr) {
+            // Symbole coloré + label qualitatif via getEcartInfo
+            let symHtml = "";
+            let qualSuffix = "";
+            if (_frEI) {
+              const eInfo = _frEI(v);
+              if (eInfo) {
+                symHtml = `<span style="color:${eInfo.color || "#d1d5db"}">${eInfo.symbol}</span> `;
+                qualSuffix = ` · ${eInfo.label.toLowerCase().replace("de la réf.", "moy.")}`;
+              }
+            }
+            ecartLine = `<br><span style="font-style:italic;">${symHtml}<span style="color:#d1d5db;">${ecartStr} / 🇫🇷${qualSuffix}</span></span>`;
+          }
+        }
+        // Valeur formatée avec unité
+        const _valStr = v != null ? `${_fv(_vc, v)}${_eUnit ? " " + _eUnit : ""}` : "—";
         tooltip.innerHTML = `<b>${lbl}</b><br>` +
-          `${v != null ? _fv(_vc, v) : "—"}<br>` +
+          `Valeur: ${_valStr}${ecartLine}<br>` +
           `<span class="map-tooltip-pop">Pop: ${p23 ? p23.toLocaleString("fr-FR") : "—"}</span>`;
         tooltip.style.display = "block";
         const rect = mapContent.getBoundingClientRect();
