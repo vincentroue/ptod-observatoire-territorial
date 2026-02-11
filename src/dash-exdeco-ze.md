@@ -71,6 +71,7 @@ import { renderButterflyMulti } from "./helpers/graph-butterfly.js";
 import { renderSlopeChart, renderIndice100Chart, renderIndice100Multi, LABELS_A5 } from "./helpers/graph-slope-indice.js";
 import { renderTreemapA5A21, renderTreemapSimple } from "./helpers/graph-treemap.js";
 import { renderButterflyVertical } from "./helpers/graph-butterfly-vertical.js";
+import { createScatterWithZoom } from "./helpers/scatter.js";
 import { createSelectionManager, createMapClickHandler } from "./helpers/selection.js";
 
 // === duckdb.js — Queries Parquet communes ===
@@ -185,7 +186,6 @@ const setSort = (col) => {
 
 <!-- &s SUB_BANNER -->
 <style>
-.sub-banner select { font-size: 12px !important; background: #fff !important; border: 1px solid #e2e8f0 !important; }
 /* Tooltip aide lecture tableaux */
 .table-help-wrap { display: inline-block; position: relative; vertical-align: middle; margin-left: 6px; }
 .table-help-icon {
@@ -205,47 +205,6 @@ const setSort = (col) => {
 }
 .table-help-wrap:hover .help-tooltip { display: block; }
 </style>
-<div class="sub-banner">
-<div style="display:flex;padding:4px 16px;gap:16px;align-items:center;">
-
-<!-- Échelon selector -->
-<div style="min-width:120px;flex-shrink:0;">
-
-```js
-const echelon = view(Inputs.radio(["Zone d'emploi"], { value: "Zone d'emploi", label: "Échelon" }));
-```
-
-</div>
-
-<!-- KPI Table compact : France + ZE sélectionnées -->
-<div style="flex:1;overflow-x:auto;">
-
-```js
-// Tableau KPI compact — France + ZE sélectionnées (max 5)
-const kpiSelCodes = [...mapSelectionState].slice(0, 5);
-const kpiSelData = kpiSelCodes.map(c => dataNoFrance.find(d => d.code === c)).filter(Boolean);
-const kpiData = [frData, ...kpiSelData].filter(Boolean);
-
-const kpiCols = [
-  { key: "libelle", label: "", type: "text", width: 120 },
-  ...defaultTableCols.map(col => {
-    const indicK = col.replace(/_\d+$/, "");
-    const per = col.match(/_(\d{2,4})$/)?.[1] || "";
-    return { key: col, label: getIndicLabel(indicK, "medium"), unit: getIndicUnit(col), periode: per ? getPeriodeLabel(per, "short") : "" };
-  })
-];
-
-const kpiStats = computeBarStats(kpiData, defaultTableCols);
-display(renderTable({
-  data: kpiData, columns: kpiCols, stats: kpiStats,
-  compact: true, maxHeight: 160, scrollX: true, stickyFirstCol: 1
-}));
-```
-
-</div>
-
-</div>
-</div>
 <!-- &e SUB_BANNER -->
 
 <!-- Styles sidebar -->
@@ -278,6 +237,15 @@ display(renderTable({
 
 <!-- &s SIDEBAR -->
 <aside class="sidebar">
+
+<section class="panel">
+<div class="panel-title">ÉCHELON</div>
+
+```js
+const echelon = view(Inputs.radio(["Zone d'emploi"], { value: "Zone d'emploi", label: "" }));
+```
+
+</section>
 
 <section class="panel">
 <div class="panel-title">INDICATEUR CARTE 1</div>
@@ -354,7 +322,47 @@ const extraIndics = view(Inputs.select(
 <!-- &e SIDEBAR -->
 
 <!-- &s LAYOUT_MAIN -->
-<div class="layout-main" style="margin-top:8px;">
+<div class="layout-main" style="margin-top:0;">
+
+```js
+// === SOUS-BANNIÈRE + KPI TABLE ===
+// Sous-bannière flush avec bannière principale (marge négative compense padding layout-main)
+const _sbBlock = document.createElement("div");
+_sbBlock.style.cssText = "margin:-6px -20px 0 -16px;padding:0;";
+
+// Barre grise flush
+const _sbBar = document.createElement("div");
+_sbBar.style.cssText = "background:#e8eaed;padding:5px 16px;font-size:11px;color:#374151;font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;gap:16px;";
+_sbBar.innerHTML = `<span style="font-weight:600;">Métriques clés</span><span style="color:#6b7280;">France + ZE sélectionnées · Sources : URSSAF 2014-2024, FLORES 2022-2023, INSEE RP 2011/16/22</span>`;
+_sbBlock.appendChild(_sbBar);
+
+// KPI Table compact — France + ZE sélectionnées (max 5)
+const kpiSelCodes = [...mapSelectionState].slice(0, 5);
+const kpiSelData = kpiSelCodes.map(c => dataNoFrance.find(d => d.code === c)).filter(Boolean);
+const kpiData = [frData, ...kpiSelData].filter(Boolean);
+
+const kpiCols = [
+  { key: "libelle", label: "", type: "text", width: 120 },
+  ...defaultTableCols.map(col => {
+    const indicK = col.replace(/_\d+$/, "");
+    const per = col.match(/_(\d{2,4})$/)?.[1] || "";
+    return { key: col, label: getIndicLabel(indicK, "medium"), unit: getIndicUnit(col), periode: per ? getPeriodeLabel(per, "short") : "" };
+  })
+];
+
+// Stats calculées sur le dataset complet (pas juste les 3 lignes KPI)
+const kpiStats = computeBarStats(dataNoFrance, defaultTableCols);
+const kpiTable = renderTable({
+  data: kpiData, columns: kpiCols, stats: kpiStats,
+  compact: true, maxHeight: 160, scrollX: true, stickyFirstCol: 1
+});
+const _kpiWrap = document.createElement("div");
+_kpiWrap.style.cssText = "padding:0 16px;background:#fff;";
+kpiTable.style.cssText = (kpiTable.style.cssText || "") + "background:#fff;width:100%;";
+_kpiWrap.appendChild(kpiTable);
+_sbBlock.appendChild(_kpiWrap);
+display(_sbBlock);
+```
 
 ```js
 // === DONNÉES + BINDINGS ===
@@ -365,8 +373,8 @@ const colKey1 = buildColKey(indic1, periode1);
 const colKey2 = buildColKey(indic2, periode2);
 const colKey = colKey1;
 const colKeyCarte = colKey1;
-const indicLabel = getIndicLabel(indic1, "long");
-const indicLabel2 = getIndicLabel(indic2, "long");
+const indicLabel = getIndicLabel(indic1, "medium");
+const indicLabel2 = getIndicLabel(indic2, "medium");
 const labelCarte = indicLabel;
 
 // Joindre données aux géométries (les 2 colKeys)
@@ -473,13 +481,13 @@ function buildCommMap(tCode, tData, w, h, opts = {}) {
 ```
 
 <!-- &s CARTES_ET_TABLEAU -->
-<div style="display:flex;gap:12px;align-items:stretch;">
+<div style="display:flex;gap:6px;align-items:stretch;">
 
 <!-- COLONNE GAUCHE : cartes + butterfly -->
 <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:4px;padding-left:6px;">
 
 ```js
-display(html`<h3 style="margin:0 0 4px 0;">Économie — Zones d'emploi // Focus communes : ${zoomLabel}</h3>`);
+display(html`<h3 style="margin:0 0 4px 0;">Économie — Zones d'emploi</h3>`);
 ```
 
 <!-- Cartes nationales côte à côte -->
@@ -518,7 +526,29 @@ const legend = isEcart
     })
   : createBinsLegend({
       colors: PAL, labels: bins.labels || [], counts,
-      vertical: true, title: "Légende", unit, reverse: !isDiv
+      vertical: true, title: "Légende", unit, reverse: !isDiv,
+      interactive: true,
+      onFilter: (activeIndices) => {
+        const allGs = map.querySelectorAll("g");
+        let fp = null;
+        for (const g of allGs) {
+          const ps = Array.from(g.children).filter(c => c.tagName === 'path');
+          if (ps.length >= zeGeo.features.length * 0.9) { fp = ps; break; }
+        }
+        if (!fp) return;
+        fp.forEach((p, i) => {
+          if (i >= zeGeo.features.length) return;
+          const v = zeGeo.features[i].properties[colKey1];
+          const bi = indicBins.getBinIdx(v);
+          if (bi >= 0 && !activeIndices.has(bi)) {
+            p.setAttribute("fill", "#f3f4f6");
+            p.setAttribute("fill-opacity", "0.15");
+          } else {
+            p.setAttribute("fill", getColor(v));
+            p.setAttribute("fill-opacity", "1");
+          }
+        });
+      }
     });
 
 // Click handler : clic normal = zoom, ctrl+clic = sélection
@@ -592,7 +622,29 @@ const legend2 = isEcart2
     })
   : createBinsLegend({
       colors: indicBins2.palette, labels: indicBins2.bins.labels || [], counts: counts2,
-      vertical: true, title: "Légende", unit: unit2, reverse: !indicBins2.isDiv
+      vertical: true, title: "Légende", unit: unit2, reverse: !indicBins2.isDiv,
+      interactive: true,
+      onFilter: (activeIndices) => {
+        const allGs = map2.querySelectorAll("g");
+        let fp = null;
+        for (const g of allGs) {
+          const ps = Array.from(g.children).filter(c => c.tagName === 'path');
+          if (ps.length >= zeGeo.features.length * 0.9) { fp = ps; break; }
+        }
+        if (!fp) return;
+        fp.forEach((p, i) => {
+          if (i >= zeGeo.features.length) return;
+          const v = zeGeo.features[i].properties[colKey2];
+          const bi = indicBins2.getBinIdx(v);
+          if (bi >= 0 && !activeIndices.has(bi)) {
+            p.setAttribute("fill", "#f3f4f6");
+            p.setAttribute("fill-opacity", "0.15");
+          } else {
+            p.setAttribute("fill", getColor2(v));
+            p.setAttribute("fill-opacity", "1");
+          }
+        });
+      }
     });
 
 map2.style.cursor = "pointer";
@@ -633,6 +685,110 @@ display(wrapper2);
 
 </div>
 <!-- Fin cartes nationales -->
+
+<!-- Scatter croisement indic1 × indic2 -->
+
+```js
+// === SCATTER PLOT — Croisement indic1 × indic2 ===
+{
+  const xCol = colKey1;
+  const yCol = colKey2;
+  const xLbl = indicLabel;
+  const yLbl = indicLabel2;
+  const mX = frData?.[xCol];
+  const mY = frData?.[yCol];
+
+  const xV = dataNoFrance.map(d => d[xCol]).filter(v => v != null).sort((a, b) => a - b);
+  const yV = dataNoFrance.map(d => d[yCol]).filter(v => v != null).sort((a, b) => a - b);
+
+  if (xV.length > 5 && yV.length > 5) {
+    const xP01 = xV[Math.floor(xV.length * 0.01)];
+    const xP99 = xV[Math.min(Math.floor(xV.length * 0.99), xV.length - 1)];
+    const yP01 = yV[Math.floor(yV.length * 0.01)];
+    const yP99 = yV[Math.min(Math.floor(yV.length * 0.99), yV.length - 1)];
+    const xPad = (xP99 - xP01) * 0.08;
+    const yPad = (yP99 - yP01) * 0.08;
+
+    const popMax = d3.max(dataNoFrance, d => d.P23_POP) || 1;
+    const rScale = d3.scaleSqrt().domain([0, popMax]).range([3, 22]);
+
+    // Couleur par quadrant (relatif aux moyennes France)
+    const qColor = (d) => {
+      const x = d[xCol], y = d[yCol];
+      if (x == null || y == null) return "#ccc";
+      if (x >= mX && y >= mY) return "#2ca02c";
+      if (x < mX && y >= mY) return "#1f77b4";
+      if (x >= mX && y < mY) return "#ff7f0e";
+      return "#d62728";
+    };
+
+    // Détection : les 2 indicateurs sont des évolutions ?
+    const isXEvol = indic1.includes("vtcam") || indic1.includes("vevol") || indic1.includes("vdifp");
+    const isYEvol = indic2.includes("vtcam") || indic2.includes("vevol") || indic2.includes("vdifp");
+
+    // Labels quadrants adaptés au contexte
+    let qLabels;
+    if (isXEvol && isYEvol) {
+      qLabels = {
+        tr: "Hausse continue", tl: "Rebond",
+        br: "Déclin récent", bl: "Déclin continu"
+      };
+    } else {
+      qLabels = {
+        tr: "Les 2 au-dessus", tl: `${yLbl} seul ↑`,
+        br: `${xLbl} seul ↑`, bl: "Les 2 en-dessous"
+      };
+    }
+
+    // Annotations positionnées au centre de chaque quadrant
+    const midXR = mX != null ? (mX + xP99 + xPad) / 2 : (xP01 + xP99) / 2;
+    const midXL = mX != null ? (xP01 - xPad + mX) / 2 : (xP01 + xP99) / 2;
+    const midYT = mY != null ? (mY + yP99 + yPad) / 2 : (yP01 + yP99) / 2;
+    const midYB = mY != null ? (yP01 - yPad + mY) / 2 : (yP01 + yP99) / 2;
+    const annotations = [
+      { x: midXR, y: midYT, text: qLabels.tr, color: "rgba(44,160,44,0.3)", fontSize: 12, fontWeight: 600 },
+      { x: midXL, y: midYT, text: qLabels.tl, color: "rgba(31,119,180,0.3)", fontSize: 12, fontWeight: 600 },
+      { x: midXR, y: midYB, text: qLabels.br, color: "rgba(255,127,14,0.3)", fontSize: 12, fontWeight: 600 },
+      { x: midXL, y: midYB, text: qLabels.bl, color: "rgba(214,39,40,0.3)", fontSize: 12, fontWeight: 600 }
+    ];
+
+    const sCodes = [...mapSelectionState];
+    const topPop = dataNoFrance
+      .filter(d => d[xCol] != null && d[yCol] != null)
+      .sort((a, b) => (b.P23_POP || 0) - (a.P23_POP || 0))
+      .slice(0, 8).map(d => d.code);
+    const lCodes = [...new Set([...sCodes, ...topPop])];
+
+    const sc = createScatterWithZoom({
+      data: dataNoFrance, xCol, yCol,
+      xDomain: [xP01 - xPad, xP99 + xPad],
+      yDomain: [yP01 - yPad, yP99 + yPad],
+      xLabel: xLbl, yLabel: yLbl,
+      meanX: mX, meanY: mY,
+      getRadius: d => rScale(d.P23_POP || 0),
+      getColor: qColor,
+      isSelected: d => sCodes.includes(d.code),
+      getTooltip: d => `${d.libelle || d.code}\nPop: ${(d.P23_POP || 0).toLocaleString("fr")}\n${xLbl}: ${formatValue(indic1, d[xCol])}\n${yLbl}: ${formatValue(indic2, d[yCol])}`,
+      width: 790, height: 420,
+      labelCodes: lCodes, labelMode,
+      _customTooltip: true,
+      annotations,
+      title: `${xLbl} × ${yLbl}`,
+      legend: [
+        { label: qLabels.tr, color: "#2ca02c" },
+        { label: qLabels.tl, color: "#1f77b4" },
+        { label: qLabels.br, color: "#ff7f0e" },
+        { label: qLabels.bl, color: "#d62728" }
+      ],
+      sizeLabel: "Taille = population · Sélectionnées = bordure jaune"
+    });
+
+    display(sc);
+  } else {
+    display(html`<div style="padding:20px;text-align:center;color:#6b7280;font-size:11px;">Données insuffisantes pour le scatter</div>`);
+  }
+}
+```
 
 <!-- Cartes communes zoom (même ZE, 2 indicateurs) -->
 <div class="cards-row">

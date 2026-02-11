@@ -203,6 +203,8 @@ export function createBinsLegend(config) {
     reverse = true,
     title = 'Légende',
     unit = '',
+    interactive = false,
+    onFilter = null,
   } = config;
 
   // Préparer les items dans l'ordre
@@ -210,27 +212,71 @@ export function createBinsLegend(config) {
     color,
     label: labels[i] || '',
     count: counts[i] || 0,
+    realIdx: i,
   }));
 
   // Inverser si demandé (pour avoir valeurs hautes en haut)
   const orderedItems = reverse ? [...items].reverse() : items;
 
   if (vertical) {
-    return html`<div class="legend-vertical">
+    const wrapper = html`<div class="legend-vertical">
       ${title ? html`<div class="legend-title">${title}</div>` : ''}
       ${unit ? html`<div class="legend-unit">${unit}</div>` : ''}
-      ${orderedItems.map(
-        (item, i) => html`<div class="legend-row-v">
-          <span class="legend-color-v" style="background:${item.color}"></span>
-          <span class="legend-text-v">${item.label}</span>
-          ${item.count !== undefined
-            ? html`<span class="legend-count-v">${item.count}</span>`
-            : ''}
-        </div>`
-      )}
     </div>`;
+
+    // Mode interactif : isoler un bin (click = montrer SEULEMENT ce bin, re-click = tout montrer)
+    const allRows = [];
+    const allItemsRef = [];
+    let isolatedIdx = null;
+
+    orderedItems.forEach((item) => {
+      const row = html`<div class="legend-row-v" style="${interactive ? 'cursor:pointer;user-select:none;' : ''}">
+        <span class="legend-color-v" style="background:${item.color}"></span>
+        <span class="legend-text-v">${item.label}</span>
+        ${item.count !== undefined
+          ? html`<span class="legend-count-v">${item.count}</span>`
+          : ''}
+      </div>`;
+
+      allRows.push(row);
+      allItemsRef.push(item);
+
+      if (interactive) {
+        row.addEventListener('click', () => {
+          const ri = item.realIdx;
+          // Click sur l'isolé → reset tout ; sinon → isoler ce bin
+          isolatedIdx = (isolatedIdx === ri) ? null : ri;
+
+          // Calculer set actif
+          const active = new Set();
+          if (isolatedIdx == null) {
+            allItemsRef.forEach(it => active.add(it.realIdx));
+          } else {
+            active.add(isolatedIdx);
+          }
+
+          // Mettre à jour les styles de TOUTES les lignes
+          allRows.forEach((r, j) => {
+            const it = allItemsRef[j];
+            const isActive = active.has(it.realIdx);
+            const sw = r.querySelector('.legend-color-v');
+            const tx = r.querySelector('.legend-text-v');
+            const ct = r.querySelector('.legend-count-v');
+            if (sw) sw.style.background = isActive ? it.color : '#d1d5db';
+            if (tx) tx.style.opacity = isActive ? '1' : '0.35';
+            if (ct) ct.style.opacity = isActive ? '1' : '0.35';
+            r.style.opacity = isActive ? '1' : '0.55';
+          });
+
+          if (onFilter) onFilter(active);
+        });
+      }
+      wrapper.appendChild(row);
+    });
+
+    return wrapper;
   } else {
-    // Horizontal - style demig
+    // Horizontal - style demig (pas de mode interactif pour l'instant)
     return html`<div
       class="legend-horizontal"
       style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;"

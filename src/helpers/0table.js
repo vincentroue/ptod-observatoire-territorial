@@ -95,19 +95,24 @@ function getP02(arr) {
  * Utilise P98/P02 pour éviter que les outliers (ex: +10.94) écrasent toutes les barres
  * Ajoute mean/std pour calcul z-score (gradient indices)
  */
-export function computeBarStats(data, cols) {
+export function computeBarStats(data, cols, franceRow = null) {
+  // Si franceRow non fourni, tenter de le trouver dans data
+  const fr = franceRow || data.find(d => d.code === "00FR") || null;
   const stats = {};
   for (const col of cols) {
     const vals = data.map(d => d[col]).filter(v => v != null && !isNaN(v));
     const posVals = vals.filter(v => v >= 0).sort((a, b) => a - b);
     const negVals = vals.filter(v => v < 0).map(v => Math.abs(v)).sort((a, b) => a - b);
 
-    // Mean et std pour z-score (gradient indices)
+    // Mean et std pour z-score
     const mean = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
     const variance = vals.length > 1
       ? vals.reduce((sum, v) => sum + Math.pow(v - mean, 2), 0) / (vals.length - 1)
       : 0;
     const std = Math.sqrt(variance);
+
+    // Référence France (fallback = mean si absent)
+    const franceRef = (fr && fr[col] != null && !isNaN(fr[col])) ? fr[col] : null;
 
     stats[col] = {
       maxPos: getP98(posVals),
@@ -115,7 +120,8 @@ export function computeBarStats(data, cols) {
       min: vals.length > 0 ? getP02(vals.sort((a, b) => a - b)) : 0,
       max: vals.length > 0 ? getP98(vals.sort((a, b) => a - b)) : 1,
       mean,
-      std
+      std,
+      franceRef
     };
   }
   return stats;
@@ -163,6 +169,26 @@ function getIndicType(colKey) {
 }
 
 /**
+ * Polarity : +1 si valeur haute = favorable, -1 si valeur haute = défavorable
+ * Utilisé pour colorer violet/vert les pct/ind par rapport à France
+ */
+function getPolarity(colKey) {
+  const { indic } = parseColKey(colKey);
+  // Indicateurs négatifs : au-dessus de France = défavorable (violet)
+  const NEGATIVE_INDICS = [
+    "rev_txpauv", "soc_txchom", "soc_txchom_1564",
+    "dmv_iv", "dmv_iv_alt",
+    "log_txvac", "log_rplocaux_pct",
+    "logd_txeffort",
+    "men_monop_pct"
+  ];
+  if (NEGATIVE_INDICS.includes(indic)) return -1;
+  // Certains patterns négatifs
+  if (indic.includes("txpauv") || indic.includes("txchom") || indic.includes("vieill")) return -1;
+  return 1;
+}
+
+/**
  * Formate une valeur avec unité
  */
 export function formatCellValue(value, colKey) {
@@ -196,121 +222,8 @@ export function formatCellValue(value, colKey) {
  * Génère une cellule avec barre de progression
  */
 export function renderBarCell(value, colKey, stats) {
-  if (value == null) return html`<span style="color:#999">—</span>`;
-
-  const type = getIndicType(colKey);
-  const colStats = stats[colKey] || { maxPos: 1, maxNeg: 1, max: 1 };
-  const isNeg = value < 0;
-  const isExtreme = value === colStats.min || value === colStats.max;
-  const fontWeight = isExtreme ? "700" : "400";
-
-  // === POP/STOCK : barre bleue (Urban PAL_SEQ_BLUE, z-score 3 paliers) ===
-  if (type === "pop") {
-    const w = Math.min(value / colStats.max * 100, 100);
-    const popMean = colStats.mean ?? value;
-    const popStd = colStats.std ?? 0;
-    const popZ = popStd > 0 ? Math.abs(value - popMean) / popStd : 0;
-    const popBarColor = popZ < 1 ? "#A2D4EC" : popZ < 2.5 ? "#73BFE2" : "#1696D2";
-    return html`<div style="display:flex;align-items:center;gap:5px">
-      <div style="width:55px;height:12px;background:#e5e7eb">
-        <div style="width:${w}%;height:100%;background:${popBarColor}"></div>
-      </div>
-      <span style="font-size:12px;font-weight:${fontWeight}">${Math.round(value).toLocaleString("fr-FR")}</span>
-    </div>`;
-  }
-
-  // === PCT : barre bleue (Urban PAL_SEQ_BLUE, z-score 3 paliers) ===
-  if (type === "pct") {
-    const w = Math.min(value / colStats.maxPos * 100, 100);
-    const pctMean = colStats.mean ?? value;
-    const pctStd = colStats.std ?? 0;
-    const pctZ = pctStd > 0 ? Math.abs(value - pctMean) / pctStd : 0;
-    const pctBarColor = pctZ < 1 ? "#A2D4EC" : pctZ < 2.5 ? "#73BFE2" : "#1696D2";
-    return html`<div style="display:flex;align-items:center;gap:5px">
-      <div style="width:55px;height:12px;background:#e5e7eb">
-        <div style="width:${w}%;height:100%;background:${pctBarColor}"></div>
-      </div>
-      <span style="font-size:12px;font-weight:${fontWeight}">${value.toFixed(1)}%</span>
-    </div>`;
-  }
-
-  // === IND : indices/ratios avec barre (même logique P02/P98 que TCAM, palette Urban) ===
-  if (type === "ind") {
-    const decInd = Math.abs(value) >= 10 ? 0 : 1;
-    const mean = colStats.mean ?? value;
-    const std = colStats.std ?? 0;
-    const minVal = colStats.min ?? mean;
-    const maxVal = colStats.max ?? mean;
-
-    // Distance à la moyenne, normalisée sur P02/P98
-    const distFromMean = value - mean;
-    const isNegZ = distFromMean < 0;  // sous la moyenne
-
-    // Largeur barre : même logique que TCAM (P02/P98 capé = barre pleine)
-    // Normaliser sur la distance max du bon côté
-    const maxDistNeg = mean - minVal;  // distance mean → P02
-    const maxDistPos = maxVal - mean;  // distance mean → P98
-    const maxDist = isNegZ ? maxDistNeg : maxDistPos;
-    const w = maxDist > 0 ? Math.min(Math.abs(distFromMean) / maxDist * 100, 100) : 0;
-
-    // Z-score pour intensité couleur (3 paliers, seuil 2.5 ~P99.4)
-    const z = std > 0 ? distFromMean / std : 0;
-    const absZ = Math.abs(z);
-
-    // Palette 6 couleurs : 3 vert + 3 violet (vert max modéré #5aaa5a 51%L)
-    let barColor, textColor;
-    if (absZ < 1) {
-      barColor = isNegZ ? "#eb99c2" : "#bcdeb4";    // rose pâle / vert très clair (79%L)
-      textColor = isNegZ ? "#af1f6b" : "#408941";
-    } else if (absZ < 2.5) {
-      barColor = isNegZ ? "#e46aa7" : "#98cf90";    // rose moyen / vert clair (69%L)
-      textColor = isNegZ ? "#af1f6b" : "#2c5c2d";
-    } else {
-      barColor = isNegZ ? "#af1f6b" : "#5aaa5a";    // violet / vert modéré (51%L)
-      textColor = isNegZ ? "#761548" : "#2c5c2d";
-    }
-
-    const arrow = isNegZ ? "▼" : "▲";
-
-    return html`<div style="display:flex;align-items:center;gap:4px">
-      <span style="font-size:10px;color:${barColor}">${arrow}</span>
-      <div style="width:50px;height:12px;background:#e5e7eb">
-        <div style="width:${w}%;height:100%;background:${barColor}"></div>
-      </div>
-      <span style="font-size:12px;color:${textColor};font-weight:${fontWeight}">${value.toFixed(decInd)}</span>
-    </div>`;
-  }
-
-  // === TCAM/DIFF : triangle + barre violet/vert (z-score 3 paliers) ===
-  const max = isNeg ? colStats.maxNeg : colStats.maxPos;
-  const w = Math.min(Math.abs(value) / max * 100, 100);
-  const tcamMean = colStats.mean ?? 0;
-  const tcamStd = colStats.std ?? 0;
-  const tcamZ = tcamStd > 0 ? Math.abs(value - tcamMean) / tcamStd : 0;
-
-  let barColor, textColor;
-  if (tcamZ < 1) {
-    barColor = isNeg ? "#eb99c2" : "#bcdeb4";
-    textColor = isNeg ? "#af1f6b" : "#408941";
-  } else if (tcamZ < 2.5) {
-    barColor = isNeg ? "#e46aa7" : "#98cf90";
-    textColor = isNeg ? "#af1f6b" : "#2c5c2d";
-  } else {
-    barColor = isNeg ? "#af1f6b" : "#5aaa5a";
-    textColor = isNeg ? "#761548" : "#2c5c2d";
-  }
-
-  const arrow = isNeg ? "▼" : "▲";
-  const sign = value >= 0 ? "+" : "";
-  const decimals = (type === "diff" || type === "vevol") ? 1 : 2;  // vdifp/vevol: 1 déc, vtcam: 2 déc
-
-  return html`<div style="display:flex;align-items:center;gap:4px">
-    <span style="font-size:10px;color:${barColor}">${arrow}</span>
-    <div style="width:50px;height:12px;background:#e5e7eb">
-      <div style="width:${w}%;height:100%;background:${barColor}"></div>
-    </div>
-    <span style="font-size:12px;color:${textColor};font-weight:${fontWeight}">${sign}${value.toFixed(decimals)}</span>
-  </div>`;
+  // Délègue à la version compact=false
+  return renderBarCellCompact(value, colKey, stats, false);
 }
 
 // &e CELL_FORMAT
@@ -570,19 +483,39 @@ function renderBarCellCompact(value, colKey, stats, compact = false) {
   const type = getIndicType(colKey);
   const colStats = stats[colKey] || { maxPos: 1, maxNeg: 1, max: 1 };
   const isNeg = value < 0;
-  // Barres plus larges
   const barW = compact ? "50px" : "70px";
   const barH = compact ? "10px" : "12px";
   const fontSize = compact ? "11px" : "12px";
-  // Urban Institute blue (signature color from PAL_SEQ_BLUE)
-  const urbanBlue = "#1696D2";
 
-  // POP/STOCK : barre bleue (Urban PAL_SEQ_BLUE, z-score 3 paliers)
+  // Référence France (fallback = mean)
+  const ref = colStats.franceRef ?? colStats.mean ?? 0;
+  const std = colStats.std ?? 0;
+
+  // Palette violet/vert avec polarité (3 bins z-score)
+  // polarity: +1 = au-dessus de ref = favorable (vert), -1 = au-dessus = défavorable (violet)
+  const polarity = getPolarity(colKey);
+  const getVioletGreen = (zScore, aboveRef) => {
+    const absZ = Math.abs(zScore);
+    // favorable = vert, défavorable = violet
+    const isFavorable = polarity > 0 ? aboveRef : !aboveRef;
+    let barColor, textColor;
+    if (absZ < 1) {
+      barColor = isFavorable ? "#bcdeb4" : "#eb99c2";
+      textColor = isFavorable ? "#408941" : "#af1f6b";
+    } else if (absZ < 2.5) {
+      barColor = isFavorable ? "#98cf90" : "#e46aa7";
+      textColor = isFavorable ? "#2c5c2d" : "#af1f6b";
+    } else {
+      barColor = isFavorable ? "#5aaa5a" : "#af1f6b";
+      textColor = isFavorable ? "#2c5c2d" : "#761548";
+    }
+    return { barColor, textColor };
+  };
+
+  // POP/STOCK : barre bleue, z-score vs France
   if (type === "pop") {
     const w = Math.min(value / colStats.max * 100, 100);
-    const popMean = colStats.mean ?? value;
-    const popStd = colStats.std ?? 0;
-    const popZ = popStd > 0 ? Math.abs(value - popMean) / popStd : 0;
+    const popZ = std > 0 ? Math.abs(value - ref) / std : 0;
     const popBarColor = popZ < 1 ? "#A2D4EC" : popZ < 2.5 ? "#73BFE2" : "#1696D2";
     return html`<div style="display:flex;align-items:center;gap:${compact ? "3px" : "5px"}">
       <div style="width:${barW};height:${barH};background:#e5e7eb;border-radius:2px;">
@@ -592,60 +525,39 @@ function renderBarCellCompact(value, colKey, stats, compact = false) {
     </div>`;
   }
 
-  // PCT : barre bleue (Urban PAL_SEQ_BLUE, z-score 3 paliers)
+  // PCT : barre proportionnelle valeur, violet/vert vs France + polarité
   if (type === "pct") {
     const w = Math.min(value / colStats.maxPos * 100, 100);
-    const pctMean = colStats.mean ?? value;
-    const pctStd = colStats.std ?? 0;
-    const pctZ = pctStd > 0 ? Math.abs(value - pctMean) / pctStd : 0;
-    const pctBarColor = pctZ < 1 ? "#A2D4EC" : pctZ < 2.5 ? "#73BFE2" : "#1696D2";
+    const aboveRef = value >= ref;
+    const pctZ = std > 0 ? (value - ref) / std : 0;
+    const { barColor, textColor } = getVioletGreen(pctZ, aboveRef);
     return html`<div style="display:flex;align-items:center;gap:${compact ? "3px" : "5px"}">
       <div style="width:${barW};height:${barH};background:#e5e7eb;border-radius:2px;">
-        <div style="width:${w}%;height:100%;background:${pctBarColor};border-radius:2px;"></div>
+        <div style="width:${w}%;height:100%;background:${barColor};border-radius:2px;"></div>
       </div>
-      <span style="font-size:${fontSize}">${value.toFixed(1)}%</span>
+      <span style="font-size:${fontSize};color:${textColor}">${value.toFixed(1)}%</span>
     </div>`;
   }
 
-  // IND : indices/ratios avec barre (même logique P02/P98 que TCAM, palette Urban)
+  // IND : barre proportionnelle écart à France, violet/vert + polarité
   if (type === "ind") {
     const decInd = Math.abs(value) >= 10 ? 0 : 1;
-    const mean = colStats.mean ?? value;
-    const std = colStats.std ?? 0;
-    const minVal = colStats.min ?? mean;
-    const maxVal = colStats.max ?? mean;
+    const minVal = colStats.min ?? ref;
+    const maxVal = colStats.max ?? ref;
 
-    // Distance à la moyenne, normalisée sur P02/P98
-    const distFromMean = value - mean;
-    const isNegZ = distFromMean < 0;
+    const distFromRef = value - ref;
+    const aboveRef = distFromRef >= 0;
 
-    // Largeur barre : P02/P98 capé = barre pleine
-    const maxDistNeg = mean - minVal;
-    const maxDistPos = maxVal - mean;
-    const maxDist = isNegZ ? maxDistNeg : maxDistPos;
-    const w = maxDist > 0 ? Math.min(Math.abs(distFromMean) / maxDist * 100, 100) : 0;
+    // Largeur barre : normalisée P02/P98 autour de la ref France
+    const maxDistNeg = ref - minVal;
+    const maxDistPos = maxVal - ref;
+    const maxDist = aboveRef ? maxDistPos : maxDistNeg;
+    const w = maxDist > 0 ? Math.min(Math.abs(distFromRef) / maxDist * 100, 100) : 0;
 
-    // Z-score pour intensité couleur (3 paliers, seuil 2.5 ~P99.4)
-    const z = std > 0 ? distFromMean / std : 0;
-    const absZ = Math.abs(z);
+    const z = std > 0 ? distFromRef / std : 0;
+    const { barColor, textColor } = getVioletGreen(z, aboveRef);
+    const arrow = aboveRef ? "▲" : "▼";
 
-    // 6 couleurs : 3 vert (▲ au-dessus moy.) + 3 violet (▼ en-dessous moy.)
-    // Vert max #5aaa5a (51%L) modéré, pas le darkest #408941 (39%L) de PAL_PURPLE_GREEN
-    let barColor, textColor;
-    if (absZ < 1) {
-      barColor = isNegZ ? "#eb99c2" : "#bcdeb4";    // rose pâle / vert très clair (79%L)
-      textColor = isNegZ ? "#af1f6b" : "#408941";
-    } else if (absZ < 2.5) {
-      barColor = isNegZ ? "#e46aa7" : "#98cf90";    // rose moyen / vert clair (69%L)
-      textColor = isNegZ ? "#af1f6b" : "#2c5c2d";
-    } else {
-      barColor = isNegZ ? "#af1f6b" : "#5aaa5a";    // violet / vert modéré (51%L)
-      textColor = isNegZ ? "#761548" : "#2c5c2d";
-    }
-
-    const arrow = isNegZ ? "▼" : "▲";
-
-    // Mêmes dimensions que TCAM compact
     return html`<div style="display:flex;align-items:center;gap:${compact ? "2px" : "4px"}">
       <span style="font-size:${compact ? "8px" : "10px"};color:${barColor}">${arrow}</span>
       <div style="width:${compact ? "45px" : "65px"};height:${barH};background:#e5e7eb;border-radius:2px;">
@@ -655,12 +567,10 @@ function renderBarCellCompact(value, colKey, stats, compact = false) {
     </div>`;
   }
 
-  // TCAM/DIFF - barres violet/vert (z-score 3 paliers)
+  // TCAM/DIFF : inchangé — signe détermine la couleur
   const max = isNeg ? colStats.maxNeg : colStats.maxPos;
   const w = Math.min(Math.abs(value) / max * 100, 100);
-  const tcamMean = colStats.mean ?? 0;
-  const tcamStd = colStats.std ?? 0;
-  const tcamZ = tcamStd > 0 ? Math.abs(value - tcamMean) / tcamStd : 0;
+  const tcamZ = std > 0 ? Math.abs(value - (colStats.mean ?? 0)) / std : 0;
 
   let barColor, textColor;
   if (tcamZ < 1) {
@@ -676,7 +586,7 @@ function renderBarCellCompact(value, colKey, stats, compact = false) {
 
   const arrow = isNeg ? "▼" : "▲";
   const sign = value >= 0 ? "+" : "";
-  const decimals = (type === "diff" || type === "vevol") ? 1 : 2;  // vdifp/vevol: 1 déc, vtcam: 2 déc
+  const decimals = (type === "diff" || type === "vevol") ? 1 : 2;
 
   return html`<div style="display:flex;align-items:center;gap:${compact ? "2px" : "4px"}">
     <span style="font-size:${compact ? "8px" : "10px"};color:${barColor}">${arrow}</span>

@@ -159,7 +159,8 @@ const DATA_HANDLES = {
   "EPCI": FileAttachment("data/agg_epci.json"),
   "Aire d'attraction": FileAttachment("data/agg_aav.json")
 };
-const COMMUNES_TOPO = FileAttachment("data/nodom_commune-ARM_MINI_2025.topojson");
+// 3Ksup : 3714 features (communes >= 3000 hab + 1 FOND_RURAL fusionné) — 7.7 MB vs 8.5 MB MINI
+const COMMUNES_TOPO = FileAttachment("data/nodom_commune-3Ksup_2025.topojson");
 const COMMUNES_PARQUET = FileAttachment("data/agg_commARM.parquet");
 
 // Cache local (0loader.js ne peut pas être utilisé avec FileAttachment passé en param)
@@ -185,6 +186,8 @@ const defaultData = await getData("Zone d'emploi");
 const defaultGeo = await getGeo("Zone d'emploi");
 const communesTopo = await COMMUNES_TOPO.json();
 const communesGeo = rewind(topojson.feature(communesTopo, communesTopo.objects.data), true);
+
+// communesGeo = 3Ksup (3713 communes >= 3000 + 1 FOND_RURAL fusionné)
 
 // Geo départements pour overlay sur autres échelons
 const depGeo = await getGeo("Département");
@@ -328,7 +331,7 @@ const periode2 = view(Inputs.select(per2Map, { value: [...per2Map.values()][0], 
 
 ```js
 const echelon = view(Inputs.radio(
-  ECHELONS_SIDEBAR,  // Importé de constants.js
+  [...ECHELONS_SIDEBAR, "Commune"],
   { value: "EPCI", label: "" }
 ));
 ```
@@ -410,24 +413,62 @@ const extraIndics = view(Inputs.select(
 
 ```js
 // === DONNÉES ===
-const meta = getEchelonMeta(echelon);
-const currentGeo = await getGeo(echelon);
-const rawData = await getData(echelon);
-const frData = getFranceData(rawData);
-const dataNoFrance = getDataNoFrance(rawData);
-
+const isCommune = echelon === "Commune";
+const meta = isCommune ? { geoKey: "CODGEO", labelKey: "libelle", filterKey: "DEP" } : getEchelonMeta(echelon);
 const colKey1 = buildColKey(indic1, periode1);
 const colKey2 = buildColKey(indic2, periode2);
 const label1 = getIndicLabel(indic1, "long");
 const label2 = getIndicLabel(indic2, "long");
 
-for (const f of currentGeo.features) {
-  const row = dataNoFrance.find(d => d.code === f.properties[meta.geoKey]);
-  if (row) {
-    f.properties[colKey1] = row[colKey1];
-    f.properties[colKey2] = row[colKey2];
-    f.properties.P23_POP = row.P23_POP;
+// Commune : DuckDB + 3Ksup geo | Autres : JSON + topojson échelon
+const { currentGeo, rawData, frData, dataNoFrance } = await (async () => {
+  if (isCommune) {
+    const commData = await queryCommunes({ conn }, {
+      tableName: "communes",
+      columns: ["code", "libelle", "regdep", "P23_POP", colKey1, colKey2],
+      minPop: 3000, limit: 5000
+    });
+    const frRow = await queryFrance({ conn }, "communes", [colKey1, colKey2]);
+    const geo = {
+      type: "FeatureCollection",
+      features: communesGeo.features.map(f => {
+        if (f.properties._merged) return { ...f }; // FOND_RURAL : pas de données
+        const row = commData.find(d => d.code === f.properties.CODGEO);
+        return {
+          ...f,
+          properties: {
+            ...f.properties,
+            libelle: row?.libelle,
+            P23_POP: row?.P23_POP,
+            [colKey1]: row?.[colKey1],
+            [colKey2]: row?.[colKey2]
+          }
+        };
+      })
+    };
+    return { currentGeo: geo, rawData: frRow ? [frRow, ...commData] : commData, frData: frRow || null, dataNoFrance: commData };
+  } else {
+    const geo = await getGeo(echelon);
+    const raw = await getData(echelon);
+    const fr = getFranceData(raw);
+    const noFr = getDataNoFrance(raw);
+    for (const f of geo.features) {
+      const row = noFr.find(d => d.code === f.properties[meta.geoKey]);
+      if (row) {
+        f.properties[colKey1] = row[colKey1];
+        f.properties[colKey2] = row[colKey2];
+        f.properties.P23_POP = row.P23_POP;
+      }
+    }
+    return { currentGeo: geo, rawData: raw, frData: fr, dataNoFrance: noFr };
   }
+})();
+
+// LabelMap pour Commune (nécessaire pour getLabel fallback et search)
+if (isCommune) {
+  const commLabelMap = new Map();
+  dataNoFrance.forEach(d => d.code && d.libelle && commLabelMap.set(d.code, d.libelle));
+  setLabelMap("Commune", commLabelMap);
 }
 
 // &jcn-colors computeIndicBins : auto-détection divergente + bins centrées 0
@@ -470,8 +511,11 @@ if (searchContainer) { searchContainer.innerHTML = ''; searchContainer.appendChi
 // Si le code zoom actuel n'existe pas dans l'échelon, on revient au Paris par défaut
 const _zoomVal = zoomTargetState;
 const labelMap = getLabelMap(echelon);
-const zoomCode = (_zoomVal && labelMap?.has(_zoomVal)) ? _zoomVal : getDefaultZoomCode(echelon);
-const zoomLabel = labelMap?.get(zoomCode) || zoomCode;
+const _defaultZoom = isCommune ? "75056" : getDefaultZoomCode(echelon);
+const zoomCode = (_zoomVal && labelMap?.has(_zoomVal)) ? _zoomVal : _defaultZoom;
+const zoomLabel = isCommune
+  ? (labelMap?.get(zoomCode) || zoomCode) + " (DEP)"
+  : (labelMap?.get(zoomCode) || zoomCode);
 ```
 
 <!-- Titres + contenus dans même flex pour alignement naturel -->
@@ -493,16 +537,20 @@ if (!window._zoomStates) window._zoomStates = {};
 
 ```js
 // Carte 1 : renderChoropleth + mini options
+// Commune : fond gris pour FOND_RURAL, labels via labelMap
+const _getColor1 = isCommune
+  ? (v, f) => f?.properties?._merged ? "#e5e7eb" : getColor1(v)
+  : (v, f) => getColor1(v);
 const map1 = renderChoropleth({
   geoData: currentGeo, valueCol: colKey1,
-  getColor: (v, f) => getColor1(v),
+  getColor: _getColor1,
   getCode: f => f.properties[meta.geoKey],
   getLabel: ({ code }) => getLabelMap(echelon)?.get(code) || code,
   formatValue: (k, v) => formatValue(indic1, v),
   indicLabel: label1, selectedCodes: [...mapSelectionState],
-  showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
-  title: label1,  // Titre SVG pour export
-  echelon, width: 385, height: 355, maxLabelsAuto: 600,
+  showLabels: showValuesOnMap, labelMode, labelBy, topN: isCommune ? 300 : 0,
+  title: label1,
+  echelon, width: 385, height: 355, maxLabelsAuto: isCommune ? 100 : 600,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 const counts1 = countBins(dataNoFrance, colKey1, bins1.thresholds || []);
@@ -538,11 +586,13 @@ map1.addEventListener("click", (e) => {
   const paths = Array.from(path.parentElement.querySelectorAll("path"));
   const idx = paths.indexOf(path);
   if (idx >= 0 && idx < currentGeo.features.length) {
-    const code = currentGeo.features[idx].properties[meta.geoKey];
+    const feat = currentGeo.features[idx];
+    if (feat.properties._merged) return; // Ignorer FOND_RURAL
+    const code = feat.properties[meta.geoKey];
     if (e.ctrlKey || e.metaKey) {
-      addToSelection(code);   // Ctrl+click = ajoute + zoom
+      addToSelection(code);
     } else {
-      setZoomOnly(code);      // Click normal = zoom seulement
+      setZoomOnly(code);
     }
   }
 });
@@ -568,17 +618,20 @@ display(wrapper1);
 <div class="card">
 
 ```js
-// Carte 2 : même pattern + mini options
+// Carte 2 : même pattern + fond gris FOND_RURAL si commune
+const _getColor2 = isCommune
+  ? (v, f) => f?.properties?._merged ? "#e5e7eb" : getColor2(v)
+  : (v, f) => getColor2(v);
 const map2 = renderChoropleth({
   geoData: currentGeo, valueCol: colKey2,
-  getColor: (v, f) => getColor2(v),
+  getColor: _getColor2,
   getCode: f => f.properties[meta.geoKey],
   getLabel: ({ code }) => getLabelMap(echelon)?.get(code) || code,
   formatValue: (k, v) => formatValue(indic2, v),
   indicLabel: label2, selectedCodes: [...mapSelectionState],
-  showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
-  title: label2,  // Titre SVG pour export
-  echelon, width: 385, height: 355, maxLabelsAuto: 600,
+  showLabels: showValuesOnMap, labelMode, labelBy, topN: isCommune ? 300 : 0,
+  title: label2,
+  echelon, width: 385, height: 355, maxLabelsAuto: isCommune ? 100 : 600,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 const counts2 = countBins(dataNoFrance, colKey2, bins2.thresholds || []);
@@ -614,11 +667,13 @@ map2.addEventListener("click", (e) => {
   const paths = Array.from(path.parentElement.querySelectorAll("path"));
   const idx = paths.indexOf(path);
   if (idx >= 0 && idx < currentGeo.features.length) {
-    const code = currentGeo.features[idx].properties[meta.geoKey];
+    const feat = currentGeo.features[idx];
+    if (feat.properties._merged) return; // Ignorer FOND_RURAL
+    const code = feat.properties[meta.geoKey];
     if (e.ctrlKey || e.metaKey) {
-      addToSelection(code);   // Ctrl+click = ajoute + zoom
+      addToSelection(code);
     } else {
-      setZoomOnly(code);      // Click normal = zoom seulement
+      setZoomOnly(code);
     }
   }
 });
@@ -650,8 +705,15 @@ display(wrapper2);
 // Zoom : query données communes pour le territoire sélectionné
 const filterKey = meta?.filterKey || "DEP";
 const isEPCI = echelon === "EPCI";
+
+// Commune : extraire DEP de la commune cliquée pour zoomer sur tout le département
+const zoomDep = isCommune
+  ? (communesGeo.features.find(f => f.properties.CODGEO === zoomCode)?.properties?.DEP
+     || (zoomCode.startsWith("97") ? zoomCode.substring(0, 3) : zoomCode.substring(0, 2)))
+  : null;
+
 // EPCI spécial : OR logic pour MGP (EPCI_EPT=code pour Paris arrond., EPCI=code pour 150 communes MGP)
-const zoomFilter = isEPCI ? null : { [filterKey]: [zoomCode] };
+const zoomFilter = isEPCI ? null : isCommune ? { DEP: [zoomDep] } : { [filterKey]: [zoomCode] };
 const zoomCustomWhere = isEPCI
   ? `(CAST("EPCI_EPT" AS VARCHAR) = '${zoomCode}' OR CAST("EPCI" AS VARCHAR) = '${zoomCode}')`
   : null;
@@ -664,7 +726,9 @@ const zoomDataMap = new Map(zoomData.map(d => [d.code, d]));
 // EPCI : le topojson n'a pas de colonne EPCI (seulement EPCI_EPT = EPT code)
 // → filtrer par CODGEO matching les résultats DuckDB (qui eux ont la bonne colonne EPCI)
 const filteredFeatures = communesGeo.features.filter(f => {
+  if (f.properties._merged) return false; // Exclure FOND_RURAL des zooms
   if (isEPCI) return zoomDataMap.has(f.properties.CODGEO);
+  if (isCommune) return String(f.properties.DEP) === String(zoomDep);
   return String(f.properties[filterKey]) === String(zoomCode);
 });
 const zoomGeo = {
@@ -1133,7 +1197,9 @@ const tableSearchInput = view(Inputs.text({
 // &jcn-duckdb queryCommunes : Si sélection filtre codes, sinon pop > 3000 hab
 const filterCodes = [...mapSelectionState];
 const hasSelection = filterCodes.length > 0;
-const tableFilter = hasSelection ? { [filterKey]: filterCodes } : null;
+// Commune : filtrer par code direct (CODGEO), autres échelons : par filterKey (DEP, ZE2020, etc.)
+const tableFilterKey = isCommune ? "code" : filterKey;
+const tableFilter = hasSelection ? { [tableFilterKey]: filterCodes } : null;
 
 // Colonnes de base : cartes + indicateurs clés par défaut + extras
 const defaultIndicCols = DEFAULT_TABLE_INDICS.map(i => buildColKey(i, getDefaultPeriode(i)));

@@ -70,7 +70,8 @@ export function renderScatter(config) {
     yTicks: customYTicks = null,
     labelCodes = [],
     labelMode = "both",
-    zoomFactor = 1
+    zoomFactor = 1,
+    annotations = []
   } = config;
 
   const validData = data.filter(d => d[xCol] != null && d[yCol] != null);
@@ -167,7 +168,18 @@ export function renderScatter(config) {
         textAnchor: "middle",
         lineHeight: 1.1
       })];
-    })() : [])
+    })() : []),
+
+    // Annotations quadrant (texte léger positionné dans chaque zone)
+    ...(annotations.map(ann => Plot.text([[ann.x, ann.y]], {
+      text: [ann.text],
+      fontSize: ann.fontSize || 11,
+      fill: ann.color || "#9ca3af",
+      fontWeight: ann.fontWeight || 400,
+      fontStyle: ann.fontStyle || "italic",
+      textAnchor: ann.textAnchor || "middle",
+      pointerEvents: "none"
+    })))
   ].filter(Boolean);
 
   const xTicks = customXTicks || d3.range(Math.ceil(xDomain[0]), Math.floor(xDomain[1]) + 1, 1);

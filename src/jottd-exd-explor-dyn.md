@@ -956,6 +956,12 @@ function getColorGradient(v) {
   }
 }
 
+// === VALEURS FRANCE (déclarées ICI, avant usage dans ecartL/ecartR) ===
+const frX_1116 = frData?.[col1116] ?? null;
+const frX_1622 = frData?.[col1622] ?? null;
+const frY_1116 = frData?.[colY1116] ?? null;
+const frY_1622 = frData?.[colY1622] ?? null;
+
 // Mode Écart France : bins sigma autour de la valeur 00FR
 const isEcart = colorMode === "Écart France";
 const ecartL = computeEcartFrance(tableData, col1622, frX_1622, { indicType: INDICATEURS[indicX_L]?.type });
@@ -1031,13 +1037,7 @@ const getScatterColorR = (v, d) => {
 // Comptages bins
 const counts1622 = countBins(tableData, col1622, BINS);
 
-// === VALEURS FRANCE (lookup 00FR pré-calculé, remplace d3.mean) ===
-// France est en 1ère ligne des JSON avec toutes les valeurs pré-agrégées
-const frX_1116 = frData?.[col1116] ?? null;
-const frX_1622 = frData?.[col1622] ?? null;
-const frY_1116 = frData?.[colY1116] ?? null;
-const frY_1622 = frData?.[colY1622] ?? null;
-// Alias pour compatibilité (scatter, overlays, etc.)
+// Alias pour compatibilité (scatter, overlays, etc.) — frX/frY déclarés plus haut
 const meanX_1116 = frX_1116;
 const meanX_1622 = frX_1622;
 const meanY_1116 = frY_1116;

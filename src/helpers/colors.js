@@ -392,7 +392,15 @@ export function computeIndicBins(data, colKey, indicKey = null) {
   // Fonction getColor
   const getColor = (v) => getColorByBins(v, bins.thresholds || [], palette);
 
-  return { bins, palette, isDiv, getColor };
+  // getBinIdx : retourne l'index du bin pour une valeur (pour filtrage légende interactive)
+  const getBinIdx = (v) => {
+    if (v == null) return -1;
+    const th = bins.thresholds || [];
+    const idx = th.findIndex(t => v < t);
+    return idx === -1 ? palette.length - 1 : idx;
+  };
+
+  return { bins, palette, isDiv, getColor, getBinIdx };
 }
 
 /**

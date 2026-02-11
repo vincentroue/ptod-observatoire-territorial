@@ -54,7 +54,7 @@ import {
 } from "./helpers/selectindic.js";
 
 // === indicators-ddict-js.js ===
-import { formatValue, getColLabel, getIndicOptionsByAggDash, getIndicOptionsByAggLogdash, INDICATEURS } from "./helpers/indicators-ddict-js.js";
+import { formatValue, getColLabel, getIndicOptionsByAggDash, INDICATEURS, THEMES } from "./helpers/indicators-ddict-js.js";
 
 // === colors.js ===
 import {
@@ -83,7 +83,7 @@ import { exportSVG } from "./helpers/graph-options.js";
 // === duckdb.js — Queries Parquet communes ===
 import {
   initDuckDB, initDuckDBBackground, waitForDuckDB,
-  registerParquet, queryCommunes, queryFrance
+  registerParquet, queryCommunes, queryFrance, getParquetColumns
 } from "./helpers/duckdb.js";
 
 // Démarrer DuckDB init en arrière-plan
@@ -120,7 +120,8 @@ const DATA_HANDLES = {
 
 // Communes (géo + parquet pour DuckDB)
 const COMMUNES_TOPO = FileAttachment("data/nodom_commune-ARM_MINI_2025.topojson");
-const COMMUNES_PARQUET = FileAttachment("data/agg_commARM.parquet");
+const COMMUNES_GEO_PARQUET = FileAttachment("data/agg_commARM.parquet");
+const COMMUNES_LOG_PARQUET = FileAttachment("data/logement/agg_comm_qlog.parquet");
 
 // Séries temporelles logement (DVF + SITADEL + LOVAC)
 const SERIES_HANDLES = {
@@ -157,9 +158,10 @@ const depGeo = await getGeo("Département");
 const communesTopo = await COMMUNES_TOPO.json();
 const communesGeo = rewind(topojson.feature(communesTopo, communesTopo.objects.data), true);
 
-// DuckDB init
+// DuckDB init — 2 parquets (geo=toutes communes+filtres, log=colonnes logement)
 const { db, conn } = await initDuckDB();
-await registerParquet(db, "communes", await COMMUNES_PARQUET.url());
+await registerParquet(db, "communes_geo", await COMMUNES_GEO_PARQUET.url());
+await registerParquet(db, "communes_log", await COMMUNES_LOG_PARQUET.url());
 
 // LabelMaps pour tous les échelons
 for (const ech of Object.keys(DATA_HANDLES)) {
@@ -172,11 +174,41 @@ for (const ech of Object.keys(DATA_HANDLES)) {
   }
 }
 
-// Colonnes disponibles
+// Colonnes disponibles (EPCI JSON = cartes nationales, DuckDB = communes)
 const AVAILABLE_COLUMNS = new Set(Object.keys(defaultData[0] || {}));
+const _geoCols = await getParquetColumns({conn}, "communes_geo");
+const _logCols = await getParquetColumns({conn}, "communes_log");
+const COMM_COLUMNS = new Set([..._geoCols, ..._logCols]);
 
-// Indicateurs logement : filtrés par _agg_logdash=x dans le ddict
-const logementIndicOptions = getIndicOptionsByAggLogdash();
+// VIEW communes_v : g.* (toutes colonnes geo, 34860 communes) + colonnes EXCLUSIVES log
+// Fix : prendre log_* depuis geo (34860 rows) et non log (3696 rows)
+const _logOnlyCols = [..._logCols].filter(c => !_geoCols.has(c));
+try {
+  const logSelect = _logOnlyCols.length > 0
+    ? ", " + _logOnlyCols.map(c => 'l."' + c + '"').join(", ")
+    : "";
+  await conn.query(`CREATE OR REPLACE VIEW communes_v AS SELECT g.*${logSelect} FROM 'communes_geo.parquet' g LEFT JOIN 'communes_log.parquet' l ON g.code = l.code`);
+  console.log("[EXDLOG] VIEW communes_v créée — g.* (" + _geoCols.size + " cols) + " + _logOnlyCols.length + " cols log-only");
+} catch (err) {
+  console.error("[EXDLOG] VIEW création échouée:", err.message);
+  await conn.query(`CREATE OR REPLACE VIEW communes_v AS SELECT * FROM 'communes_geo.parquet'`);
+  console.log("[EXDLOG] Fallback: VIEW = communes_geo only");
+}
+
+// Indicateurs logement : filtrés par thèmes log* + colonnes disponibles dans les données
+const _logThemes = new Set(["log", "logd", "logv", "logsr", "logsn", "logl", "logs"]);
+const _logEntries = [];
+const _sortedLT = Object.entries(THEMES).filter(([k]) => _logThemes.has(k)).sort((a, b) => (a[1].ordre || 99) - (b[1].ordre || 99));
+for (const [thKey, thInfo] of _sortedLT) {
+  const thIndics = Object.entries(INDICATEURS)
+    .filter(([key, info]) => info.theme === thKey && info.periodes?.some(p => AVAILABLE_COLUMNS.has(`${key}_${p}`)))
+    .sort((a, b) => (a[1].ordre || 99) - (b[1].ordre || 99));
+  if (thIndics.length > 0) {
+    _logEntries.push([`── ${thInfo.label} ──`, `__sep_${thKey}__`]);
+    for (const [ik, ii] of thIndics) _logEntries.push([ii.medium || ii.short || ik, ik]);
+  }
+}
+const logementIndicOptions = new Map(_logEntries);
 
 // === SÉRIES TEMPORELLES LOGEMENT VIA DUCKDB ===
 // Enregistrer parquet séries EPCI
@@ -523,10 +555,16 @@ const _selCodes = [...mapSelectionState];
 const _mc1 = zoomCode || RENNES_CODE;
 const _mc2 = _selCodes.length > 0 && _selCodes[0] !== _mc1 ? _selCodes[0] : (_selCodes[1] || PARIS_CODE);
 
-const _fetchComm = (tCode) => {
-  const tFilter = _isEPCI ? null : { [_fk]: [tCode] };
-  const tWhere = _isEPCI ? `(CAST("EPCI_EPT" AS VARCHAR) = '${tCode}' OR CAST("EPCI" AS VARCHAR) = '${tCode}')` : null;
-  return queryCommunes({ conn }, { tableName: "communes", filter: tFilter, customWhere: tWhere, columns: ["code", "libelle", "P23_POP", colKey1, colKey2].filter((v,i,a) => a.indexOf(v) === i), limit: 2000 });
+const _fetchComm = async (tCode) => {
+  const cols = ["code", "libelle", "P23_POP", colKey1, colKey2].filter((v,i,a) => a.indexOf(v) === i && COMM_COLUMNS.has(v));
+  const colsSql = cols.map(c => `"${c}"`).join(", ");
+  const where = _isEPCI
+    ? `(CAST("EPCI_EPT" AS VARCHAR) = '${tCode}' OR CAST("EPCI" AS VARCHAR) = '${tCode}')`
+    : `CAST("${_fk}" AS VARCHAR) = '${tCode}'`;
+  try {
+    const result = await conn.query(`SELECT ${colsSql} FROM communes_v WHERE ${where} LIMIT 2000`);
+    return result.toArray().map(r => { const d = r.toJSON(); d.code = String(d.code); if (d.P23_POP != null) d.P23_POP = Number(d.P23_POP); return d; });
+  } catch (err) { console.error("[EXDLOG] _fetchComm error:", err.message); return []; }
 };
 const [_cd1, _cd2] = await Promise.all([_fetchComm(_mc1), _fetchComm(_mc2)]);
 
@@ -566,8 +604,11 @@ function buildCommMap(tCode, tData, w, h, opts = {}) {
 }
 ```
 
-<!-- &s CARTES_2x2 -->
-<div style="padding-left:6px;margin-top:10px;">
+<!-- &s CARTES_GRAPHS_TABLE -->
+<div style="display:flex;gap:6px;align-items:stretch;">
+
+<!-- COLONNE GAUCHE : cartes + graphs -->
+<div style="flex:0 0 auto;display:flex;flex-direction:column;gap:4px;padding-left:6px;">
 
 ```js
 display(html`<h3 style="margin:0 0 4px 0;">Vue France par ${echelon} // Focus communes : ${zoomLabel}</h3>`);
@@ -764,14 +805,10 @@ display(wrapper2log);
 
 </div>
 
-</div>
-<!-- &e CARTES_2x2 -->
+<!-- Graphiques empilés sous les cartes -->
 
-<!-- &s GRAPHIQUES -->
-<div style="margin-top:16px;padding-left:6px;">
-
-<!-- Graphique 1 : France référence -->
-<div class="card" style="padding:6px 10px;max-width:520px;">
+<!-- Graphique 1 : France référence (order:2 → affiché sous Graph 2) -->
+<div class="card" style="padding:6px 10px;order:2;">
 <h4 style="margin:0 0 6px 0;font-size:11px;color:#374151;font-family:Inter,system-ui,sans-serif;">France — Volumes et Prix (2010-2024)</h4>
 
 ```js
@@ -788,10 +825,10 @@ const volScale = 3000 / maxVol;  // Ajusté pour que barres soient visibles
 
 display(Plot.plot({
   style: { fontFamily: "Inter, system-ui, sans-serif" },
-  width: 400,
+  width: 340,
   height: 160,
   marginLeft: 42,
-  marginRight: 50,
+  marginRight: 40,
   marginBottom: 22,
   x: {
     label: null,
@@ -842,8 +879,8 @@ display(Plot.plot({
 
 </div>
 
-<!-- Graphique 2 : Indice 100 prix global — territoires sélectionnés -->
-<div class="card" style="padding:6px 10px;max-width:520px;">
+<!-- Graphique 2 : Indice 100 prix global (order:1 → au-dessus du Graph 1) -->
+<div class="card" style="padding:6px 10px;order:1;">
 <h4 style="margin:0 0 6px 0;font-size:11px;color:#374151;font-family:Inter,system-ui,sans-serif;">Indice prix global (base 100 = 2010) — Territoires sélectionnés</h4>
 
 ```js
@@ -911,7 +948,7 @@ if (indexSeries.length > 0) {
 
   display(Plot.plot({
     style: { fontFamily: "Inter, system-ui, sans-serif" },
-    width: 400,
+    width: 340,
     height: 185,
     marginLeft: 38,
     marginRight: 50,
@@ -952,14 +989,14 @@ Prix global pondéré (mai+apt) | Base 100 = 2010 | — France ref | Ctrl+clic c
 </div>
 
 </div>
-<!-- &e GRAPHIQUES -->
+<!-- fin COLONNE GAUCHE (cartes + graphs) -->
 
-<!-- &s TABLE_COMMUNES_50K -->
-<div style="margin-top:16px;padding-left:6px;">
+<!-- COLONNE DROITE : Table communes >50K -->
+<div style="flex:1;min-width:300px;display:flex;flex-direction:column;">
 
 ```js
 // === SORT STATE COMMUNES (bloc séparé pour réactivité) ===
-const commSortState = Mutable({col: "logd_px2_global_24", asc: false});
+const commSortState = Mutable({col: "logd_px2q2_mai_24", asc: false});
 const setCommSort = (col) => {
   const cur = commSortState.value;
   commSortState.value = { col, asc: cur.col === col ? !cur.asc : false };
@@ -969,18 +1006,18 @@ const setCommSort = (col) => {
 ```js
 // === COMMUNES >50K — Requête DuckDB parquet ===
 const commCols50k = [
-  "logd_px2_global_24", "logd_px2_global_vevol_1924", "logd_px2_global_vevol_2224",
-  "logd_trans_24", "logd_trans_vevol_1924"
+  "logd_px2q2_mai_24", "logd_px2_mai_vevol_1924", "logd_px2_mai_vevol_2224",
+  "logd_nbtrans_mai_24", "logd_trans_vtcam_1924"
 ];
 const commColsSql = commCols50k.map(c => `CAST("${c}" AS DOUBLE) AS "${c}"`).join(", ");
 
 const commResult50k = await conn.query(`
   SELECT CAST(code AS VARCHAR) AS code, libelle, regdep,
     CAST("P23_POP" AS DOUBLE) AS P23_POP, ${commColsSql}
-  FROM 'communes.parquet'
-  WHERE CAST("P23_POP" AS DOUBLE) >= 50000
-    AND CAST("logd_px2_global_24" AS DOUBLE) IS NOT NULL
-  ORDER BY CAST("logd_px2_global_24" AS DOUBLE) DESC
+  FROM communes_v
+  WHERE "P23_POP" >= 50000
+    AND "logd_px2q2_mai_24" IS NOT NULL
+  ORDER BY "logd_px2q2_mai_24" DESC
 `);
 const commData50k = commResult50k.toArray().map(r => {
   const d = r.toJSON();
@@ -1035,7 +1072,7 @@ const PASTEL_ROSE_STRONG = "#f0c6e0";
 const colorCell = (col, val) => {
   if (val == null || !commColStats[col]) return { bg: "", bold: false };
   // Pas de fond couleur sur prix brut et transactions brutes
-  if (col === "logd_px2_global_24" || (col.includes("trans") && !col.includes("vevol"))) return { bg: "", bold: false };
+  if (col === "logd_px2q2_mai_24" || col === "logd_nbtrans_mai_24") return { bg: "", bold: false };
   const { std, frRef } = commColStats[col];
   if (std === 0) return { bg: "", bold: false };
   const z = (val - frRef) / std;
@@ -1049,9 +1086,9 @@ const colorCell = (col, val) => {
 // Barre proportionnelle grise pour prix global (40px max width)
 const barHtml = (val) => {
   if (val == null) return "";
-  const maxVal = commColStats["logd_px2_global_24"]?.max || 1;
+  const maxVal = commColStats["logd_px2q2_mai_24"]?.max || 1;
   const pct = Math.min(100, (val / maxVal) * 100);
-  return `<div style="position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:#94a3b8;opacity:0.18;border-radius:1px;"></div>`;
+  return `<div style="position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:#64748b;opacity:0.28;border-radius:1px;"></div>`;
 };
 
 // Abréviation Arrondissement → Arr.
@@ -1062,17 +1099,17 @@ const fmtVol = v => v != null ? Math.round(v).toLocaleString("fr") : "—";
 
 const colDefs = [
   { key: "libelle", label: "Commune", sub: "", w: 115, align: "left", fmt: shortLib, type: "text" },
-  { key: "logd_px2_global_24", label: "Prix global", sub: "€/m² 2024", w: 62, align: "right", fmt: fmtPrix, type: "bar" },
-  { key: "logd_px2_global_vevol_1924", label: "Δ Prix", sub: "% 19-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" },
-  { key: "logd_px2_global_vevol_2224", label: "Δ Prix", sub: "% 22-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" },
-  { key: "logd_trans_24", label: "Trans.", sub: "nb 2024", w: 52, align: "right", fmt: fmtVol, type: "plain" },
-  { key: "logd_trans_vevol_1924", label: "Δ Trans.", sub: "% 19-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" }
+  { key: "logd_px2q2_mai_24", label: "Prix mai.", sub: "€/m² 2024", w: 62, align: "right", fmt: fmtPrix, type: "bar" },
+  { key: "logd_px2_mai_vevol_1924", label: "Δ Prix", sub: "% 19-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" },
+  { key: "logd_px2_mai_vevol_2224", label: "Δ Prix", sub: "% 22-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" },
+  { key: "logd_nbtrans_mai_24", label: "Trans.", sub: "nb 2024", w: 52, align: "right", fmt: fmtVol, type: "plain" },
+  { key: "logd_trans_vtcam_1924", label: "Δ Trans.", sub: "TCAM 19-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" }
 ];
 
 // Header
 const commHeader = document.createElement("div");
 commHeader.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;";
-commHeader.innerHTML = `<span style="font-size:12px;font-weight:600;color:#1e293b;font-family:Inter,system-ui,sans-serif;">Communes >50K hab. <span class="panel-tooltip-wrap" style="margin-left:2px;"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text" style="width:220px;left:0;transform:none;">Prix DVF pondéré (maisons+appart). Barre grise = niveau prix. Fond vert/rose = écart vs France (variations). Gras = extrêmes (±2σ).</span></span></span><span style="font-size:10px;color:#9ca3af;font-family:Inter,system-ui,sans-serif;">${commData50k.length} villes</span>`;
+commHeader.innerHTML = `<span style="font-size:12px;font-weight:600;color:#1e293b;font-family:Inter,system-ui,sans-serif;">Communes >50K hab. <span class="panel-tooltip-wrap" style="margin-left:2px;"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text" style="width:220px;left:0;transform:none;">Prix DVF médian maisons. Barre grise = niveau prix. Fond vert/rose = écart vs France (variations). Gras = extrêmes (±2σ).</span></span></span><span style="font-size:10px;color:#9ca3af;font-family:Inter,system-ui,sans-serif;">${commData50k.length} villes</span>`;
 
 // Container table
 const commTableWrap = document.createElement("div");
@@ -1097,7 +1134,7 @@ function renderCommTable() {
   });
 
   const thStyle = "padding:4px 3px;font-size:11px;font-weight:600;color:#374151;border-bottom:2px solid #d1d5db;cursor:pointer;white-space:nowrap;position:sticky;top:0;background:#e5e7eb;z-index:3;";
-  const tdStyle = "padding:3px 3px;font-size:11.5px;color:#1e293b;border-bottom:1px solid #e5e7eb;white-space:nowrap;";
+  const tdStyle = "padding:3px 3px;font-size:11.5px;color:#1e293b;border-bottom:1px solid #e5e7eb;white-space:nowrap;background:#fff;";
 
   let h = `<table style="width:100%;border-collapse:collapse;"><thead><tr>`;
   for (const cd of colDefs) {
@@ -1170,7 +1207,10 @@ display(commTableWrap);
 ```
 
 </div>
-<!-- &e TABLE_COMMUNES_50K -->
+<!-- fin COLONNE DROITE table -->
+
+</div>
+<!-- &e CARTES_GRAPHS_TABLE -->
 
 <!-- &s TABLEAU -->
 <div style="margin-top:16px;padding-left:12px;">
@@ -1342,30 +1382,41 @@ const commDetailWhere = (hasCommSelection && echelon === "EPCI")
 // Colonnes logement pour communes
 const commDetailBaseCols = [
   colKey,
-  "logd_px2_global_24", "logd_px2_global_vevol_1924", "logd_px2_global_vevol_2224",
-  "logd_px2q2_mai_24", "logd_px2q2_appt_24",
-  "logd_trans_24", "logd_trans_vevol_1924",
+  "logd_px2q2_mai_24", "logd_px2_mai_vevol_1924", "logd_px2_mai_vevol_2224",
+  "logd_px2q2_appt_24", "logd_px2_appt_vevol_1924",
+  "logd_nbtrans_mai_24", "logd_trans_vtcam_1924",
   "log_vac_pct_22", "logv_vac2ans_pct_24"
 ];
 const commDetailExtraCols = (extraIndics || []).filter(i => !i.startsWith("__sep_")).map(i => buildColKey(i, getDefaultPeriode(i)));
-const commDetailAllCols = [...new Set([...commDetailExtraCols, ...commDetailBaseCols])];
+const commDetailAllCols = [...new Set([...commDetailExtraCols, ...commDetailBaseCols])].filter(c => COMM_COLUMNS.has(c));
 
-const communesDetailData = await queryCommunes({ conn }, {
-  tableName: "communes",
-  filter: (echelon === "EPCI" && hasCommSelection) ? null : commDetailFilter,
-  customWhere: commDetailWhere,
-  columns: ["code", "libelle", "regdep", "P23_POP", ...commDetailAllCols],
-  limit: hasCommSelection ? 500 : undefined,
-  minPop: hasCommSelection ? 0 : MIN_POP_DEFAULT
-});
+// Requête commune detail via VIEW (inclut filtres géo + colonnes logement)
+const _cdReqCols = ["code", "libelle", "regdep", "P23_POP", ...commDetailAllCols].filter((v,i,a) => a.indexOf(v) === i && COMM_COLUMNS.has(v));
+const _cdColsSql = _cdReqCols.map(c => `"${c}"`).join(", ");
+const _cdWhereParts = [];
+if (!hasCommSelection) _cdWhereParts.push(`"P23_POP" >= ${MIN_POP_DEFAULT}`);
+if (echelon === "EPCI" && hasCommSelection) {
+  _cdWhereParts.push(commDetailWhere);
+} else if (commDetailFilter) {
+  const fk = Object.keys(commDetailFilter)[0];
+  const fv = commDetailFilter[fk];
+  if (Array.isArray(fv)) _cdWhereParts.push(`CAST("${fk}" AS VARCHAR) IN (${fv.map(v => "'" + v + "'").join(", ")})`);
+}
+const _cdWhereSql = _cdWhereParts.length ? `WHERE ${_cdWhereParts.join(" AND ")}` : "";
+const _cdLimitSql = hasCommSelection ? "LIMIT 500" : "";
+let communesDetailMapped = [];
+try {
+  const _cdResult = await conn.query(`SELECT ${_cdColsSql} FROM communes_v ${_cdWhereSql} ${_cdLimitSql}`);
+  communesDetailMapped = _cdResult.toArray().map(r => { const d = r.toJSON(); d.code = String(d.code); if (d.P23_POP != null) d.P23_POP = Number(d.P23_POP); return d; });
+} catch (err) { console.error("[EXDLOG] communesDetail error:", err.message); }
 
 // Filtrer communes avec au moins 1 valeur logement non-null
-const communesDetailClean = communesDetailData.filter(d =>
+const communesDetailClean = communesDetailMapped.filter(d =>
   commDetailAllCols.some(c => d[c] != null)
 );
 
-// France reference row
-const frRowComm = await queryFrance({ conn }, "communes", commDetailAllCols);
+// France reference row (depuis EPCI JSON, déjà chargé)
+const frRowComm = frData;
 const commDetailTableData = (frRowComm ? [frRowComm, ...communesDetailClean] : communesDetailClean).map(d => ({
   ...d, regshort: d.regdep ? d.regdep.split("/")[0] : ""
 }));
