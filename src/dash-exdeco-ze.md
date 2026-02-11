@@ -529,13 +529,13 @@ const legend = isEcart
       vertical: true, title: "Légende", unit, reverse: !isDiv,
       interactive: true,
       onFilter: (activeIndices) => {
-        const allGs = map.querySelectorAll("g");
-        let fp = null;
-        for (const g of allGs) {
-          const ps = Array.from(g.children).filter(c => c.tagName === 'path');
-          if (ps.length >= zeGeo.features.length * 0.9) { fp = ps; break; }
-        }
-        if (!fp) return;
+        // Cibler le 2e groupe <g> (fill paths), PAS le 1er (contour fill="none")
+        const zc = map.querySelector("g.zoom-content") || map.querySelector("svg");
+        const groups = Array.from(zc.children).filter(c => c.tagName === 'g');
+        const fp = groups.length >= 2
+          ? Array.from(groups[1].children).filter(c => c.tagName === 'path')
+          : null;
+        if (!fp || fp.length < zeGeo.features.length * 0.9) return;
         fp.forEach((p, i) => {
           if (i >= zeGeo.features.length) return;
           const v = zeGeo.features[i].properties[colKey1];
@@ -625,14 +625,13 @@ const legend2 = isEcart2
       vertical: true, title: "Légende", unit: unit2, reverse: !indicBins2.isDiv,
       interactive: true,
       onFilter: (activeIndices) => {
-        const allGs = map2.querySelectorAll("g");
-        let fp = null;
-        for (const g of allGs) {
-          const ps = Array.from(g.children).filter(c => c.tagName === 'path');
-          if (ps.length >= zeGeo.features.length * 0.9) { fp = ps; break; }
-        }
-        if (!fp) return;
-        fp.forEach((p, i) => {
+        const zc2 = map2.querySelector("g.zoom-content") || map2.querySelector("svg");
+        const groups2 = Array.from(zc2.children).filter(c => c.tagName === 'g');
+        const fp2 = groups2.length >= 2
+          ? Array.from(groups2[1].children).filter(c => c.tagName === 'path')
+          : null;
+        if (!fp2 || fp2.length < zeGeo.features.length * 0.9) return;
+        fp2.forEach((p, i) => {
           if (i >= zeGeo.features.length) return;
           const v = zeGeo.features[i].properties[colKey2];
           const bi = indicBins2.getBinIdx(v);
@@ -769,18 +768,19 @@ display(wrapper2);
       getColor: qColor,
       isSelected: d => sCodes.includes(d.code),
       getTooltip: d => `${d.libelle || d.code}\nPop: ${(d.P23_POP || 0).toLocaleString("fr")}\n${xLbl}: ${formatValue(indic1, d[xCol])}\n${yLbl}: ${formatValue(indic2, d[yCol])}`,
-      width: 790, height: 420,
+      width: 820, height: 400,
       labelCodes: lCodes, labelMode,
       _customTooltip: true,
       annotations,
-      title: `${xLbl} × ${yLbl}`,
+      title: `${xLbl} × ${yLbl} — Zones d'emploi (${dataNoFrance.length})`,
       legend: [
         { label: qLabels.tr, color: "#2ca02c" },
         { label: qLabels.tl, color: "#1f77b4" },
         { label: qLabels.br, color: "#ff7f0e" },
         { label: qLabels.bl, color: "#d62728" }
       ],
-      sizeLabel: "Taille = population · Sélectionnées = bordure jaune"
+      sizeLabel: "Taille = population · Sélectionnées = bordure jaune",
+      fillOpacity: 0.6
     });
 
     display(sc);
