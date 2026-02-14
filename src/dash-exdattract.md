@@ -21,11 +21,9 @@ import { createBanner, createNav, OTTD_PAGES } from "./helpers/layout.js"
 const _voletCfg = OTTD_PAGES.find(p => p.id === 'exdattract')
 display(createBanner({
   voletTitle: "Attractivité résidentielle × productive",
-  voletTooltip: "Indices composites croisant dynamiques migratoires (SMA, rotation, profils CSP) et économiques (emploi total/privé, créations, cadres). Calcul en z-scores normalisés sur 2 périodes (2011-16 / 2016-22).",
+  voletTooltip: "Indices composites croisant dynamiques migratoires (SMA, rotation, profils CSP) et économiques (emploi total/privé, créations, cadres). Calcul en z-scores normalisés sur 2 périodes (2011-16 / 2016-22). Sources : INSEE RP 2011-2023, MIGCOM, URSSAF, DVF, SIDE.",
   color: _voletCfg?.color || "#2980b9",
-  navElement: createNav(OTTD_PAGES, 'exdattract'),
-  sourcesText: "Sources",
-  sourcesTooltip: "INSEE RP 2011/16/22/23, MIGCOM 2016/2022, URSSAF 2014-2024, DVF 2016-2024, SIDE 2017-2024"
+  navElement: createNav(OTTD_PAGES, 'exdattract')
 }))
 ```
 <!-- &e BANNER -->
@@ -220,11 +218,15 @@ let _duckReady = null, _duckDB = null, _duckConn = null, _communesGeo = null
 async function ensureDuckDB() {
   if (!_duckReady) {
     _duckReady = (async () => {
-      const { db, conn } = await initDuckDB()
-      await registerParquet(db, "communes", await COMMUNES_PARQUET.url())
-      _duckDB = db; _duckConn = conn
-      const topoRaw = await COMMUNES_TOPO.json()
-      _communesGeo = rewind(topojson.feature(topoRaw, topoRaw.objects[Object.keys(topoRaw.objects)[0]]), true)
+      try {
+        const { db, conn } = await initDuckDB()
+        await registerParquet(db, "communes", await COMMUNES_PARQUET.url())
+        _duckDB = db; _duckConn = conn
+        const topoRaw = await COMMUNES_TOPO.json()
+        _communesGeo = rewind(topojson.feature(topoRaw, topoRaw.objects[Object.keys(topoRaw.objects)[0]]), true)
+      } catch (err) {
+        console.error("[EXDATTRACT] DuckDB init failed:", err.message)
+      }
     })()
   }
   return _duckReady
@@ -512,9 +514,10 @@ const _loadResult = await (async () => {
 const { frData, currentGeo, currentMeta, currentLabelMap } = _loadResult
 const _rawDataNoFrance = _loadResult.dataNoFrance
 
-// Filtrage échelon : EPCI hors CC, commune déjà ≥5K côté DuckDB
+// Filtrage échelon : EPCI hors CC (si TYPE_EPCI dispo), commune déjà ≥5K côté DuckDB
 const isEPCI = echelon === "EPCI"
-const dataNoFrance = isEPCI
+const _hasTypeEPCI = _rawDataNoFrance.length > 0 && "TYPE_EPCI" in (_rawDataNoFrance[0] || {})
+const dataNoFrance = isEPCI && _hasTypeEPCI
   ? _rawDataNoFrance.filter(d => d.TYPE_EPCI && d.TYPE_EPCI !== "CC")
   : _rawDataNoFrance
 
@@ -524,7 +527,7 @@ const dataCommTable = dataCommScatter  // même filtre pour table à côté du s
 
 // For commune: maps use EPCI data (hors CC), scatter/table use commune data
 const _mapDataAll = _loadResult._mapData || dataNoFrance
-const _mapDataRaw = isCommune ? _mapDataAll.filter(d => d.TYPE_EPCI && d.TYPE_EPCI !== "CC") : _mapDataAll
+const _mapDataRaw = isCommune && _hasTypeEPCI ? _mapDataAll.filter(d => d.TYPE_EPCI && d.TYPE_EPCI !== "CC") : _mapDataAll
 const _mapFrData = _loadResult._mapFrData || frData
 const _mapLabelMap = _loadResult._mapLabelMap || currentLabelMap
 
@@ -584,14 +587,14 @@ const _sbBar = document.createElement("div")
 _sbBar.style.cssText = "background:#e8eaed;padding:5px 16px;font-size:11.5px;color:#374151;font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;gap:12px;"
 
 const _sbToggle = document.createElement("button")
-_sbToggle.style.cssText = "background:#fff;border:2px solid #64748b;border-radius:20px;padding:4px 16px 4px 11px;font-size:11.5px;color:#374151;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;transition:all 0.15s;white-space:nowrap;flex-shrink:0;font-weight:500;box-shadow:0 1px 3px rgba(0,0,0,0.08);"
+_sbToggle.style.cssText = "background:#f8fafc;border:1px solid #cbd5e1;border-radius:20px;padding:4px 14px 4px 10px;font-size:11.5px;color:#475569;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;transition:all 0.15s;white-space:nowrap;flex-shrink:0;font-weight:500;"
 _sbToggle.innerHTML = `<span style="font-size:9px;transition:transform 0.2s;display:inline-block;" id="_kpi-chevron">▶</span> Profil comparé territoires sélectionnés`
-_sbToggle.onmouseenter = () => { _sbToggle.style.borderColor = "#475569"; _sbToggle.style.background = "#f1f5f9"; }
-_sbToggle.onmouseleave = () => { _sbToggle.style.borderColor = "#64748b"; _sbToggle.style.background = "#fff"; }
+_sbToggle.onmouseenter = () => { _sbToggle.style.borderColor = "#94a3b8"; _sbToggle.style.background = "#f1f5f9"; }
+_sbToggle.onmouseleave = () => { _sbToggle.style.borderColor = "#cbd5e1"; _sbToggle.style.background = "#f8fafc"; }
 
 const _sbBreadcrumb = document.createElement("span")
 _sbBreadcrumb.style.cssText = "color:#6b7280;font-size:11px;margin-left:auto;white-space:nowrap;"
-_sbBreadcrumb.textContent = `Attractivité · ${echLabel} · ${_tabLabel}${isCommune ? " · Cartes EPCI hors CC" : ""}`
+_sbBreadcrumb.textContent = `${echLabel} · ${_tabLabel} · 2011→2022/23`
 
 _sbBar.appendChild(_sbToggle)
 _sbBar.appendChild(_sbBreadcrumb)
@@ -807,27 +810,41 @@ const zoomLabel = _zoomCheckMap.get(zoomCode) || zoomCode
 // Barre mode visualisation inline avec tabset
 const _mapEchLabel = isCommune ? "EPCI hors CC" : echLabel
 const _modeBar = document.createElement("div")
-_modeBar.style.cssText = "display:flex;align-items:center;gap:10px;margin:0 0 6px 0;font-family:Inter,system-ui,sans-serif;"
+_modeBar.style.cssText = "display:flex;align-items:center;gap:12px;margin:0 0 6px 0;font-family:Inter,system-ui,sans-serif;"
 
 const _modeLabel = document.createElement("span")
 _modeLabel.style.cssText = "font-size:12px;font-weight:600;color:#374151;white-space:nowrap;"
-_modeLabel.textContent = "Mode de Visualisation :"
+_modeLabel.textContent = "Vue :"
 
-// Clone tabset pour affichage inline au-dessus des cartes
-const _tabClone = _tabInput.cloneNode(true)
-_tabClone.style.cssText = "display:inline-flex;margin:0;"
-{ const d = _tabClone.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:2px;"; d.querySelectorAll("label").forEach(l => { l.style.cssText = "padding:3px 12px;font-size:11.5px;border:1px solid #cbd5e1;border-radius:4px;cursor:pointer;background:#f8fafc;color:#374151;"; }); } }
-// Sync clone clicks → real tabInput
-_tabClone.querySelectorAll("input[type=radio]").forEach(r => {
-  r.addEventListener("change", () => { const real = _tabInput.querySelector(`input[value="${r.value}"]`); if (real) { real.checked = true; real.dispatchEvent(new Event("input", {bubbles: true})); } })
+// Tab buttons inline (pas un clone radio — boutons propres)
+const _tabBtnWrap = document.createElement("div")
+_tabBtnWrap.style.cssText = "display:flex;gap:0;border:1.5px solid #3b82f6;border-radius:5px;overflow:hidden;"
+const _tabDefs = [
+  { key: "libre", label: "Libre", tip: "Choix libre des indicateurs carte et scatter" },
+  { key: "niveau", label: "Indices T2", tip: "Indices composites période récente (2016-22/23)" },
+  { key: "trajectoire", label: "Trajectoire T2−T1", tip: "Évolution des indices entre T1 (2011-16) et T2 (2016-22)" }
+]
+_tabDefs.forEach((td, i) => {
+  const btn = document.createElement("button")
+  const isActive = activeTab === td.key
+  btn.style.cssText = `padding:5px 14px;font-size:12px;font-weight:${isActive ? "600" : "400"};border:none;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s;${isActive ? "background:#3b82f6;color:#fff;" : "background:#f0f6ff;color:#374151;"}${i > 0 ? "border-left:1px solid #93c5fd;" : ""}`
+  btn.textContent = td.label
+  btn.title = td.tip
+  btn.onmouseenter = () => { if (!isActive) btn.style.background = "#dbeafe"; }
+  btn.onmouseleave = () => { if (!isActive) btn.style.background = "#f0f6ff"; }
+  btn.onclick = () => {
+    const real = _tabInput.querySelector(`input[value="${td.key}"]`)
+    if (real) { real.checked = true; real.dispatchEvent(new Event("input", {bubbles: true})); }
+  }
+  _tabBtnWrap.appendChild(btn)
 })
 
 const _modeEch = document.createElement("span")
 _modeEch.style.cssText = "font-size:11px;color:#6b7280;margin-left:auto;white-space:nowrap;"
-_modeEch.textContent = `${_mapEchLabel}${isCommune ? " (cartes EPCI hors CC · scatter >30K)" : ""}`
+_modeEch.textContent = `${_mapEchLabel}${isCommune ? " · Cartes EPCI hors CC · Scatter >30K" : ""}`
 
 _modeBar.appendChild(_modeLabel)
-_modeBar.appendChild(_tabClone)
+_modeBar.appendChild(_tabBtnWrap)
 _modeBar.appendChild(_modeEch)
 display(_modeBar)
 ```
