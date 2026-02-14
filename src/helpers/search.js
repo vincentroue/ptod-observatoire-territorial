@@ -87,13 +87,13 @@ export function createSearchBox(options) {
   clearBtn.textContent = '✕ Effacer tout';
   clearBtn.style.cssText = `
     font-size: 11px; padding: 3px 8px;
-    background: #dc2626; color: white;
+    background: #f87171; color: white;
     border: none; border-radius: 4px;
     cursor: pointer; display: none;
     font-weight: 500;
   `;
-  clearBtn.onmouseenter = () => clearBtn.style.background = '#b91c1c';
-  clearBtn.onmouseleave = () => clearBtn.style.background = '#dc2626';
+  clearBtn.onmouseenter = () => clearBtn.style.background = '#ef4444';
+  clearBtn.onmouseleave = () => clearBtn.style.background = '#f87171';
   clearBtn.onclick = () => {
     const selection = getSelection();
     selection.clear();

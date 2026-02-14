@@ -309,7 +309,6 @@ ${selInfo}
 </section>
 
 <section class="panel">
-<div class="panel-title">Légende</div>
 <div id="legend-container"></div>
 </section>
 

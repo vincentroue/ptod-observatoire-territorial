@@ -64,13 +64,18 @@ h6 a,
   max-width: 1600px;
 }
 .banner-titles {
-  flex: 1;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
 }
 .banner-titles h1 {
   margin: 0;
   font-size: 18px;
   font-weight: 700;
-  color: #ffffff !important; /* Blanc sur fond spacegray */
+  color: #ffffff !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .banner-titles p {
   margin: 1px 0 0 0;
@@ -97,17 +102,18 @@ h6 a,
 /* === NAVIGATION BANNIÈRE === */
 .nav-banner {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   margin-left: auto;
-  padding: 4px 6px;
+  padding: 3px 5px;
   background: rgba(37, 99, 235, 0.25);
   border: 2px solid #2563eb;
   border-radius: 6px;
+  flex-shrink: 0;
 }
 .nav-btn {
   display: inline-block;
-  padding: 5px 12px;
-  font-size: 12px;
+  padding: 4px 9px;
+  font-size: 11.5px;
   font-weight: 500;
   color: #e8eaed;
   text-decoration: none;

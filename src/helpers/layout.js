@@ -11,19 +11,23 @@
 // ============================================================
 
 /**
- * Crée la bannière principale OTTD
+ * Crée la bannière OTTD v4
+ * Ligne 1 : OTTD — ◆ voletTitle + ⓘ tooltip
+ * Ligne 2 : Observatoire des trajectoires territoriales
  * @param {Object} options
- * @param {string} options.title - Titre principal (ex: "OTTD")
- * @param {string} options.subtitle - Sous-titre (ex: "Observatoire Trajectoires")
- * @param {HTMLElement|null} [options.navElement] - Élément navigation (createNav)
- * @param {string} [options.sourcesText] - Texte bouton sources (null = pas de bouton)
+ * @param {string} options.voletTitle - Titre du volet (ex: "Attractivité résidentielle × productive")
+ * @param {string} [options.voletTooltip] - Texte tooltip ⓘ à côté du titre
+ * @param {string} [options.color] - Couleur volet pour bouton actif nav
+ * @param {HTMLElement|null} [options.navElement] - Navigation (createNav)
+ * @param {string} [options.sourcesText] - Texte bouton sources
  * @param {string} [options.sourcesTooltip] - Tooltip sources
  * @returns {HTMLElement}
  */
 export function createBanner(options) {
   const {
-    title = "OTTD",
-    subtitle = "Observatoire Trajectoires Territoriales",
+    voletTitle = "",
+    voletTooltip = "",
+    color = "#2563eb",
     navElement = null,
     sourcesText = null,
     sourcesTooltip = ""
@@ -31,38 +35,63 @@ export function createBanner(options) {
 
   const banner = document.createElement('div');
   banner.className = 'banner';
+  banner.style.setProperty('--volet-color', color);
 
   const inner = document.createElement('div');
   inner.className = 'banner-inner';
 
-  // ------- Titres -------
+  // Bloc titres (2 lignes)
   const titles = document.createElement('div');
   titles.className = 'banner-titles';
 
-  const h1 = document.createElement('h1');
-  h1.textContent = title;
+  // Logo losange stylé
+  const logo = document.createElement('span');
+  logo.className = 'ottd-logo';
+  logo.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L22 12L12 22L2 12Z" stroke="white" stroke-width="1.5" fill="rgba(255,255,255,0.08)"/><path d="M12 7L17 12L12 17L7 12Z" stroke="white" stroke-width="1" opacity="0.45"/></svg>`;
 
-  const p = document.createElement('p');
-  p.textContent = subtitle;
+  // Ligne 1 : ◇ OTTD — Titre volet + ⓘ
+  const line1 = document.createElement('div');
+  line1.className = 'banner-line1';
+  line1.appendChild(logo);
+  const ottdSpan = document.createElement('span');
+  ottdSpan.className = 'ottd-brand';
+  ottdSpan.textContent = 'OTTD';
+  line1.appendChild(ottdSpan);
+  const dashSpan = document.createElement('span');
+  dashSpan.className = 'ottd-dash';
+  dashSpan.textContent = ' — ';
+  line1.appendChild(dashSpan);
+  const voletSpan = document.createElement('span');
+  voletSpan.className = 'ottd-volet';
+  voletSpan.textContent = voletTitle;
+  line1.appendChild(voletSpan);
+  if (voletTooltip) {
+    const info = document.createElement('span');
+    info.className = 'banner-info';
+    info.setAttribute('data-tip', voletTooltip);
+    info.textContent = 'ⓘ';
+    line1.appendChild(info);
+  }
+  titles.appendChild(line1);
 
-  titles.appendChild(h1);
-  titles.appendChild(p);
+  // Ligne 2 : Observatoire des trajectoires territoriales
+  const line2 = document.createElement('div');
+  line2.className = 'banner-line2';
+  line2.textContent = 'Observatoire des trajectoires territoriales';
+  titles.appendChild(line2);
+
   inner.appendChild(titles);
 
-  // ------- Navigation (si fournie) -------
-  if (navElement) {
-    inner.appendChild(navElement);
-  }
+  // Navigation
+  if (navElement) inner.appendChild(navElement);
 
-  // ------- Bouton sources (optionnel) -------
+  // Sources
   if (sourcesText) {
-    const sourcesBtn = document.createElement('span');
-    sourcesBtn.className = 'sources-btn';
-    sourcesBtn.textContent = sourcesText;
-    if (sourcesTooltip) {
-      sourcesBtn.title = sourcesTooltip;
-    }
-    inner.appendChild(sourcesBtn);
+    const btn = document.createElement('span');
+    btn.className = 'sources-btn';
+    btn.textContent = sourcesText;
+    if (sourcesTooltip) btn.title = sourcesTooltip;
+    inner.appendChild(btn);
   }
 
   banner.appendChild(inner);
@@ -84,8 +113,11 @@ export function createNav(pages, activePage) {
     link.className = 'nav-btn';
     link.textContent = page.label;
 
+    if (page.title) {
+      link.setAttribute('data-tip', page.title);
+    }
+
     if (page.disabled) {
-      // Page future - afficher mais désactivé
       link.classList.add('disabled');
       link.style.opacity = '0.4';
       link.style.pointerEvents = 'none';
@@ -118,10 +150,12 @@ export function createSidebarShell(sections) {
     panel.className = 'panel';
     panel.id = `panel-${section.id}`;
 
-    const title = document.createElement('div');
-    title.className = 'panel-title';
-    title.textContent = section.title;
-    panel.appendChild(title);
+    if (section.title) {
+      const title = document.createElement('div');
+      title.className = 'panel-title';
+      title.textContent = section.title;
+      panel.appendChild(title);
+    }
 
     if (section.hint) {
       const hint = document.createElement('span');
@@ -192,12 +226,24 @@ export function createSubBanner(groups) {
  * Usage: createNav(OTTD_PAGES, 'exdc')
  */
 export const OTTD_PAGES = [
-  { id: 'exd', label: 'EXD', href: './jottd-exd-explor-dyn' },
-  { id: 'exdtc', label: 'Communes', href: './dash-exdtc-template-commune' },
-  { id: 'comm-bis', label: 'Comm-bis', href: './jottd-exdc-comm-bis' },
-  { id: 'exdeco', label: 'Éco ZE', href: './dash-exdeco-ze' },
-  { id: 'exdf', label: 'Flux', href: './dash-exdf-flux-migr', disabled: true },
-  { id: 'exdlog', label: 'Logement', href: './dash-exdlog' }
+  { id: 'exd', label: '◇ Exploratoire', href: './jottd-exd-explor-dyn',
+    title: 'Vue exploratoire multi-échelon — tous indicateurs, 7 niveaux géographiques',
+    color: '#8e44ad' },
+  { id: 'exdtc', label: '◎ Communes', href: './dash-exdtc-template-commune',
+    title: 'Zoom territorial par commune — carte détaillée, comparaison inter-communale',
+    color: '#27ae60' },
+  { id: 'exdeco', label: '▤ Économie', href: './dash-exdeco-ze',
+    title: 'Économie sectorielle — emploi FLORES, URSSAF, spécialisation par zone d\'emploi',
+    color: '#e67e22' },
+  { id: 'exdlog', label: '⌂ Logement', href: './dash-exdlog',
+    title: 'Marché du logement — prix DVF, vacance LOVAC, construction SITADEL',
+    color: '#16a085' },
+  { id: 'exdattract', label: '◆ Attractivité', href: './dash-exdattract',
+    title: 'Attractivité résidentielle et productive — indices composites multi-échelon',
+    color: '#2980b9' },
+  { id: 'exdf', label: '⇄ Flux', href: './dash-exdf-flux-migr', disabled: true,
+    title: 'Flux migratoires — MIGCOM détaillé (à venir)',
+    color: '#c0392b' }
 ];
 
 // &e PAGES_CONFIG
@@ -212,7 +258,7 @@ export const SIDEBAR_SECTIONS_BASE = [
   { id: 'echelon', title: 'Échelon', hint: null },
   { id: 'search', title: 'Recherche', hint: 'Saisir 2+ caractères' },
   { id: 'options', title: 'Options', hint: null },
-  { id: 'legend', title: 'Légende', hint: null }
+  { id: 'legend', title: '', hint: null }
 ];
 
 /**
@@ -223,7 +269,7 @@ export const SIDEBAR_SECTIONS_EXDC = [
   { id: 'search', title: 'Recherche', hint: 'Saisir 2+ caractères' },
   { id: 'selection', title: 'Sélection', hint: null },
   { id: 'columns', title: 'Colonnes tableau', hint: null },
-  { id: 'legend', title: 'Légende carte', hint: null }
+  { id: 'legend', title: '', hint: null }
 ];
 
 /**
@@ -234,7 +280,7 @@ export const SIDEBAR_SECTIONS_EXDE = [
   { id: 'search', title: 'Recherche', hint: null },
   { id: 'naf', title: 'Secteur NAF', hint: 'Sélectionner niveau' },
   { id: 'period', title: 'Période', hint: null },
-  { id: 'legend', title: 'Légende', hint: null }
+  { id: 'legend', title: '', hint: null }
 ];
 
 /**
@@ -245,7 +291,7 @@ export const SIDEBAR_SECTIONS_EXDL = [
   { id: 'search', title: 'Recherche', hint: null },
   { id: 'indicateurs', title: 'Indicateurs', hint: null },
   { id: 'period', title: 'Période', hint: null },
-  { id: 'legend', title: 'Légende', hint: null }
+  { id: 'legend', title: '', hint: null }
 ];
 // &e SIDEBAR_PRESETS
 

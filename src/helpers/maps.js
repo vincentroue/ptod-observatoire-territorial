@@ -14,8 +14,9 @@
 import * as Plot from "npm:@observablehq/plot";
 import * as d3 from "npm:d3";
 import { html } from "npm:htl";
-import { INDICATEURS, PERIODES } from "./indicators-ddict-js.js";
+import { INDICATEURS, PERIODES, getSource, formatValue as ddictFormatValue } from "./indicators-ddict-js.js";
 import { parseColKey } from "./indicators-ddict-ext.js";
+import { buildTerritoryTooltip, calcPercentile } from "./tooltip.js";
 
 // ============================================================
 // &s PROJECTION — Config projection France
@@ -205,8 +206,8 @@ export function renderChoropleth(config) {
         // 2. Sinon lookup via getLabel (Map code → libellé)
         const rawName = topoName || getLabel({ code }) || code;
         const name = rawName.length > 12 ? rawName.substring(0, 11) + "…" : rawName;
-        if (labelMode === "values") return valStr;
-        if (labelMode === "names") return name;
+        if (labelMode === "values" || labelMode === "val.") return valStr;
+        if (labelMode === "names" || labelMode === "noms") return name;
         if (labelMode === "both") return `${name}\n${valStr}`;
         return valStr;
       };
@@ -300,14 +301,46 @@ export function createMapWrapper(map, statsOverlay, legendElement = null, zoomCo
     // Titre + sous-titre HTML (au-dessus de la carte, hors zone positionnée)
     if (title || colKey) {
       const { indic: _ti, periode: _tp } = colKey ? parseColKey(colKey) : {};
-      const _tUnit = _ti ? (INDICATEURS[_ti]?.unit || "") : "";
+      const _tInd = _ti ? INDICATEURS[_ti] : null;
+      const _tUnit = _tInd?.unit || "";
       const _tPer = _tp && PERIODES[_tp]?.long ? PERIODES[_tp].long : "";
-      const subtitleParts = [_tUnit, _tPer].filter(Boolean).join(" — ");
-      const titleEl = html`<div class="map-title-block">
-        ${title ? html`<div class="map-title">${title}</div>` : ""}
-        ${subtitleParts ? html`<div class="map-subtitle">${subtitleParts}</div>` : ""}
-      </div>`;
-      wrapper.appendChild(titleEl);
+      // Inclure échelon dans subtitle sauf si déjà dans le titre (commune maps)
+      const _showEchelon = echelon && !title.includes(echelon) ? echelon : "";
+      const subtitleParts = [_tUnit, _tPer, _showEchelon].filter(Boolean).join(" — ");
+      const _tSource = _ti ? getSource(_ti) : "";
+      const _tDef = _tInd?.definition || "";
+
+      // ⓘ hover avec definition + note + source
+      let infoHtml = "";
+      if (_tDef || _tSource) {
+        const defLine = _tDef ? `<b>${_tInd?.long || _tInd?.medium || ""}</b><br>${_tDef}` : "";
+        // Note : strip {percentile} et {france_value} (templates runtime, pas pour info statique)
+        let noteClean = (_tInd?.note || "").replace(/\{percentile\}/g, "…").replace(/\{france_value\}/g, "…").replace(/\(🇫🇷 …[^)]*\)/g, "").trim();
+        // Retirer phrase "Valeur supérieure à …% des territoires" (redondant avec tooltip)
+        noteClean = noteClean.replace(/Valeur supérieure à …% des territoires\.?/g, "").trim();
+        const noteLine = noteClean ? `<br><span class="tip-note">${noteClean}</span>` : "";
+        const srcLine = _tSource ? `<br><span class="tip-source">Source : ${_tSource}</span>` : "";
+        infoHtml = ` <span class="tip-icon">ⓘ<span class="tip-content">${defLine}${noteLine}${srcLine}</span></span>`;
+      }
+
+      // Source line sous le subtitle
+      const sourceLine = _tSource ? `<div class="map-source-line">Source : ${_tSource}</div>` : "";
+
+      const titleBlock = document.createElement("div");
+      titleBlock.className = "map-title-block";
+      if (title) {
+        const tDiv = document.createElement("div");
+        tDiv.className = "map-title";
+        tDiv.innerHTML = `<span class="title-with-tip">${title}${infoHtml}</span>`;
+        titleBlock.appendChild(tDiv);
+      }
+      if (subtitleParts || _tSource) {
+        const sDiv = document.createElement("div");
+        sDiv.className = "map-subtitle";
+        sDiv.innerHTML = [subtitleParts, _tSource ? `<span class="map-source-line">· ${_tSource}</span>` : ""].filter(Boolean).join(" ");
+        titleBlock.appendChild(sDiv);
+      }
+      wrapper.appendChild(titleBlock);
     }
 
     // Conteneur SVG + overlays (position:relative pour absolute children)
@@ -346,71 +379,44 @@ export function createMapWrapper(map, statsOverlay, legendElement = null, zoomCo
     expandBtn.onclick = () => openMapFullscreen(mapContent);
     mapContent.appendChild(expandBtn);
 
-    // Tooltip HTML custom — event delegation (même stratégie que handleMapClick)
+    // Tooltip HTML custom — event delegation avec buildTerritoryTooltip centralisé
     if (map._tipConfig) {
-      const { geoData: _geo, getCode: _gc, getLabel: _gl, valueCol: _vc, formatValue: _fv } = map._tipConfig;
+      const { geoData: _geo, getCode: _gc, getLabel: _gl, valueCol: _vc } = map._tipConfig;
       const tooltip = html`<div class="map-tooltip"></div>`;
       mapContent.appendChild(tooltip);
+
+      // Pré-calculer data array depuis features (pour percentile)
+      const _dataArr = _geo.features.map(f => f.properties).filter(p => p && p[_vc] != null);
 
       const svgEl = map.querySelector ? (map.querySelector("svg") || map) : map;
       svgEl.addEventListener("mousemove", (e) => {
         const path = e.target.closest("path");
         if (!path) { tooltip.style.display = "none"; return; }
-        const parent = path.parentElement;
-        const paths = Array.from(parent.querySelectorAll("path"));
-        const idx = paths.indexOf(path);
-        if (idx < 0 || idx >= _geo.features.length) { tooltip.style.display = "none"; return; }
-        const feature = _geo.features[idx];
+        // Lookup feature : Plot attache __data__ (GeoJSON feature) sur chaque path
+        let feature = path.__data__;
+        if (!feature?.properties) {
+          const parent = path.parentElement;
+          const paths = Array.from(parent.querySelectorAll("path"));
+          const idx = paths.indexOf(path);
+          if (idx < 0 || idx >= _geo.features.length) { tooltip.style.display = "none"; return; }
+          feature = _geo.features[idx];
+        }
         const code = _gc(feature);
         if (!code) { tooltip.style.display = "none"; return; }
-        const lbl = _gl({ code }) || code;
-        const v = feature.properties[_vc];
-        const p23 = feature.properties.P23_POP;
-        // Extraire indicateur + unité depuis colKey
-        const { indic: _ei } = parseColKey(_vc);
-        const _eType = INDICATEURS[_ei]?.type || "";
-        const _eUnit = INDICATEURS[_ei]?.unit || "";
-        // Ligne écart vs France (toujours si frRef défini)
+
+        // Enrichir properties avec libelle depuis label map
+        const props = { ...feature.properties, libelle: _gl({ code }) || code };
+
+        // Utiliser buildTerritoryTooltip centralisé (même format que scatter : dot, rang, ×Fr., devant/derrière)
         const _fr = map._tipConfig.frRef;
-        const _frEI = map._tipConfig.frGetEcartInfo;
-        let ecartLine = "";
-        if (_fr != null && v != null) {
-          const _isEvol = ["vtcam", "vevol", "vdifp"].includes(_eType);
-          const _isPct = _eType === "pct";
-          // Calcul écart : absolu (pts) pour évolutions et % | relatif (%) pour le reste
-          let ecartStr;
-          if (_isEvol || _isPct) {
-            const diff = v - _fr;
-            ecartStr = `${diff >= 0 ? "+" : ""}${diff.toFixed(1)} pts`;
-          } else if (_fr !== 0) {
-            const pct = ((v - _fr) / Math.abs(_fr)) * 100;
-            ecartStr = `${pct >= 0 ? "+" : ""}${Math.round(pct)}%`;
-          }
-          if (ecartStr) {
-            // Symbole coloré + label qualitatif via getEcartInfo
-            let symHtml = "";
-            let qualSuffix = "";
-            if (_frEI) {
-              const eInfo = _frEI(v);
-              if (eInfo) {
-                symHtml = `<span style="color:${eInfo.color || "#d1d5db"}">${eInfo.symbol}</span> `;
-                qualSuffix = ` · ${eInfo.label.toLowerCase().replace("de la réf.", "moy.")}`;
-              }
-            }
-            ecartLine = `<br><span style="font-style:italic;">${symHtml}<span style="color:#d1d5db;">${ecartStr} / 🇫🇷${qualSuffix}</span></span>`;
-          }
-        }
-        // Valeur formatée avec unité
-        const _valStr = v != null ? `${_fv(_vc, v)}${_eUnit ? " " + _eUnit : ""}` : "—";
-        tooltip.innerHTML = `<b>${lbl}</b><br>` +
-          `Valeur: ${_valStr}${ecartLine}<br>` +
-          `<span class="map-tooltip-pop">Pop: ${p23 ? p23.toLocaleString("fr-FR") : "—"}</span>`;
+        tooltip.innerHTML = buildTerritoryTooltip(props, _vc, _dataArr, _fr);
+        // Positionnement fixed (viewport) pour éviter clipping par sidebar/card
         tooltip.style.display = "block";
-        const rect = mapContent.getBoundingClientRect();
-        let x = e.clientX - rect.left + 10;
-        let y = e.clientY - rect.top - 35;
-        if (x + 140 > rect.width) x = e.clientX - rect.left - 150;
-        if (y < 0) y = e.clientY - rect.top + 15;
+        const tipRect = tooltip.getBoundingClientRect();
+        let x = e.clientX + 12;
+        let y = e.clientY - tipRect.height - 8;
+        if (x + tipRect.width > window.innerWidth - 8) x = e.clientX - tipRect.width - 12;
+        if (y < 0) y = e.clientY + 16;
         tooltip.style.left = x + "px";
         tooltip.style.top = y + "px";
       });
@@ -935,7 +941,7 @@ export function createMapPanel(config) {
         max: gradientResult.max,
         showZero: gradientResult.divergent,
         decimals: 2,
-        title: `Légende${unit ? " (" + unit + ")" : ""}`,
+        title: unit || "",
         capped: true,
         rawMin: gradientResult.rawMin,
         rawMax: gradientResult.rawMax
@@ -945,7 +951,7 @@ export function createMapPanel(config) {
         labels: binsResult.bins?.labels || [],
         counts,
         vertical: true,
-        title: "Légende",
+        title: "",
         unit,
         reverse: !binsResult.isDiv
       });

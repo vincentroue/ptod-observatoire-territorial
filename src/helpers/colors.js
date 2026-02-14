@@ -13,8 +13,8 @@
  * 8 couleurs pour 8 bins
  */
 export const PAL_PURPLE_GREEN = [
-  "#761548", "#af1f6b", "#e46aa7", "#eb99c2",  // Négatifs : violet foncé → rose
-  "#bcdeb4", "#98cf90", "#408941", "#2c5c2d"   // Positifs : vert clair → vert foncé
+  "#761548", "#af1f6b", "#e46aa7", "#eb99c2",  // Négatifs : violet foncé → rose pâle (Urban Institute)
+  "#bcdeb4", "#98cf90", "#408941", "#2c5c2d"   // Positifs : vert pâle → vert foncé (Urban Institute)
 ];
 
 /**
@@ -68,7 +68,7 @@ export const PAL_GRADIENT_BLUE = [
  */
 export const GRADIENT_PALETTES = {
   divergent: {
-    "Violet-Vert": ["#761548", "#c44d8a", "#e8a0c0", "#f5f5f5", "#a8d4a0", "#5ba55b", "#2c5c2d"],
+    "Violet-Vert": ["#761548", "#af1f6b", "#e46aa7", "#f5f5f5", "#bcdeb4", "#98cf90", "#2c5c2d"],
     "Bleu-Jaune": ["#b8860b", "#d4a017", "#f5e6a0", "#f8f8f8", "#a8d4e8", "#5ba3d0", "#084594"]
   },
   sequential: ["#f7fbff", "#c6dbef", "#6baed6", "#2171b5", "#08519c", "#08306b"]  // ColorBrewer Blues
@@ -612,10 +612,17 @@ export function computeEcartFrance(data, colKey, refValue, options = {}) {
     return { label, pct, binIdx, symbol, color };
   };
 
+  // getBinIdx : index du bin pour filtrage légende interactive
+  const getBinIdx = (v) => {
+    if (v == null || isNaN(v)) return -1;
+    const idx = thresholds.findIndex(t => v < t);
+    return idx === -1 ? PAL_ECART_FRANCE.length - 1 : idx;
+  };
+
   return {
     thresholds, labels, qualLabels: ECART_FRANCE_LABELS,
     pctLabels, ref, sigma, palette: PAL_ECART_FRANCE,
-    isEvolution, isAbsoluteEcart, getColor, getEcartInfo
+    isEvolution, isAbsoluteEcart, getColor, getEcartInfo, getBinIdx
   };
 }
 

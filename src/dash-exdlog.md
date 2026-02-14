@@ -347,7 +347,7 @@ const periode1 = view(Inputs.select(perMap1, { value: [...perMap1.values()][0], 
 ```
 
 ```js
-const colorMode1 = view(Inputs.radio(["Répart.", "Écart Fr.", "Gradient"], { value: "Répart.", label: "" }));
+const colorMode1 = view(Inputs.radio(["%", "±Fr.", "Grad."], { value: "%", label: "" }));
 ```
 
 </section>
@@ -366,7 +366,7 @@ const periode2 = view(Inputs.select(perMap2, { value: [...perMap2.values()][0], 
 ```
 
 ```js
-const colorMode2 = view(Inputs.radio(["Répart.", "Écart Fr.", "Gradient"], { value: "Écart Fr.", label: "" }));
+const colorMode2 = view(Inputs.radio(["%", "±Fr.", "Grad."], { value: "±Fr.", label: "" }));
 ```
 
 </section>
@@ -455,8 +455,8 @@ const _cm1 = colorMode1;
 const indicBins = computeIndicBins(dataNoFrance, colKey1, indic1);
 const { bins, palette: PAL, isDiv, getColor: getColorBins } = indicBins;
 const gradient = createGradientScale(dataNoFrance, colKey1);
-const isGradient = _cm1 === "Gradient";
-const isEcart = _cm1 === "Écart Fr.";
+const isGradient = _cm1 === "Grad.";
+const isEcart = _cm1 === "±Fr.";
 const ecart = computeEcartFrance(dataNoFrance, colKey1, frData?.[colKey1], { indicType: INDICATEURS[indic1]?.type });
 const getColor = isEcart ? ecart.getColor : isGradient ? gradient.getColor : getColorBins;
 
@@ -464,8 +464,8 @@ const getColor = isEcart ? ecart.getColor : isGradient ? gradient.getColor : get
 const _cm2 = colorMode2;
 const indicBins2 = computeIndicBins(dataNoFrance, colKey2, indic2);
 const gradient2 = createGradientScale(dataNoFrance, colKey2);
-const isGradient2 = _cm2 === "Gradient";
-const isEcart2 = _cm2 === "Écart Fr.";
+const isGradient2 = _cm2 === "Grad.";
+const isEcart2 = _cm2 === "±Fr.";
 const ecart2 = computeEcartFrance(dataNoFrance, colKey2, frData?.[colKey2], { indicType: INDICATEURS[indic2]?.type });
 const getColor2 = isEcart2 ? ecart2.getColor : isGradient2 ? gradient2.getColor : indicBins2.getColor;
 
@@ -588,15 +588,31 @@ function buildCommMap(tCode, tData, w, h, opts = {}) {
   const tGrad = tData.length >= 10 ? createGradientScale(tData, _ck) : _gr;
   const tEcart = _isE ? computeEcartFrance(tData, _ck, _ec.ref, { sigma: _ec.sigma, indicType: INDICATEURS[_ind]?.type }) : null;
   const tGetColor = _isE ? tEcart.getColor : _isG ? tGrad.getColor : tBins.getColor;
-  const cMap = renderChoropleth({ geoData: tGeo, valueCol: _ck, getColor: tGetColor, getCode: f => f.properties.CODGEO, getLabel: ({ code }) => tMap.get(code)?.libelle || code, formatValue: (k, v) => formatValue(_ind, v), indicLabel: _il, showLabels: showValuesOnMap, labelMode, labelBy, topN: 200, title: tLabel, maxLabelsAuto: 80, echelon: "Commune", width: w, height: h });
+  const cMap = renderChoropleth({ geoData: tGeo, valueCol: _ck, getColor: tGetColor, getCode: f => f.properties.CODGEO, getLabel: ({ code }) => tMap.get(code)?.libelle || code, formatValue: (k, v) => formatValue(_ind, v), indicLabel: _il, showLabels: showValuesOnMap, labelMode, labelBy, topN: 200, title: `${_il} — ${tLabel}`, maxLabelsAuto: 80, echelon: "Commune", width: w, height: h });
   if (!cMap) return null;
   if (cMap._tipConfig) { cMap._tipConfig.frRef = frData?.[_ck]; cMap._tipConfig.frGetEcartInfo = _isE ? tEcart?.getEcartInfo : _ec.getEcartInfo; }
   const tEcartCounts = _isE ? countBins(tData, _ck, tEcart.thresholds || []) : [];
+  const _fmComm = (activeIndices) => {
+    const zc = cMap.querySelector("g.zoom-content") || cMap.querySelector("svg");
+    const groups = Array.from(zc.children).filter(c => c.tagName === 'g');
+    const fp = groups.length >= 2 ? Array.from(groups[1].children).filter(c => c.tagName === 'path') : null;
+    if (!fp || fp.length < tGeo.features.length * 0.9) return;
+    fp.forEach((p, i) => {
+      if (i >= tGeo.features.length) return;
+      const v = tGeo.features[i].properties[_ck];
+      const bi = _isE ? tEcart.getBinIdx(v) : tBins.getBinIdx(v);
+      if (bi >= 0 && !activeIndices.has(bi)) {
+        p.setAttribute("fill", "#f3f4f6"); p.setAttribute("fill-opacity", "0.15");
+      } else {
+        p.setAttribute("fill", tGetColor(v)); p.setAttribute("fill-opacity", "1");
+      }
+    });
+  };
   const cLegend = _isE
-    ? createEcartFranceLegend({ palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS, pctLabels: tEcart.pctLabels, counts: tEcartCounts, title: "Écart France" })
+    ? createEcartFranceLegend({ palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS, pctLabels: tEcart.pctLabels, counts: tEcartCounts, title: "±Fr.", interactive: true, onFilter: _fmComm })
     : _isG
-    ? createGradientLegend({ colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential, min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent, decimals: 2, title: "Légende", capped: true, rawMin: tGrad.rawMin, rawMax: tGrad.rawMax })
-    : createBinsLegend({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, _ck, tBins.bins.thresholds || []), vertical: true, title: "Légende", unit: getIndicUnit(_ck), reverse: !tBins.isDiv });
+    ? createGradientLegend({ colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential, min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent, decimals: 2, capped: true, rawMin: tGrad.rawMin, rawMax: tGrad.rawMax })
+    : createBinsLegend({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, _ck, tBins.bins.thresholds || []), vertical: true, unit: getIndicUnit(_ck), reverse: !tBins.isDiv, interactive: true, onFilter: _fmComm });
   const card = document.createElement("div");
   card.style.cssText = "padding:4px;";
   card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), { exportSVGFn: exportSVG, echelon: tLabel, colKey: _ck, title: `${_il} — ${tLabel}` }));
@@ -636,22 +652,40 @@ const map = renderChoropleth({
 const counts = countBins(dataNoFrance, colKey, bins.thresholds || []);
 const unit = getIndicUnit(colKey);
 const ecartCounts = isEcart ? countBins(dataNoFrance, colKey, ecart.thresholds || []) : [];
+const _filterMapLog = (mapEl, geoRef, ck, getBi, getCol) => (activeIndices) => {
+  const zc = mapEl.querySelector("g.zoom-content") || mapEl.querySelector("svg");
+  const groups = Array.from(zc.children).filter(c => c.tagName === 'g');
+  const fp = groups.length >= 2 ? Array.from(groups[1].children).filter(c => c.tagName === 'path') : null;
+  if (!fp || fp.length < geoRef.features.length * 0.9) return;
+  fp.forEach((p, i) => {
+    if (i >= geoRef.features.length) return;
+    const v = geoRef.features[i].properties[ck];
+    const bi = getBi(v);
+    if (bi >= 0 && !activeIndices.has(bi)) {
+      p.setAttribute("fill", "#f3f4f6"); p.setAttribute("fill-opacity", "0.15");
+    } else {
+      p.setAttribute("fill", getCol(v)); p.setAttribute("fill-opacity", "1");
+    }
+  });
+};
 const legend = isEcart
   ? createEcartFranceLegend({
       palette: ecart.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecart.pctLabels,
-      counts: ecartCounts, title: `Écart France (en ${ecart.isAbsoluteEcart ? "pts" : "%"})`
+      counts: ecartCounts, title: `±Fr. (en ${ecart.isAbsoluteEcart ? "pts" : "%"})`,
+      interactive: true, onFilter: _filterMapLog(map, currentGeo, colKey, ecart.getBinIdx, getColor)
     })
   : isGradient
   ? createGradientLegend({
       colors: gradient.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient.min, max: gradient.max, showZero: gradient.divergent,
-      decimals: 2, title: `Légende${unit ? " (" + unit + ")" : ""}`,
+      decimals: 2, title: unit || "",
       capped: true, rawMin: gradient.rawMin, rawMax: gradient.rawMax
     })
   : createBinsLegend({
       colors: PAL, labels: bins.labels || [], counts,
-      vertical: true, title: "Légende", unit, reverse: !isDiv
+      vertical: true, unit, reverse: !isDiv,
+      interactive: true, onFilter: _filterMapLog(map, currentGeo, colKey, indicBins.getBinIdx, getColor)
     });
 
 // Click handler
@@ -720,18 +754,20 @@ const legend2 = isEcart2
   ? createEcartFranceLegend({
       palette: ecart2.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecart2.pctLabels,
-      counts: ecartCounts2, title: `Écart Fr. (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`
+      counts: ecartCounts2, title: `±Fr. (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`,
+      interactive: true, onFilter: _filterMapLog(map2, currentGeo, colKey2, ecart2.getBinIdx, getColor2)
     })
   : isGradient2
   ? createGradientLegend({
       colors: gradient2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient2.min, max: gradient2.max, showZero: gradient2.divergent,
-      decimals: 2, title: `Légende${unit2log ? " (" + unit2log + ")" : ""}`,
+      decimals: 2, title: unit2log || "",
       capped: true, rawMin: gradient2.rawMin, rawMax: gradient2.rawMax
     })
   : createBinsLegend({
       colors: indicBins2.palette, labels: indicBins2.bins.labels || [], counts: counts2,
-      vertical: true, title: "Légende", unit: unit2log, reverse: !indicBins2.isDiv
+      vertical: true, unit: unit2log, reverse: !indicBins2.isDiv,
+      interactive: true, onFilter: _filterMapLog(map2, currentGeo, colKey2, indicBins2.getBinIdx, getColor2)
     });
 
 map2.style.cursor = "pointer";

@@ -12,6 +12,8 @@
 
 import * as Plot from "npm:@observablehq/plot";
 import * as d3 from "npm:d3";
+import { INDICATEURS, getSource } from "./indicators-ddict-js.js";
+import { parseColKey } from "./indicators-ddict-ext.js";
 
 // ============================================================
 // &s RENDER — Génération scatter plot
@@ -37,6 +39,8 @@ import * as d3 from "npm:d3";
  * @param {Function} config.isSelected - (d) => boolean
  * @param {Function} config.getTooltip - (d) => string
  * @param {boolean} [config._customTooltip=false] - Supprimer title natif (tooltip custom)
+ * @param {boolean} [config.showNegativeBands=false] - Bandes rouges zones négatives
+ * @param {number} [config.maxTicks=12] - Cap ticks max par axe (évite surcharge au zoom)
  * @param {number} [config.fillOpacity=0.85]
  * @param {number} [config.width=540]
  * @param {number} [config.height=440]
@@ -68,36 +72,41 @@ export function renderScatter(config) {
     height = 440,
     xTicks: customXTicks = null,
     yTicks: customYTicks = null,
+    xUnit = "",
+    yUnit = "",
+    showNegativeBands = false,
+    maxTicks = 12,
     labelCodes = [],
     labelMode = "both",
     zoomFactor = 1,
-    annotations = []
+    annotations = [],
+    quadrantRects = [],
+    marginRight = 16
   } = config;
 
   const validData = data.filter(d => d[xCol] != null && d[yCol] != null);
 
   const marks = [
-    // Axes 0 en GRIS
-    Plot.ruleX([0], { stroke: "#555", strokeWidth: 1 }),
-    Plot.ruleY([0], { stroke: "#555", strokeWidth: 1 }),
+    // Quadrant background tints (subtle colored rectangles behind data)
+    ...quadrantRects.map(r => Plot.rect([r], { x1: "x1", x2: "x2", y1: "y1", y2: "y2", fill: r.fill, stroke: "none" })),
 
-    // Bissectrice y=x fine et discrète
-    (!isNaN(xDomain[0]) && !isNaN(xDomain[1]) && !isNaN(yDomain[0]) && !isNaN(yDomain[1])) ? Plot.line([
+    // Bandes rouges zones négatives (optionnel)
+    showNegativeBands && xDomain[0] < 0 && xDomain[1] > 0 ? Plot.rectX([{ x1: xDomain[0], x2: 0, y1: yDomain[0], y2: yDomain[1] }], { x1: "x1", x2: "x2", y1: "y1", y2: "y2", fill: "#fef2f2", fillOpacity: 0.5 }) : null,
+    showNegativeBands && yDomain[0] < 0 && yDomain[1] > 0 ? Plot.rectY([{ x1: xDomain[0], x2: xDomain[1], y1: yDomain[0], y2: 0 }], { x1: "x1", x2: "x2", y1: "y1", y2: "y2", fill: "#fef2f2", fillOpacity: 0.5 }) : null,
+
+    // Axes 0 renforcés (visibles si le domaine traverse zéro)
+    (xDomain[0] < 0 && xDomain[1] > 0) ? Plot.ruleX([0], { stroke: "#94a3b8", strokeWidth: 1 }) : null,
+    (yDomain[0] < 0 && yDomain[1] > 0) ? Plot.ruleY([0], { stroke: "#94a3b8", strokeWidth: 1 }) : null,
+
+    // Bissectrice y=x (fine, discrète)
+    (!isNaN(xDomain[0]) && !isNaN(yDomain[0])) ? Plot.line([
       [Math.max(xDomain[0], yDomain[0]), Math.max(xDomain[0], yDomain[0])],
       [Math.min(xDomain[1], yDomain[1]), Math.min(xDomain[1], yDomain[1])]
-    ], { stroke: "#aaa", strokeWidth: 0.8, strokeDasharray: "4,4" }) : null,
+    ], { stroke: "#e5e7eb", strokeWidth: 0.6, strokeDasharray: "3,3" }) : null,
 
-    // Moyennes France en GRIS pointillé
-    !isNaN(meanX) ? Plot.ruleX([meanX], { stroke: "#888", strokeWidth: 1, strokeDasharray: "4,3" }) : null,
-    !isNaN(meanY) ? Plot.ruleY([meanY], { stroke: "#888", strokeWidth: 1, strokeDasharray: "4,3" }) : null,
-    !isNaN(meanX) && !isNaN(yDomain[1]) ? Plot.text([[meanX, yDomain[1] * 0.95]], {
-      text: [`Moy ${meanX?.toFixed(2)}`],
-      fontSize: 10, fill: "#555", textAnchor: "start", dx: 3
-    }) : null,
-    !isNaN(meanY) && !isNaN(xDomain[1]) ? Plot.text([[xDomain[1] * 0.95, meanY]], {
-      text: [`Moy ${meanY?.toFixed(2)}`],
-      fontSize: 10, fill: "#555", textAnchor: "end", dy: -5
-    }) : null,
+    // Moyennes France — lignes de référence quadrants (bien visibles)
+    !isNaN(meanX) ? Plot.ruleX([meanX], { stroke: "#374151", strokeWidth: 1, strokeDasharray: "8,4" }) : null,
+    !isNaN(meanY) ? Plot.ruleY([meanY], { stroke: "#374151", strokeWidth: 1, strokeDasharray: "8,4" }) : null,
 
     // Régression par origine
     showRegression && regression && !isNaN(regression.slope) && isFinite(regression.slope) ? Plot.line([
@@ -126,8 +135,8 @@ export function renderScatter(config) {
     // Labels avec anti-collision
     ...(labelCodes.length > 0 ? (() => {
       const labelData = validData.filter(d => labelCodes.includes(d.code));
-      const xScale = d3.scaleLinear().domain(xDomain).range([60, width - 20]);
-      const yScale = d3.scaleLinear().domain(yDomain).range([height - 50, 20]);
+      const xScale = d3.scaleLinear().domain(xDomain).range([60, width - marginRight]);
+      const yScale = d3.scaleLinear().domain(yDomain).range([height - 52, 20]);
 
       const positioned = labelData.map(d => ({
         ...d,
@@ -155,8 +164,8 @@ export function renderScatter(config) {
           const name = (d.libelle || d.code).substring(0, 10);
           const xVal = d[xCol]?.toFixed(1);
           const yVal = d[yCol]?.toFixed(1);
-          if (labelMode === "names") return name;
-          if (labelMode === "values") return `${xVal}/${yVal}`;
+          if (labelMode === "names" || labelMode === "noms") return name;
+          if (labelMode === "values" || labelMode === "val.") return `${xVal}/${yVal}`;
           return `${name}\n${xVal}/${yVal}`;
         },
         fontSize: 8,
@@ -170,28 +179,50 @@ export function renderScatter(config) {
       })];
     })() : []),
 
-    // Annotations quadrant (texte léger positionné dans chaque zone)
+    // Annotations quadrant (texte positionné dans chaque zone)
     ...(annotations.map(ann => Plot.text([[ann.x, ann.y]], {
       text: [ann.text],
-      fontSize: ann.fontSize || 11,
-      fill: ann.color || "#9ca3af",
-      fontWeight: ann.fontWeight || 400,
+      fontSize: ann.fontSize || 13,
+      fill: ann.color || "#6b7280",
+      fontWeight: ann.fontWeight || 600,
       fontStyle: ann.fontStyle || "italic",
       textAnchor: ann.textAnchor || "middle",
       pointerEvents: "none"
     })))
   ].filter(Boolean);
 
-  const xTicks = customXTicks || d3.range(Math.ceil(xDomain[0]), Math.floor(xDomain[1]) + 1, 1);
-  const yTicks = customYTicks || d3.range(Math.ceil(yDomain[0]), Math.floor(yDomain[1]) + 1, 1);
+  // Ticks adaptatifs avec cap pixel-aware (évite surcharge au zoom)
+  const autoTicks = (domain, axisPixels) => {
+    const span = domain[1] - domain[0];
+    if (span <= 0) return undefined;
+    // Cap basé sur pixels disponibles (~60px min entre ticks)
+    const pixelCap = axisPixels ? Math.max(3, Math.floor(axisPixels / 60)) : maxTicks;
+    const cap = Math.min(maxTicks, pixelCap);
+    let step = Math.pow(10, Math.floor(Math.log10(span))) * (span > 50 ? 2 : span > 10 ? 1 : span > 2 ? 0.5 : 0.2);
+    // Si trop de ticks, doubler le step jusqu'au cap
+    let ticks = d3.range(Math.ceil(domain[0] / step) * step, domain[1] + step * 0.01, step);
+    while (ticks.length > cap && step < span) { step *= 2; ticks = d3.range(Math.ceil(domain[0] / step) * step, domain[1] + step * 0.01, step); }
+    return ticks;
+  };
+  const xAxisPx = width - 60 - marginRight;   // width - marginLeft - marginRight
+  const yAxisPx = height - 52 - 10;  // height - marginBottom - marginTop
+  const xTicks = customXTicks || autoTicks(xDomain, xAxisPx);
+  const yTicks = customYTicks || autoTicks(yDomain, yAxisPx);
+
+  // Labels avec unité ddict
+  const xLabelFull = xUnit ? `${xLabel} (${xUnit})` : xLabel;
+  const yLabelFull = yUnit ? `${yLabel} (${yUnit})` : yLabel;
 
   const plot = Plot.plot({
     grid: true,
-    style: { fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#444" },
-    x: { label: xLabel, domain: xDomain, labelOffset: 40, labelFontSize: 13, labelFontWeight: 600, ticks: xTicks },
-    y: { label: yLabel, domain: yDomain, labelFontSize: 13, labelFontWeight: 600, ticks: yTicks },
-    marginBottom: 50,
+    r: { type: "identity" },
+    style: { fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#333" },
+    x: { label: xLabelFull, domain: xDomain, labelOffset: 42, labelAnchor: "right", line: true, ticks: xTicks, labelArrow: "none" },
+    y: { label: yLabelFull, domain: yDomain, labelAnchor: "top", line: true, ticks: yTicks, labelArrow: "none" },
+    marginBottom: 52,
     marginTop: 10,
+    marginLeft: 60,
+    marginRight,
     marks,
     width,
     height
@@ -226,8 +257,10 @@ export function renderScatter(config) {
 export function createScatterWithZoom(config) {
   const {
     title = "Scatter Plot",
+    subtitle = null,
     legend = [],
     sizeLabel = "Taille = valeur",
+    sourceText = null,
     ...scatterConfig
   } = config;
 
@@ -249,9 +282,31 @@ export function createScatterWithZoom(config) {
   const headerRow = document.createElement("div");
   headerRow.style.cssText = "display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;";
 
-  const titleEl = document.createElement("h3");
-  titleEl.style.cssText = "margin:0;font-size:14px;font-weight:600;color:#1f2937;";
-  titleEl.textContent = title;
+  const titleEl = document.createElement("div");
+  titleEl.style.cssText = "margin:0;";
+
+  // Titre principal (div, pas h3 — évite overrides CSS Observable)
+  const titleH3 = document.createElement("div");
+  titleH3.className = "map-title";
+  titleH3.textContent = title;
+  titleEl.appendChild(titleH3);
+
+  // Sous-titre : count + source (même format que carte)
+  let _srcText = sourceText;
+  if (!_srcText) {
+    const _xIndic = scatterConfig.xCol ? parseColKey(scatterConfig.xCol).indic : null;
+    const _yIndic = scatterConfig.yCol ? parseColKey(scatterConfig.yCol).indic : null;
+    const _sources = [...new Set([_xIndic, _yIndic].filter(Boolean).map(k => getSource(k)).filter(Boolean))];
+    if (_sources.length > 0) _srcText = _sources.join(", ");
+  }
+  const subParts = [subtitle, _srcText ? `<span class="map-source-line">· ${_srcText}</span>` : ""].filter(Boolean);
+  if (subParts.length > 0) {
+    const srcEl = document.createElement("div");
+    srcEl.className = "map-subtitle";
+    srcEl.innerHTML = subParts.join(" ");
+    titleEl.appendChild(srcEl);
+  }
+
   headerRow.appendChild(titleEl);
 
   const btnRow = document.createElement("div");
@@ -274,30 +329,50 @@ export function createScatterWithZoom(config) {
   headerRow.appendChild(btnRow);
   container.appendChild(headerRow);
 
-  // --- Légende ---
-  if (legend.length > 0) {
-    const legendEl = document.createElement("div");
-    legendEl.style.cssText = "display:flex;gap:12px;font-size:11px;color:#6b7280;align-items:center;margin-bottom:8px;flex-wrap:wrap;padding-left:8px;";
-    legend.forEach(item => {
-      const span = document.createElement("span");
-      span.style.cssText = "display:flex;align-items:center;gap:3px;";
-      span.innerHTML = `<span style="display:inline-block;width:10px;height:10px;background:${item.color};border-radius:50%;"></span>${item.label}`;
-      legendEl.appendChild(span);
-    });
-    const sizeSpan = document.createElement("span");
-    sizeSpan.style.cssText = "color:#9ca3af;margin-left:8px;";
-    sizeSpan.textContent = sizeLabel;
-    legendEl.appendChild(sizeSpan);
-    container.appendChild(legendEl);
+  // --- Réserver espace à droite pour la légende (dans la marge SVG) ---
+  const _hasLegend = legend.length > 0 || sizeLabel instanceof HTMLElement || sizeLabel instanceof DocumentFragment;
+  if (_hasLegend) {
+    scatterConfig.marginRight = 150;
   }
+
+  // --- Content row : plot + légende overlay ---
+  const contentRow = document.createElement("div");
+  contentRow.style.cssText = "position:relative;";
 
   // --- Plot container + tooltip ---
   const plotContainer = document.createElement("div");
   plotContainer.style.cssText = "position:relative;";
-  container.appendChild(plotContainer);
+  contentRow.appendChild(plotContainer);
+
+  // --- Légende dans la marge droite du SVG (pas sur le quadrillage) ---
+  if (_hasLegend) {
+    const legendWrap = document.createElement("div");
+    legendWrap.className = "scatter-legend-wrap";
+    legendWrap.style.cssText = "position:absolute;top:6px;right:4px;padding:2px 4px;font-size:10px;color:#4b5563;line-height:1.5;background:none;border:none;border-radius:3px;z-index:5;";
+    // Couleurs
+    if (legend.length > 0) {
+      legend.forEach(item => {
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex;align-items:center;gap:5px;white-space:nowrap;";
+        row.innerHTML = `<span style="display:inline-block;width:10px;height:10px;background:${item.color};border-radius:50%;flex-shrink:0;border:0.5px solid rgba(0,0,0,0.15);"></span>${item.label}`;
+        legendWrap.appendChild(row);
+      });
+    }
+    // Séparateur + taille
+    if (sizeLabel instanceof HTMLElement || sizeLabel instanceof DocumentFragment) {
+      if (legend.length > 0) {
+        const sep = document.createElement("div");
+        sep.style.cssText = "border-top:1px solid #e5e7eb;margin:6px 0 4px;";
+        legendWrap.appendChild(sep);
+      }
+      legendWrap.appendChild(sizeLabel);
+    }
+    contentRow.appendChild(legendWrap);
+  }
+  container.appendChild(contentRow);
 
   const tooltip = document.createElement("div");
-  tooltip.style.cssText = "display:none;position:absolute;background:rgba(255,255,255,0.97);border:1px solid #d1d5db;border-radius:4px;padding:6px 10px;font-size:12px;color:#1f2937;pointer-events:none;z-index:20;box-shadow:0 2px 8px rgba(0,0,0,0.12);white-space:pre-line;line-height:1.4;max-width:240px;";
+  tooltip.style.cssText = "display:none;position:fixed;background:rgba(15,23,42,0.92);border:1px solid #374151;border-radius:5px;padding:8px 11px;font-size:11.5px;color:#e2e8f0;pointer-events:none;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,0.3);white-space:normal;line-height:1.5;max-width:300px;";
   plotContainer.appendChild(tooltip);
 
   // --- Dimensions selon mode ---
@@ -355,26 +430,34 @@ export function createScatterWithZoom(config) {
     plotContainer.insertBefore(scatter, tooltip);
     currentPlot = scatter;
 
-    // --- Tooltip event delegation sur circles ---
+    // --- Tooltip via Delaunay spatial lookup (pas d'index SVG — Plot regroupe circles par fill) ---
     const validData = scatter._tipData;
     if (validData && scatterConfig.getTooltip) {
       scatter.style.cursor = "grab";
+      const xSI = scatter.scale("x"), ySI = scatter.scale("y");
+      const xSF = d3.scaleLinear().domain(xSI.domain).range(xSI.range);
+      const ySF = d3.scaleLinear().domain(ySI.domain).range(ySI.range);
+      const pts = validData.map(d => [
+        xSF(d[scatterConfig.xCol]),
+        ySF(d[scatterConfig.yCol])
+      ]);
+      const delaunay = d3.Delaunay.from(pts);
+
       scatter.addEventListener("mousemove", (e) => {
         if (isDragging) { tooltip.style.display = "none"; return; }
-        const circle = e.target.closest("circle");
-        if (!circle) { tooltip.style.display = "none"; return; }
-        const circles = Array.from(scatter.querySelectorAll("circle"));
-        const idx = circles.indexOf(circle);
-        if (idx < 0 || idx >= validData.length) { tooltip.style.display = "none"; return; }
+        const [mx, my] = d3.pointer(e, scatter);
+        const idx = delaunay.find(mx, my);
+        if (idx < 0 || idx >= pts.length) { tooltip.style.display = "none"; return; }
+        const dist = Math.hypot(mx - pts[idx][0], my - pts[idx][1]);
+        if (dist > 30) { tooltip.style.display = "none"; return; }
         const d = validData[idx];
-        circle.style.cursor = "pointer";
         tooltip.innerHTML = scatterConfig.getTooltip(d).replace(/\n/g, "<br>");
         tooltip.style.display = "block";
-        const rect = plotContainer.getBoundingClientRect();
-        let x = e.clientX - rect.left + 14;
-        let y = e.clientY - rect.top - 30;
-        if (x + 220 > rect.width) x = e.clientX - rect.left - 230;
-        if (y < 0) y = e.clientY - rect.top + 14;
+        const tipRect = tooltip.getBoundingClientRect();
+        let x = e.clientX + 14;
+        let y = e.clientY - tipRect.height - 8;
+        if (x + tipRect.width > window.innerWidth - 8) x = e.clientX - tipRect.width - 14;
+        if (y < 0) y = e.clientY + 14;
         tooltip.style.left = x + "px";
         tooltip.style.top = y + "px";
       });
@@ -394,8 +477,7 @@ export function createScatterWithZoom(config) {
     const my = e.clientY - rect.top;
 
     const dims = getDims();
-    // Marges approximatives Plot (marginLeft ~55, marginTop 10, marginRight ~20, marginBottom 50)
-    const ml = 55, mt = 10, mr = 20, mb = 50;
+    const ml = 60, mt = 10, mr = 16, mb = 52;
     const pw = dims.width - ml - mr;
     const ph = dims.height - mt - mb;
 
@@ -439,7 +521,7 @@ export function createScatterWithZoom(config) {
     const onMove = (ev) => {
       if (!isDragging) return;
       const dims = getDims();
-      const ml = 55, mt = 10, mr = 20, mb = 50;
+      const ml = 60, mt = 10, mr = 16, mb = 52;
       const pw = dims.width - ml - mr;
       const ph = dims.height - mt - mb;
       const dx = ev.clientX - startPos.x;
@@ -562,20 +644,31 @@ export function createScatterWithZoom(config) {
 // ============================================================
 
 /**
- * Ajoute des click handlers aux cercles d'un scatter plot
+ * Ajoute des click handlers aux cercles d'un scatter plot via Delaunay
  *
  * @param {Object} scatterPlot - L'objet Plot retourné par renderScatter
- * @param {Array} filteredData - Les données filtrées (même ordre que les cercles)
+ * @param {Array} filteredData - Les données filtrées
  * @param {Function} onClick - Callback (code) => void
+ * @param {string} xCol - Colonne X
+ * @param {string} yCol - Colonne Y
  */
-export function addScatterClickHandlers(scatterPlot, filteredData, onClick) {
-  scatterPlot.querySelectorAll("circle").forEach((circle, i) => {
-    if (i < filteredData.length) {
-      circle.style.cursor = "pointer";
-      circle.addEventListener("click", () => {
-        onClick(filteredData[i].code);
-      });
-    }
+export function addScatterClickHandlers(scatterPlot, filteredData, onClick, xCol, yCol) {
+  if (!filteredData.length || !xCol || !yCol) return;
+  const xSI = scatterPlot.scale("x"), ySI = scatterPlot.scale("y");
+  if (!xSI || !ySI) return;
+  const xSF = d3.scaleLinear().domain(xSI.domain).range(xSI.range);
+  const ySF = d3.scaleLinear().domain(ySI.domain).range(ySI.range);
+  const pts = filteredData.map(d => [xSF(d[xCol]), ySF(d[yCol])]);
+  const delaunay = d3.Delaunay.from(pts);
+
+  scatterPlot.style.cursor = "pointer";
+  scatterPlot.addEventListener("click", (e) => {
+    const [mx, my] = d3.pointer(e, scatterPlot);
+    const idx = delaunay.find(mx, my);
+    if (idx < 0 || idx >= pts.length) return;
+    const dist = Math.hypot(mx - pts[idx][0], my - pts[idx][1]);
+    if (dist > 30) return;
+    onClick(filteredData[idx].code);
   });
 }
 

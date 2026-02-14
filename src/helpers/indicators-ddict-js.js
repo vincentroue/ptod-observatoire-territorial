@@ -3,7 +3,7 @@
 // AUTO-GÉNÉRÉ depuis config/ddict_indicateurs_ottd.json + CSV volets (v_*)
 // NE PAS MODIFIER - Relancer: Rscript scripts/util-gen-indicators-js.R
 // Volets: source CSV ddict-validation-light_ottd.csv (colonnes v_*)
-// Généré: 2026-02-11 22:22:35.308129
+// Généré: 2026-02-13 10:55:59.083745
 // =======================================================================
 
 import * as d3 from "npm:d3";
@@ -235,16 +235,16 @@ const DDICT = {
     "&comment_idx": "══════════ INDICES SYNTHÉTIQUES (idx) ══════════",
     "idxresid_dyn_ind": {
       "rawObsvACT": "idx_resid",
-      "short": "Attract. résid.",
-      "medium": "Attractivité résidentielle",
+      "short": "◆ Attract. résid.",
+      "medium": "Indice d'attractivité résidentielle",
       "long": "Indice attractivité résidentielle (SMA, TMI cadres, TMI 65+)",
       "type": "ind",
       "unit": "ind",
-      "theme": "dmf",
-      "ordre": 29.81,
+      "theme": "idx",
+      "ordre": 1,
       "source": "Calcul PTOD",
       "formula": "50 + mean(z_composantes) × 15, borné [0-100]",
-      "note": "3 composantes flux migratoires. Score 50=moyenne, >65=attractif, <35=répulsif.",
+      "note": "Synthèse de 4 composantes migratoires (solde migratoire, rotation, taux migratoire cadres et 65+). Score 50 = moyenne nationale. Supérieur = territoire plus attractif.",
       "periodes": [
         "11_16",
         "16_22"
@@ -256,13 +256,17 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Indice composite d’attractivité résidentielle : solde migratoire, rotation, profils cadres et 65+. Normalisé en z-score.",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "idxeco_soc_ind": {
-      "short": "IDX Attract. éco. (soc)",
-      "medium": "Indice attractivité économique (sociétés)",
+      "short": "◆ Attract. éco.(s)",
+      "medium": "◆ Indice d'attractivité économique (social)",
       "long": "Indice synthétique d'attractivité économique avec créations de sociétés",
       "type": "ind",
       "unit": "indice",
@@ -272,14 +276,28 @@ const DDICT = {
         "1117",
         "1724"
       ],
+      "source": "Calcul PTOD",
+      "formula": "50 + mean(z_composantes) × 15, borné [0-100]",
+      "srcVar": [
+        "eco_emp_vtcam_1622",
+        "eco_emppriv_vtcam_2224",
+        "eco_etabpriv_vevol_1924",
+        "eco_entrcrea_soc_vevol_1724",
+        "dsp_csp_cadres_vdifp_1622"
+      ],
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Indice composite d'attractivité économique (variante sociale) : emploi RP, emploi privé, établissements, créations, cadres.",
+      "note": "Synthèse de 5 composantes économiques (emploi total, emploi privé URSSAF, établissements, créations de sociétés, cadres). Normalisé en z-score. Valeur supérieure à {percentile}% des territoires.",
       "volets": [],
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "idxeco_tot_ind": {
-      "short": "IDX Attract. éco. (tot)",
-      "medium": "Indice attractivité économique (total)",
+      "short": "◆ Attract. éco.(t)",
+      "medium": "◆ Indice d'attractivité économique (total)",
       "long": "Indice synthétique d'attractivité économique avec créations totales",
       "type": "ind",
       "unit": "indice",
@@ -289,6 +307,20 @@ const DDICT = {
         "1117",
         "1724"
       ],
+      "source": "Calcul PTOD",
+      "formula": "50 + mean(z_composantes) × 15, borné [0-100]",
+      "srcVar": [
+        "eco_emp_vtcam_1622",
+        "eco_emppriv_vtcam_2224",
+        "eco_etabpriv_vevol_1924",
+        "eco_entrcrea_tot_vevol_1724",
+        "dsp_csp_cadres_vdifp_1622"
+      ],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Indice composite d'attractivité économique (variante totale) incluant l'emploi total.",
+      "note": "Mêmes composantes que la variante sociale mais avec l'emploi total en remplacement. Normalisé en z-score. Valeur 0 = moyenne nationale. Valeur supérieure à {percentile}% des territoires.",
       "volets": [],
       "agg_dash": true,
       "agg_ecodash": false,
@@ -296,16 +328,16 @@ const DDICT = {
     },
     "idxgentri_ind": {
       "rawObsvACT": "idx_gentri",
-      "short": "Gentrification",
-      "medium": "Indice gentrification",
+      "short": "◆ Gentrification",
+      "medium": "Indice de gentrification",
       "long": "Indice gentrification (transformation sociale en cours)",
       "type": "ind",
       "unit": "ind",
-      "theme": "dsp",
-      "ordre": 29.85,
+      "theme": "idx",
+      "ordre": 4,
       "source": "Calcul PTOD",
       "formula": "50 + mean(z_cappé±3) × 15, borné [0-100]",
-      "note": "7-9 composantes : cadres stk/évol, TMI cad/-ouvr, revenu med/évol, TR + DVF prix optionnels. Score élevé=gentrification.",
+      "note": "Croise l’évolution des prix, l’arrivée de cadres et le départ de populations modestes. Valeur 0 = moyenne nationale. Valeur élevée = dynamique de gentrification marquée. Valeur supérieure à {percentile}% des territoires.",
       "periodes": [
         "11_22"
       ],
@@ -324,22 +356,26 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Indice composite de gentrification : évolution prix immobiliers, profils socio-économiques et flux migratoires.",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "idxlogtens_ind": {
       "rawObsvACT": "idx_logtens",
-      "short": "Tension log.",
-      "medium": "Tension logement",
+      "short": "◆ Tension logt",
+      "medium": "Indice de tension du logement",
       "long": "Indice tension marché logement",
       "type": "ind",
       "unit": "ind",
-      "theme": "log",
-      "ordre": 29.87,
+      "theme": "idx",
+      "ordre": 5,
       "source": "Calcul PTOD",
       "formula": "50 + mean(z_composantes) × 15, borné [0-100]",
-      "note": "4 composantes : -vacance, revenu med, pauvreté, rés. secondaires. Score élevé=marché tendu.",
+      "note": "Synthèse des prix immobiliers, du taux de vacance, de la construction neuve et des loyers. Valeur 0 = moyenne nationale. Positif = marché tendu. Valeur supérieure à {percentile}% des territoires.",
       "periodes": [
         "22"
       ],
@@ -351,6 +387,10 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 2,
+      "polarity": -1,
+      "symbol": "",
+      "definition": "Indice composite de tension du logement : prix, vacance, construction et loyers.",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -358,8 +398,8 @@ const DDICT = {
     "&comment_dm": "══════════ DÉMOGRAPHIE GÉNÉRALE (dm) ══════════",
     "dm_pop_vtcam": {
       "rawObsvACT": "tcam_pop",
-      "short": "△ evol. pop.",
-      "medium": "△ evolution population (TCAM)",
+      "short": "△ Pop",
+      "medium": "△ Évolution de la population",
       "long": "Taux de croissance annuel moyen de la population totale",
       "type": "vtcam",
       "unit": "%/an",
@@ -381,6 +421,11 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "△",
+      "definition": "Taux de croissance annuel moyen de la population sur la période, lissant les variations annuelles.",
+      "note": "Vitesse d’évolution de la population lissée sur la période. Un TCAM de +1%/an signifie qu’en moyenne la population augmente de 1% chaque année. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}/an).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -388,7 +433,7 @@ const DDICT = {
     "dm_sn_vtcam": {
       "rawObsvACT": "tcam_sn",
       "short": "△ Solde naturel",
-      "medium": "△ Solde naturel (TCAM)",
+      "medium": "△ Contribution du solde naturel",
       "long": "Contribution du solde naturel à l'évolution démographique",
       "type": "vtcam",
       "unit": "%/an",
@@ -411,14 +456,19 @@ const DDICT = {
         "DECESD22"
       ],
       "volets": ["exd", "exdc"],
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "△",
+      "definition": "Contribution du solde naturel (naissances moins décès) à l’évolution démographique, en taux annuel moyen.",
+      "note": "Part de la croissance due au solde naturel (naissances moins décès). Négatif = plus de décès que de naissances. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}/an).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dm_pop_vevol": {
       "rawObsvACT": {},
-      "short": "△ evol. pop. 22-23",
-      "medium": "△ evolution population 22-23",
+      "short": "△ Pop 22-23",
+      "medium": "△ Variation population récente",
       "long": "Variation population entre 2022 et 2023 en pourcentage",
       "type": "vevol",
       "unit": "%",
@@ -434,14 +484,19 @@ const DDICT = {
         "P23_POP"
       ],
       "volets": "exdc",
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "△",
+      "definition": "Variation annuelle récente de la population (dernière année disponible).",
+      "note": "Variation la plus récente, complément du TCAM long terme. Permet de détecter les inflexions de tendance. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dm_sma_vtcam": {
       "rawObsvACT": "tcam_sma",
-      "short": "△ Solde migr. app.",
-      "medium": "△ Solde migratoire apparent (TCAM)",
+      "short": "△ Solde migr.",
+      "medium": "△ Contribution du solde migratoire",
       "long": "Contribution du solde migratoire apparent (résidu)",
       "type": "vtcam",
       "unit": "%/an",
@@ -457,6 +512,11 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "△",
+      "definition": "Contribution du solde migratoire apparent à l’évolution démographique. Résidu : croissance totale moins solde naturel.",
+      "note": "Part de la croissance due aux migrations (entrées moins sorties). Positif = le territoire attire plus d’habitants qu’il n’en perd. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}/an).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -464,7 +524,7 @@ const DDICT = {
     "&comment_dmv": "══════════ VIEILLISSEMENT (dmv) ══════════",
     "dmv_60p_pct": {
       "rawObsvACT": "pct_60plus",
-      "short": "Part 60ans+",
+      "short": "% 60 ans+",
       "medium": "Part des 60 ans et plus",
       "long": "Part de la population de 60ans+ dans la population totale",
       "type": "pct",
@@ -484,14 +544,19 @@ const DDICT = {
         "P22_POP90P"
       ],
       "volets": ["exd", "exdc"],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part de la population âgée de 60 ans et plus dans la population totale.",
+      "note": "Marqueur du vieillissement démographique. Une part élevée peut impliquer des besoins accrus en services de santé et d'autonomie. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmv_60p_vdifp": {
       "rawObsvACT": "var_60plus",
-      "short": "△ evol. part 60ans+",
-      "medium": "△ evolution part 60ans+ (pts)",
+      "short": "▲ 60 ans+",
+      "medium": "▲ Variation de la part des 60 ans+",
       "long": "Variation de la part des 60ans+ en points",
       "type": "vdifp",
       "unit": "pts",
@@ -505,13 +570,16 @@ const DDICT = {
         "11_22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "▲",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmv_75p_pct": {
       "rawObsvACT": "pct_75plus",
-      "short": "Part 75ans+",
+      "short": "% 75 ans+",
       "medium": "Part des 75 ans et plus",
       "long": "Part de la population de 75ans+ (vieillissement avancé)",
       "type": "pct",
@@ -531,14 +599,19 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part de la population âgée de 75 ans et plus dans la population totale.",
+      "note": "Indicateur de grand âge. Part élevée = enjeux de dépendance, d'isolement et de services de proximité. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmv_75p_vdifp": {
       "rawObsvACT": "var_75plus",
-      "short": "△ evol. part 75ans+",
-      "medium": "△ evolution part 75ans+ (pts)",
+      "short": "▲ 75 ans+",
+      "medium": "▲ Variation de la part des 75 ans+",
       "long": "Variation de la part des 75ans+ en points",
       "type": "vdifp",
       "unit": "pts",
@@ -552,6 +625,9 @@ const DDICT = {
         "11_22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "▲",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -559,7 +635,7 @@ const DDICT = {
     "dmv_iv_ind": {
       "rawObsvACT": "iv",
       "short": "Ind. vieillissement",
-      "medium": "Indice de vieillissement",
+      "medium": "Indice de vieillissement (60+/0-14)",
       "long": "Indice de vieillissement (pop 65ans+ / pop <20 ans)",
       "type": "ind",
       "unit": "ratio",
@@ -580,14 +656,19 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 2,
+      "polarity": -1,
+      "symbol": "",
+      "definition": "Rapport entre la population de 60 ans+ et celle de moins de 15 ans. Mesure le vieillissement relatif.",
+      "note": "Nombre de personnes de 60+ pour 100 de moins de 15 ans. Valeur 100 = autant de seniors que de jeunes. Au-dessus = population vieillissante. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmv_iv_vdifp": {
       "rawObsvACT": "var_iv",
-      "short": "△ evol. ind. vieill.",
-      "medium": "△ evolution indice vieillissement (pts)",
+      "short": "▲ Vieillissement",
+      "medium": "▲ Variation de l’indice de vieillissement",
       "long": "Variation de l'indice de vieillissement en points",
       "type": "vdifp",
       "unit": "pts",
@@ -601,6 +682,9 @@ const DDICT = {
         "11_22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "▲",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -608,7 +692,7 @@ const DDICT = {
     "&comment_dm_tranches": "--- Tranches d'âge détaillées (structure pop, pas vieillissement) ---",
     "dm_1519_pct": {
       "rawObsvACT": "pct_1519",
-      "short": "Part 15-19",
+      "short": "% 15-19 ans",
       "medium": "Part des 15-19 ans",
       "long": "Part de la population de 15-19 ans",
       "type": "pct",
@@ -624,13 +708,16 @@ const DDICT = {
         "P22_POP1519"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dm_2024_pct": {
       "rawObsvACT": "pct_2024",
-      "short": "Part 20-24",
+      "short": "% 20-24 ans",
       "medium": "Part des 20-24 ans",
       "long": "Part de la population de 20-24 ans",
       "type": "pct",
@@ -646,13 +733,16 @@ const DDICT = {
         "P22_POP2024"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dm_2539_pct": {
       "rawObsvACT": "pct_2539",
-      "short": "Part 25-39",
+      "short": "% 25-39 ans",
       "medium": "Part des 25-39 ans",
       "long": "Part de la population de 25-39 ans",
       "type": "pct",
@@ -669,13 +759,16 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dm_4054_pct": {
       "rawObsvACT": "pct_4054",
-      "short": "Part 40-54",
+      "short": "% 40-54 ans",
       "medium": "Part des 40-54 ans",
       "long": "Part de la population de 40-54 ans",
       "type": "pct",
@@ -691,13 +784,16 @@ const DDICT = {
         "P22_POP4054"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dm_5564_pct": {
       "rawObsvACT": "pct_5564",
-      "short": "Part 55-64",
+      "short": "% 55-64 ans",
       "medium": "Part des 55-64 ans",
       "long": "Part de la population de 55-64 ans",
       "type": "pct",
@@ -713,13 +809,16 @@ const DDICT = {
         "P22_POP5564"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dm_6579_pct": {
       "rawObsvACT": "pct_6579",
-      "short": "Part 65-79",
+      "short": "% 65-79 ans",
       "medium": "Part des 65-79 ans",
       "long": "Part de la population de 65-79 ans",
       "type": "pct",
@@ -736,13 +835,16 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dm_80p_pct": {
       "rawObsvACT": "pct_80p",
-      "short": "Part 80ans+",
+      "short": "% 80 ans+",
       "medium": "Part des 80 ans et plus",
       "long": "Part de la population de 80 ans et plus",
       "type": "pct",
@@ -758,6 +860,9 @@ const DDICT = {
         "P22_POP80P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -765,8 +870,8 @@ const DDICT = {
     "&comment_dmv_seul": "--- Personnes vivant seules par tranche ---",
     "dmv_6579_seul_pct": {
       "rawObsvACT": "pct_6579_seul",
-      "short": "65-79 seuls",
-      "medium": "Part des 65-79 vivant seuls",
+      "short": "% 65-79 seuls",
+      "medium": "Part des 65-79 ans vivant seuls",
       "long": "Part des 65-79 ans vivant seuls dans leur tranche",
       "type": "pct",
       "unit": "%",
@@ -784,14 +889,17 @@ const DDICT = {
         "P22_POP6579"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmv_80p_seul_pct": {
       "rawObsvACT": "pct_80p_seul",
-      "short": "80ans+ seuls",
-      "medium": "Part des 80ans+ vivant seuls",
+      "short": "% 80+ seuls",
+      "medium": "Part des 80+ vivant seuls",
       "long": "Part des 80 ans et plus vivant seuls",
       "type": "pct",
       "unit": "%",
@@ -810,6 +918,9 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -817,8 +928,8 @@ const DDICT = {
     "&comment_dmf": "══════════ FLUX MIGRATOIRES (dmf) - MIGCOM ══════════",
     "dmf_pe_pct": {
       "rawObsvACT": "PE_pct",
-      "short": "Part entrants",
-      "medium": "Part des entrants",
+      "short": "% entrants",
+      "medium": "Part des entrants dans la population",
       "long": "Part des individus entrés dans le territoire",
       "type": "pct",
       "unit": "%",
@@ -832,14 +943,19 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des entrants (personnes arrivées) dans la population totale du territoire.",
+      "note": "Proportion de nouveaux arrivants. Un taux élevé signale un territoire ouvert aux flux. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_ps_pct": {
       "rawObsvACT": "PS_pct",
-      "short": "Part sortants",
-      "medium": "Part des sortants",
+      "short": "% sortants",
+      "medium": "Part des sortants dans la population",
       "long": "Part des individus sortis du territoire",
       "type": "pct",
       "unit": "%",
@@ -853,6 +969,11 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des sortants (personnes parties) dans la population totale du territoire.",
+      "note": "Proportion de départs. Un taux élevé traduit une forte mobilité sortante. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -860,7 +981,7 @@ const DDICT = {
     "dmf_sm_stock": {
       "rawObsvACT": "SM",
       "short": "Solde migratoire",
-      "medium": "Solde migratoire (effectif)",
+      "medium": "Solde migratoire apparent",
       "long": "Différence entrants - sortants en nombre",
       "type": "stock",
       "unit": "hab",
@@ -873,14 +994,19 @@ const DDICT = {
         "22"
       ],
       "volets": ["exd", "exdc"],
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Différence entre le nombre d’entrants et de sortants sur la période intercensitaire (source MIGCOM).",
+      "note": "Solde migratoire apparent : personnes installées moins celles parties. Source MIGCOM (fichiers détail du recensement). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_tm_vtcam": {
       "rawObsvACT": "TM",
-      "short": "Taux migr. total",
-      "medium": "Taux migratoire total",
+      "short": "△ Tx migr. total",
+      "medium": "△ Évolution du taux migratoire total",
       "long": "Solde migratoire rapporté à la population moyenne",
       "type": "vtcam",
       "unit": "%/an",
@@ -894,14 +1020,19 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "△",
+      "definition": "Taux de croissance annuel moyen du taux migratoire total sur la période.",
+      "note": "Évolution du solde migratoire rapporté à la population. Positif = l'attractivité migratoire s'améliore. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_tr_pct": {
       "rawObsvACT": "TR_pct",
-      "short": "Taux rotation",
-      "medium": "Taux de rotation",
+      "short": "Tx rotation",
+      "medium": "Taux de rotation migratoire",
       "long": "Intensité des flux (entrants + sortants) rapportée à la population",
       "type": "pct",
       "unit": "%",
@@ -915,6 +1046,11 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 1,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Somme des entrants et sortants rapportée à la population. Mesure l’intensité des échanges migratoires.",
+      "note": "Taux de rotation : intensité des flux (entrées + sorties / population). Un taux élevé = beaucoup de mouvements, même si le solde est proche de zéro. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -922,8 +1058,8 @@ const DDICT = {
     "&comment_eco": "══════════ ÉCONOMIE / EMPLOI (eco) ══════════",
     "eco_emp_vtcam": {
       "rawObsvACT": "tcam_emp",
-      "short": "△ evol. emploi",
-      "medium": "△ evolution emploi total (TCAM)",
+      "short": "△ Emploi",
+      "medium": "△ Évolution de l’emploi total",
       "long": "Taux de croissance annuel moyen de l'emploi total",
       "type": "vtcam",
       "unit": "%/an",
@@ -943,6 +1079,11 @@ const DDICT = {
       ],
       "volets": ["exd", "exde"],
       "eda": true,
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "△",
+      "definition": "Taux de croissance annuel moyen de l’emploi total au lieu de travail sur la période.",
+      "note": "Évolution de l’emploi au lieu de travail. Positif = création nette d’emplois. Négatif = destruction nette. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}/an).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
@@ -951,7 +1092,7 @@ const DDICT = {
     "eco_act1564_stock": {
       "rawObsvACT": "act1564",
       "short": "Actifs 15-64",
-      "medium": "Total actifs 15-64 ans",
+      "medium": "Population active 15-64 ans",
       "long": "Population active de 15 à 64 ans",
       "type": "stock",
       "unit": "hab",
@@ -966,6 +1107,9 @@ const DDICT = {
         "C22_ACT1564"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -988,6 +1132,9 @@ const DDICT = {
         "C22_ACTOCC1564"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -995,8 +1142,8 @@ const DDICT = {
     "&comment_eco_csp_actocc": "--- CSP Actifs Occupés 15-64 ---",
     "eco_actocc_artcom_pct": {
       "rawObsvACT": "pct_actocc_artcom",
-      "short": "ActOcc Artisans",
-      "medium": "Part actifs occ. artisans/comm.",
+      "short": "% Artisans act.",
+      "medium": "Part des artisans dans les actifs",
       "long": "Part des artisans, commerçants parmi les actifs occupés 15-64",
       "type": "pct",
       "unit": "%",
@@ -1012,14 +1159,17 @@ const DDICT = {
         "C22_ACTOCC1564"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "eco_actocc_cadres_pct": {
       "rawObsvACT": "pct_actocc_cadres",
-      "short": "ActOcc Cadres",
-      "medium": "Part actifs occ. cadres",
+      "short": "% Cadres actifs",
+      "medium": "Part des cadres dans les actifs",
       "long": "Part des cadres parmi les actifs occupés 15-64",
       "type": "pct",
       "unit": "%",
@@ -1035,14 +1185,17 @@ const DDICT = {
         "C22_ACTOCC1564"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "eco_actocc_profint_pct": {
       "rawObsvACT": "pct_actocc_profint",
-      "short": "ActOcc Prof. Int.",
-      "medium": "Part actifs occ. prof. inter.",
+      "short": "% Prof.int. act.",
+      "medium": "Part des prof. intermédiaires actifs",
       "long": "Part des professions intermédiaires parmi les actifs occupés 15-64",
       "type": "pct",
       "unit": "%",
@@ -1058,14 +1211,17 @@ const DDICT = {
         "C22_ACTOCC1564"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "eco_actocc_employes_pct": {
       "rawObsvACT": "pct_actocc_employes",
-      "short": "ActOcc Employés",
-      "medium": "Part actifs occ. employés",
+      "short": "% Employés act.",
+      "medium": "Part des employés dans les actifs",
       "long": "Part des employés parmi les actifs occupés 15-64",
       "type": "pct",
       "unit": "%",
@@ -1081,14 +1237,17 @@ const DDICT = {
         "C22_ACTOCC1564"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "eco_actocc_ouvriers_pct": {
       "rawObsvACT": "pct_actocc_ouvriers",
-      "short": "ActOcc Ouvriers",
-      "medium": "Part actifs occ. ouvriers",
+      "short": "% Ouvriers act.",
+      "medium": "Part des ouvriers dans les actifs",
       "long": "Part des ouvriers parmi les actifs occupés 15-64",
       "type": "pct",
       "unit": "%",
@@ -1104,6 +1263,9 @@ const DDICT = {
         "C22_ACTOCC1564"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1111,8 +1273,8 @@ const DDICT = {
     "&comment_eco_salnsal": "--- Salariés / Non-salariés ---",
     "eco_sal_pct": {
       "rawObsvACT": "pct_sal",
-      "short": "Part salariés",
-      "medium": "Part des salariés 15ans+",
+      "short": "% salariés",
+      "medium": "Part des salariés dans l’emploi",
       "long": "Part des salariés dans la population active occupée 15ans+",
       "type": "pct",
       "unit": "%",
@@ -1129,14 +1291,19 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc", "exde"],
       "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des salariés dans l'emploi total.",
+      "note": "Complémentaire des non-salariés. Part très élevée = économie structurée autour d'entreprises établies. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
     },
     "eco_nsal_pct": {
       "rawObsvACT": "pct_nsal",
-      "short": "Part non-salariés",
-      "medium": "Part des non-salariés 15ans+",
+      "short": "% non-salariés",
+      "medium": "Part des non-salariés dans l’emploi",
       "long": "Part des non-salariés dans la population active occupée 15ans+",
       "type": "pct",
       "unit": "%",
@@ -1153,6 +1320,11 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des non-salariés (indépendants, professions libérales, auto-entrepreneurs) dans l'emploi total.",
+      "note": "Indépendants et professions libérales. Part élevée = tissu de petites entreprises, zones rurales ou touristiques. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
@@ -1161,7 +1333,7 @@ const DDICT = {
     "eco_txemp_1564": {
       "rawObsvACT": "txemp_1564",
       "short": "Tx emploi 15-64",
-      "medium": "Taux emploi 15-64 ans",
+      "medium": "Taux d’emploi des 15-64 ans",
       "long": "Taux d'emploi des 15-64 ans (actifs occupés / pop)",
       "type": "tx",
       "unit": "%",
@@ -1182,14 +1354,19 @@ const DDICT = {
         "P22_POP1564"
       ],
       "volets": ["exd", "exde"],
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Rapport entre le nombre d’actifs occupés de 15-64 ans et la population totale de 15-64 ans.",
+      "note": "Taux d’emploi : proportion de la population en âge de travailler qui occupe effectivement un emploi. Complémentaire du taux de chômage (inclut aussi les inactifs). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
     },
     "eco_txemp_1564_vdifp": {
       "rawObsvACT": "txemp_1564_evol",
-      "short": "Évol tx emploi",
-      "medium": "Évol. taux emploi 15-64",
+      "short": "▲ Var. tx emploi",
+      "medium": "▲ Variation du taux d’emploi 15-64",
       "long": "Évolution du taux d'emploi 15-64 ans en points de %",
       "type": "vdifp",
       "unit": "pts %",
@@ -1206,6 +1383,9 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "▲",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1213,7 +1393,7 @@ const DDICT = {
     "eco_txemp_1524": {
       "rawObsvACT": "txemp_1524",
       "short": "Tx emploi 15-24",
-      "medium": "Taux emploi 15-24 ans",
+      "medium": "Taux d’emploi des 15-24 ans",
       "long": "Taux d'emploi des 15-24 ans (jeunes)",
       "type": "tx",
       "unit": "%",
@@ -1233,6 +1413,11 @@ const DDICT = {
         "P22_POP2024"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Rapport entre le nombre d'actifs occupés de 15-24 ans et la population totale de 15-24 ans.",
+      "note": "Taux d'emploi des jeunes. Faible = difficultés d'insertion (études longues, chômage jeunes). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1240,7 +1425,7 @@ const DDICT = {
     "eco_txemp_2554": {
       "rawObsvACT": "txemp_2554",
       "short": "Tx emploi 25-54",
-      "medium": "Taux emploi 25-54 ans",
+      "medium": "Taux d’emploi des 25-54 ans",
       "long": "Taux d'emploi des 25-54 ans (âge actif)",
       "type": "tx",
       "unit": "%",
@@ -1260,6 +1445,11 @@ const DDICT = {
         "P22_POP4054"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Rapport entre le nombre d'actifs occupés de 25-54 ans et la population totale de 25-54 ans.",
+      "note": "Taux d'emploi du cœur d'activité. Tranche la plus homogène, reflète la santé du marché du travail local. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1267,7 +1457,7 @@ const DDICT = {
     "eco_txemp_5564": {
       "rawObsvACT": "txemp_5564",
       "short": "Tx emploi 55-64",
-      "medium": "Taux emploi 55-64 ans",
+      "medium": "Taux d’emploi des 55-64 ans",
       "long": "Taux d'emploi des 55-64 ans (seniors)",
       "type": "tx",
       "unit": "%",
@@ -1286,6 +1476,11 @@ const DDICT = {
         "P22_POP5564"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Rapport entre le nombre d'actifs occupés de 55-64 ans et la population totale de 55-64 ans.",
+      "note": "Taux d'emploi des seniors. Enjeu majeur du maintien dans l'emploi en fin de carrière. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1293,8 +1488,8 @@ const DDICT = {
     "&comment_eco_concentration": "--- Concentration emploi (attractivité) ---",
     "eco_ratio_emplt_actoc": {
       "rawObsvACT": "ice",
-      "short": "ICE",
-      "medium": "Indice concentration emploi",
+      "short": "Conc. emploi",
+      "medium": "Indice de concentration de l’emploi",
       "long": "Indice de concentration de l'emploi (emplois/actifs occupés résidents ×100)",
       "type": "ind",
       "unit": "ind",
@@ -1302,7 +1497,7 @@ const DDICT = {
       "ordre": 29,
       "source": "INSEE RP",
       "formula": "P22_EMPLT / C22_ACTOCC1564 × 100",
-      "note": ">100 = pôle emploi, <100 = zone dortoir",
+      "note": "Indice de concentration de l’emploi : emplois / actifs résidents. Valeur > 1 = pôle d’emploi (attire des travailleurs extérieurs). Valeur < 1 = territoire résidentiel (résidents travaillent ailleurs). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "periodes": [
         "22"
       ],
@@ -1312,6 +1507,10 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc", "exde"],
       "eda": true,
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Rapport entre nombre d’emplois sur le territoire et nombre d’actifs occupés résidents.",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
@@ -1319,7 +1518,7 @@ const DDICT = {
     "&comment_idx_synth": "--- 4 Indices Synthétiques v2 (z-score cappé ±3) ---",
     "idxresid_dyn_pct": {
       "rawObsvACT": "idx_resid_pct",
-      "short": "Attract. résid. (pct)",
+      "short": "◆ Attract. résid.%",
       "medium": "Attractivité résidentielle (percentile)",
       "long": "Indice attractivité résidentielle - méthode percentile",
       "type": "ind",
@@ -1339,14 +1538,17 @@ const DDICT = {
       ],
       "volets": [],
       "eda": false,
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "idxeco_dyn_ind": {
       "rawObsvACT": "idx_eco",
-      "short": "Attract. éco.",
-      "medium": "Attractivité économique",
+      "short": "◆ Attract. éco.",
+      "medium": "Indice d’attractivité économique",
       "long": "Indice attractivité économique v2 (4 composantes dynamiques)",
       "type": "ind",
       "unit": "ind",
@@ -1366,13 +1568,16 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "idxeco_dyn_pct": {
       "rawObsvACT": "idx_eco_pct",
-      "short": "Attract. éco. (pct)",
+      "short": "◆ Attract. éco.%",
       "medium": "Attractivité économique (percentile)",
       "long": "Indice attractivité économique v2 - méthode percentile",
       "type": "ind",
@@ -1392,14 +1597,17 @@ const DDICT = {
       ],
       "volets": [],
       "eda": false,
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "idxgentri_pct": {
       "rawObsvACT": "idx_gentri_pct",
-      "short": "Gentrification (pct)",
-      "medium": "Indice gentrification (percentile)",
+      "short": "◆ Gentrific. %",
+      "medium": "Gentrification (percentile)",
       "long": "Indice gentrification - méthode percentile",
       "type": "ind",
       "unit": "ind",
@@ -1425,14 +1633,17 @@ const DDICT = {
       ],
       "volets": [],
       "eda": false,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "idxlogtens_pct": {
       "rawObsvACT": "idx_logtens_pct",
-      "short": "Tension log. (pct)",
-      "medium": "Tension logement (percentile)",
+      "short": "◆ Tension logt %",
+      "medium": "Tension du logement (percentile)",
       "long": "Indice tension logement - méthode percentile",
       "type": "ind",
       "unit": "ind",
@@ -1451,6 +1662,9 @@ const DDICT = {
       ],
       "volets": [],
       "eda": false,
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1458,8 +1672,8 @@ const DDICT = {
     "&comment_eco_flores": "--- Entreprises et Établissements (FLORES) ---",
     "eco_emp_pres_pct": {
       "rawObsvACT": "pct_emp_pres",
-      "short": "Emplois présent.",
-      "medium": "Part emplois présentiels",
+      "short": "% Emploi présent.",
+      "medium": "Part de l’emploi présentiel",
       "long": "Part des emplois de la sphère présentielle",
       "type": "pct",
       "unit": "%",
@@ -1475,14 +1689,19 @@ const DDICT = {
         "ETPTOT23"
       ],
       "volets": ["exd", "exdc", "exde"],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Part de l'emploi dans la sphère présentielle (services à la population locale : commerce, santé, éducation, services à la personne).",
+      "note": "Sphère présentielle = emplois liés à la population résidente. Part élevée = économie tournée vers les besoins locaux. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
     },
     "eco_emp_npres_pct": {
       "rawObsvACT": "pct_emp_npres",
-      "short": "Emplois non-prés.",
-      "medium": "Part emplois non-présentiels",
+      "short": "% Emploi non-prés.",
+      "medium": "Part de l’emploi non-présentiel",
       "long": "Part des emplois de la sphère productive (non-présentielle)",
       "type": "pct",
       "unit": "%",
@@ -1498,14 +1717,19 @@ const DDICT = {
         "ETPTOT23"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Part de l'emploi dans la sphère non-présentielle (industrie, services aux entreprises, activités exportatrices).",
+      "note": "Sphère productive = emplois qui exportent hors du territoire. Part élevée = économie orientée production/export. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "eco_eff_petites_pct": {
       "rawObsvACT": "pct_eff_petites",
-      "short": "Eff. petites",
-      "medium": "Part effectifs <10 sal.",
+      "short": "% Petites entrep.",
+      "medium": "Part des petites entreprises",
       "long": "Part des effectifs dans établissements de moins de 10 salariés",
       "type": "pct",
       "unit": "%",
@@ -1521,14 +1745,19 @@ const DDICT = {
         "ETPTOT23"
       ],
       "volets": "exde",
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part de l'emploi dans les petites entreprises (moins de 50 salariés).",
+      "note": "Poids des petites entreprises. Part élevée = tissu économique granulaire, artisanat, commerce de proximité. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
     },
     "eco_eff_grandes_pct": {
       "rawObsvACT": "pct_eff_grandes",
-      "short": "Eff. grandes",
-      "medium": "Part effectifs 100ans+ sal.",
+      "short": "% Grandes entrep.",
+      "medium": "Part des grandes entreprises",
       "long": "Part des effectifs dans établissements de 100ans+ salariés",
       "type": "pct",
       "unit": "%",
@@ -1544,6 +1773,11 @@ const DDICT = {
         "ETPTOT23"
       ],
       "volets": "exde",
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part de l'emploi dans les grandes entreprises (250 salariés et plus).",
+      "note": "Poids des grandes entreprises. Part élevée = territoire structuré par de gros employeurs. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
@@ -1552,7 +1786,7 @@ const DDICT = {
     "eco_krugman_a38": {
       "rawObsvACT": "krugman_a38",
       "short": "Krugman A38",
-      "medium": "Indice Krugman (38 secteurs)",
+      "medium": "Indice de Krugman sectoriel (A38)",
       "long": "Indice de spécialisation de Krugman calculé sur 38 secteurs NAF. 0=structure identique à la France, 100=totalement spécialisé",
       "type": "ind",
       "unit": "indice 0-100",
@@ -1572,6 +1806,11 @@ const DDICT = {
         75
       ],
       "interpretation": "12=très diversifié, 75=très spécialisé",
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Somme des écarts absolus entre structure sectorielle locale (A38) et nationale. Mesure la dissimilarité économique.",
+      "note": "Mesure à quel point la structure économique locale diffère du profil national. Valeur 0 = profil identique à la France. Plus la valeur est élevée, plus le territoire est spécialisé différemment. Calculé sur 38 secteurs. Valeur supérieure à {percentile}% des territoires (🇫🇷 0 par construction).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
@@ -1579,7 +1818,7 @@ const DDICT = {
     "eco_krugman_a21": {
       "rawObsvACT": "krugman_a21",
       "short": "Krugman A21",
-      "medium": "Indice Krugman (21 secteurs)",
+      "medium": "Indice de Krugman sectoriel (A21)",
       "long": "Indice de spécialisation de Krugman calculé sur 21 secteurs NAF agrégés",
       "type": "ind",
       "unit": "indice 0-100",
@@ -1598,6 +1837,11 @@ const DDICT = {
         8,
         60
       ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Somme des écarts absolus entre structure sectorielle locale (A21) et nationale.",
+      "note": "Dissimilarité de structure économique par rapport à la France. Valeur 0 = profil identique. Calculé sur 21 secteurs (plus agrégé que A38). Valeur supérieure à {percentile}% des territoires (🇫🇷 0 par construction).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
@@ -1606,7 +1850,7 @@ const DDICT = {
     "eco_gini_a38": {
       "rawObsvACT": "gini_a38",
       "short": "Gini A38",
-      "medium": "Indice Gini (38 secteurs)",
+      "medium": "Indice de Gini sectoriel (A38)",
       "long": "Indice de concentration de Gini calculé sur 38 secteurs NAF. 0=emplois répartis uniformément, 1=emplois concentrés dans un seul secteur",
       "type": "ind",
       "unit": "indice 0-1",
@@ -1626,6 +1870,11 @@ const DDICT = {
         0.85
       ],
       "interpretation": "0.5=diversifié, 0.85=très concentré",
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Indice de Gini de concentration sectorielle de l’emploi (A38). 0 = répartition égale, 1 = concentration totale.",
+      "note": "Mesure la concentration de l’emploi entre 38 secteurs. Valeur 0 = emploi également réparti. Proche de 1 = emploi concentré dans très peu de secteurs. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
@@ -1633,7 +1882,7 @@ const DDICT = {
     "eco_gini_a21": {
       "rawObsvACT": "gini_a21",
       "short": "Gini A21",
-      "medium": "Indice Gini (21 secteurs)",
+      "medium": "Indice de Gini sectoriel (A21)",
       "long": "Indice de concentration de Gini calculé sur 21 secteurs NAF agrégés",
       "type": "ind",
       "unit": "indice 0-1",
@@ -1652,6 +1901,11 @@ const DDICT = {
         0.4,
         0.75
       ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Indice de Gini de concentration sectorielle de l’emploi (A21). Version agrégée.",
+      "note": "Concentration de l’emploi sur 21 secteurs. 0 = répartition égale, 1 = concentration totale. Complémentaire du Krugman (Gini = concentration absolue, Krugman = écart à la France). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
@@ -1659,7 +1913,7 @@ const DDICT = {
     "eco_krugman_a5": {
       "rawObsvACT": "krugman_a5",
       "short": "Krugman A5",
-      "medium": "Indice Krugman (5 secteurs RP)",
+      "medium": "Indice de Krugman sectoriel (A5)",
       "long": "Indice de spécialisation de Krugman calculé sur 5 secteurs RP (AGRI, INDUS, CONST, CTS, APESAS). Même formule que A38/A21.",
       "type": "ind",
       "unit": "indice 0-200",
@@ -1686,6 +1940,11 @@ const DDICT = {
         60
       ],
       "interpretation": "0=identique France, plus élevé=plus spécialisé. A5 moins granulaire que A38/A21.",
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Somme des écarts absolus entre structure sectorielle locale (A5) et nationale. Version très agrégée.",
+      "note": "Dissimilarité sur 5 grands secteurs (agriculture, industrie, construction, commerce/services, administration). Valeur 0 = même répartition que la France. Exemple : 0.15 = 15 points d’écart cumulés. Valeur supérieure à {percentile}% des territoires (🇫🇷 0 par construction).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1693,7 +1952,7 @@ const DDICT = {
     "eco_krugman_a5_vevol": {
       "rawObsvACT": "krugman_a5_vevol",
       "short": "△ Krugman A5",
-      "medium": "Évolution Krugman A5 (11-22)",
+      "medium": "△ Évolution de l’indice de Krugman (A5)",
       "long": "Évolution de l'indice Krugman A5 entre 2011 et 2022 en points",
       "type": "vevol",
       "unit": "pts",
@@ -1710,6 +1969,11 @@ const DDICT = {
       ],
       "volets": ["exd", "exde"],
       "interpretation": ">0 = spécialisation accrue, <0 = diversification",
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "△",
+      "definition": "Évolution de l’indice de Krugman A5 entre deux dates.",
+      "note": "Variation du Krugman A5. Positif = le territoire se différencie davantage du profil national. Négatif = convergence vers la moyenne. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1717,8 +1981,8 @@ const DDICT = {
     "&comment_eco_urssaf": "--- Emploi privé URSSAF (TCAM 2014-2024) ---",
     "eco_emppriv_vtcam": {
       "rawObsvACT": "emppriv_vtcam",
-      "short": "TCAM Empl. privé",
-      "medium": "TCAM emploi privé salarié",
+      "short": "△ Emploi privé",
+      "medium": "△ Évolution de l’emploi salarié privé",
       "long": "Taux de croissance annuel moyen de l'emploi salarié privé (source URSSAF-ACOSS)",
       "type": "vtcam",
       "unit": "%/an",
@@ -1737,14 +2001,19 @@ const DDICT = {
       ],
       "volets": [],
       "interpretation": ">0 = création emploi, <0 = destruction emploi",
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "△",
+      "definition": "Taux de croissance annuel moyen de l'emploi salarié privé (source URSSAF, données trimestrielles).",
+      "note": "Dynamique de l'emploi privé, plus réactif que l'emploi total (RP). Source URSSAF, fréquence trimestrielle. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
     },
     "eco_etabpriv_vevol": {
       "rawObsvACT": "etabpriv_vevol",
-      "short": "Évol. Étab. privés",
-      "medium": "Évolution établissements privés",
+      "short": "△ Étab. privés",
+      "medium": "△ Évolution des établissements privés",
       "long": "Évolution du nombre d'établissements privés entre 2019-2024 (moyenne mobile 3 ans)",
       "type": "vevol",
       "unit": "%",
@@ -1760,14 +2029,19 @@ const DDICT = {
       ],
       "volets": [],
       "interpretation": ">0 = création établissements, <0 = fermetures nettes",
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "△",
+      "definition": "Évolution du nombre d'établissements privés sur la période (source URSSAF).",
+      "note": "Dynamique du tissu d'entreprises. Positif = créations nettes d'établissements. Indicateur complémentaire de l'emploi. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "eco_entrcrea_tot_vevol": {
       "rawObsvACT": "entrcrea_tot_vevol",
-      "short": "Évol. Créations total",
-      "medium": "Évolution créations entreprises (toutes)",
+      "short": "△ Créations tot.",
+      "medium": "△ Évolution des créations d’entreprises",
       "long": "Évolution des créations d'entreprises toutes formes juridiques (moyenne mobile 2018-2020 vs 2022-2024)",
       "type": "vevol",
       "unit": "%",
@@ -1783,14 +2057,19 @@ const DDICT = {
       ],
       "volets": [],
       "interpretation": ">0 = dynamique entrepreneuriale, inclut EI et auto-entrepreneurs",
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "△",
+      "definition": "Évolution du nombre total de créations d'entreprises (y compris micro-entreprises).",
+      "note": "Dynamique entrepreneuriale globale. Inclut les micro-entreprises qui représentent la majorité des créations. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
     },
     "eco_entrcrea_soc_vevol": {
       "rawObsvACT": "entrcrea_soc_vevol",
-      "short": "Évol. Créations sociétés",
-      "medium": "Évolution créations sociétés",
+      "short": "△ Créations soc.",
+      "medium": "△ Évolution des créations de sociétés",
       "long": "Évolution des créations de sociétés hors EI/auto-entrepreneurs (moyenne mobile 2018-2020 vs 2022-2024)",
       "type": "vevol",
       "unit": "%",
@@ -1806,6 +2085,11 @@ const DDICT = {
       ],
       "volets": [],
       "interpretation": ">0 = création structures solides, hors micro/auto-entreprises",
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "△",
+      "definition": "Évolution du nombre de créations de sociétés (hors micro-entreprises).",
+      "note": "Créations de sociétés uniquement (SA, SAS, SARL). Indicateur plus robuste que les créations totales car exclut les micro-entreprises. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
@@ -1813,8 +2097,8 @@ const DDICT = {
     "&comment_eco_secteurs": "--- Part emplois par secteur (RP 11/16/22) ---",
     "eco_sectagri_pct": {
       "rawObsvACT": "pct_sect_agri",
-      "short": "Sect. Agriculture",
-      "medium": "Part emplois agriculture",
+      "short": "% Agriculture",
+      "medium": "Part de l’agriculture dans l’emploi",
       "long": "Part des emplois au lieu de travail dans l'agriculture",
       "type": "pct",
       "unit": "%",
@@ -1830,14 +2114,19 @@ const DDICT = {
         "C22_EMPLT"
       ],
       "volets": "exde",
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part de l'agriculture dans l'emploi total au lieu de travail.",
+      "note": "Poids de l'agriculture. Part élevée en zones rurales et viticoles. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
     },
     "eco_sectindus_pct": {
       "rawObsvACT": "pct_sect_indus",
-      "short": "Sect. Industrie",
-      "medium": "Part emplois industrie",
+      "short": "% Industrie",
+      "medium": "Part de l’industrie dans l’emploi",
       "long": "Part des emplois au lieu de travail dans l'industrie",
       "type": "pct",
       "unit": "%",
@@ -1853,14 +2142,19 @@ const DDICT = {
         "C22_EMPLT"
       ],
       "volets": ["exd", "exde"],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part de l'industrie dans l'emploi total au lieu de travail.",
+      "note": "Poids industriel. Territoires à tradition manufacturière. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
     },
     "eco_sectconst_pct": {
       "rawObsvACT": "pct_sect_const",
-      "short": "Sect. Construction",
-      "medium": "Part emplois construction",
+      "short": "% Construction",
+      "medium": "Part de la construction dans l’emploi",
       "long": "Part des emplois au lieu de travail dans la construction",
       "type": "pct",
       "unit": "%",
@@ -1878,14 +2172,19 @@ const DDICT = {
         "C22_EMPLT"
       ],
       "volets": "exde",
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part de la construction (BTP) dans l'emploi total au lieu de travail.",
+      "note": "Poids du BTP. Part élevée en zones de croissance démographique ou touristiques. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
     },
     "eco_sectservi_pct": {
       "rawObsvACT": "pct_sect_servi",
-      "short": "Sect. Commerce/Services",
-      "medium": "Part emplois commerce/transports/services",
+      "short": "% Commerce/Serv.",
+      "medium": "Part du commerce et services",
       "long": "Part des emplois au lieu de travail dans le commerce, transports et services divers",
       "type": "pct",
       "unit": "%",
@@ -1903,14 +2202,19 @@ const DDICT = {
         "C22_EMPLT"
       ],
       "volets": ["exd", "exde"],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part du commerce et des services marchands dans l'emploi total au lieu de travail.",
+      "note": "Poids du tertiaire marchand. Dominant en zone urbaine et touristique. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
     },
     "eco_sectadmin_pct": {
       "rawObsvACT": "pct_sect_admin",
-      "short": "Sect. Admin/Santé",
-      "medium": "Part emplois admin/enseignement/santé",
+      "short": "% Admin/Santé",
+      "medium": "Part de l’administration et santé",
       "long": "Part des emplois au lieu de travail dans l'administration, enseignement, santé et action sociale",
       "type": "pct",
       "unit": "%",
@@ -1928,6 +2232,11 @@ const DDICT = {
         "C22_EMPLT"
       ],
       "volets": ["exd", "exde"],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part de l'administration publique, enseignement, santé et action sociale dans l'emploi total.",
+      "note": "Poids du secteur public et parapublic. Part élevée dans les préfectures, CHU, villes universitaires. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": true,
       "agg_logdash": false
@@ -1935,8 +2244,8 @@ const DDICT = {
     "&comment_eco_tp": "--- Temps partiel salariés (RP 11/16/22) ---",
     "eco_emptpspart_pct": {
       "rawObsvACT": "pct_tpspart",
-      "short": "% Tps partiel",
-      "medium": "Part salariés temps partiel",
+      "short": "% Temps partiel",
+      "medium": "Part du temps partiel dans l’emploi",
       "long": "Part des salariés au lieu de travail à temps partiel",
       "type": "pct",
       "unit": "%",
@@ -1954,14 +2263,19 @@ const DDICT = {
         "P{y}_EMPLT_SAL"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des emplois à temps partiel dans l'emploi total.",
+      "note": "Temps partiel souvent subi. Part élevée peut signaler une précarité de l'emploi ou un tissu tertiaire (commerce, services). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": true,
       "agg_logdash": false
     },
     "eco_emptpspart_vdifp": {
       "rawObsvACT": "vdifp_tpspart",
-      "short": "△ Tps partiel",
-      "medium": "Évol. temps partiel (pts)",
+      "short": "▲ Temps partiel",
+      "medium": "▲ Variation de la part du temps partiel",
       "long": "Évolution de la part des salariés à temps partiel en points de %",
       "type": "vdifp",
       "unit": "pts",
@@ -1977,6 +2291,9 @@ const DDICT = {
         "eco_emptpspart_pct_11"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "▲",
       "agg_dash": false,
       "agg_ecodash": true,
       "agg_logdash": false
@@ -1985,8 +2302,8 @@ const DDICT = {
     "&comment_soc_chom": "--- Chômage par âge ---",
     "soc_txchom_1564": {
       "rawObsvACT": "txchom_1564",
-      "short": "Tx chôm. 15-64",
-      "medium": "Taux chômage 15-64 ans",
+      "short": "Tx chômage 15-64",
+      "medium": "Taux de chômage des 15-64 ans",
       "long": "Taux de chômage des 15-64 ans",
       "type": "tx",
       "unit": "%",
@@ -2002,6 +2319,11 @@ const DDICT = {
         "C22_ACT1564"
       ],
       "volets": ["exd", "exde"],
+      "priority": 1,
+      "polarity": -1,
+      "symbol": "",
+      "definition": "Part des actifs de 15-64 ans sans emploi et en recherche active d’emploi (définition déclarative, recensement).",
+      "note": "Taux de chômage au sens du recensement. Définition légèrement différente du BIT (déclaratif). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2009,7 +2331,7 @@ const DDICT = {
     "soc_txchom_1524": {
       "rawObsvACT": "txchom_1524",
       "short": "Tx chôm. 15-24",
-      "medium": "Taux chômage 15-24 ans",
+      "medium": "Taux de chômage des 15-24 ans",
       "long": "Taux de chômage des jeunes (15-24 ans)",
       "type": "tx",
       "unit": "%",
@@ -2027,6 +2349,11 @@ const DDICT = {
         "P22_ACT1524"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": -1,
+      "symbol": "",
+      "definition": "Part des actifs de 15-24 ans sans emploi et en recherche active d'emploi.",
+      "note": "Chômage des jeunes, structurellement plus élevé que la moyenne. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2034,7 +2361,7 @@ const DDICT = {
     "soc_txchom_2554": {
       "rawObsvACT": "txchom_2554",
       "short": "Tx chôm. 25-54",
-      "medium": "Taux chômage 25-54 ans",
+      "medium": "Taux de chômage des 25-54 ans",
       "long": "Taux de chômage des 25-54 ans (âge actif)",
       "type": "tx",
       "unit": "%",
@@ -2052,6 +2379,11 @@ const DDICT = {
         "P22_ACT2554"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": -1,
+      "symbol": "",
+      "definition": "Part des actifs de 25-54 ans sans emploi et en recherche active d'emploi.",
+      "note": "Chômage du cœur d'activité. Indicateur le plus représentatif de la santé du marché du travail. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2059,7 +2391,7 @@ const DDICT = {
     "soc_txchom_5564": {
       "rawObsvACT": "txchom_5564",
       "short": "Tx chôm. 55-64",
-      "medium": "Taux chômage 55-64 ans",
+      "medium": "Taux de chômage des 55-64 ans",
       "long": "Taux de chômage des seniors (55-64 ans)",
       "type": "tx",
       "unit": "%",
@@ -2077,6 +2409,11 @@ const DDICT = {
         "P22_ACT5564"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": -1,
+      "symbol": "",
+      "definition": "Part des actifs de 55-64 ans sans emploi et en recherche active d'emploi.",
+      "note": "Chômage des seniors, souvent de longue durée. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2085,7 +2422,7 @@ const DDICT = {
     "soc_txpauv_3039": {
       "rawObsvACT": "txpauv_3039",
       "short": "Tx pauv. 30-39",
-      "medium": "Taux pauvreté 30-39 ans",
+      "medium": "Taux de pauvreté des 30-39 ans",
       "long": "Taux de pauvreté des 30-39 ans (seuil 60%)",
       "type": "tx",
       "unit": "%",
@@ -2100,6 +2437,9 @@ const DDICT = {
         "TP60AGE221"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2107,7 +2447,7 @@ const DDICT = {
     "soc_txpauv_loc": {
       "rawObsvACT": "txpauv_loc",
       "short": "Tx pauv. locataires",
-      "medium": "Taux pauvreté locataires",
+      "medium": "Taux de pauvreté des locataires",
       "long": "Taux de pauvreté des locataires (seuil 60%)",
       "type": "tx",
       "unit": "%",
@@ -2122,6 +2462,9 @@ const DDICT = {
         "TP60TOL221"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2130,8 +2473,8 @@ const DDICT = {
     "&comment_dsp_csp": "--- CSP Population 15+ ---",
     "dsp_csp_agri_pct": {
       "rawObsvACT": "pct_csp_agri",
-      "short": "CSP Agriculteurs",
-      "medium": "Part agriculteurs exploitants",
+      "short": "% Agriculteurs",
+      "medium": "Part des agriculteurs exploitants",
       "long": "Part des agriculteurs exploitants dans la population 15ans+",
       "type": "pct",
       "unit": "%",
@@ -2149,14 +2492,17 @@ const DDICT = {
         "C22_POP15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_csp_artcom_pct": {
       "rawObsvACT": "pct_csp_artcom",
-      "short": "CSP Artisans",
-      "medium": "Part artisans, commerçants",
+      "short": "% Artisans-comm.",
+      "medium": "Part des artisans-commerçants",
       "long": "Part des artisans, commerçants, chefs d'entreprise dans la population 15ans+",
       "type": "pct",
       "unit": "%",
@@ -2172,14 +2518,17 @@ const DDICT = {
         "C22_POP15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_csp_cadres_pct": {
       "rawObsvACT": "pct_csp_cadres",
-      "short": "CSP Cadres",
-      "medium": "Part cadres, prof. intel.",
+      "short": "% Cadres",
+      "medium": "Part des cadres et prof. intellectuelles",
       "long": "Part des cadres et professions intellectuelles sup. dans la population 15ans+",
       "type": "pct",
       "unit": "%",
@@ -2201,14 +2550,19 @@ const DDICT = {
         "C11_POP15P"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des cadres et professions intellectuelles supérieures dans la population de 15 ans et plus.",
+      "note": "Marqueur de capital humain. Part élevée = territoire à profil métropolitain ou tertiaire supérieur. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_csp_cadres_vdifp": {
       "rawObsvACT": "evol_csp_cadres",
-      "short": "Évol. Cadres",
-      "medium": "Évolution part cadres",
+      "short": "▲ Cadres",
+      "medium": "▲ Variation de la part des cadres",
       "long": "Évolution de la part des cadres en points de % (positif = progression)",
       "type": "vdifp",
       "unit": "pts",
@@ -2224,14 +2578,17 @@ const DDICT = {
         "dsp_csp_cadres_pct_11"
       ],
       "volets": "exd",
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "▲",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_csp_profint_pct": {
       "rawObsvACT": "pct_csp_profint",
-      "short": "CSP Prof. Int.",
-      "medium": "Part prof. intermédiaires",
+      "short": "% Prof. interm.",
+      "medium": "Part des professions intermédiaires",
       "long": "Part des professions intermédiaires dans la population 15ans+",
       "type": "pct",
       "unit": "%",
@@ -2249,14 +2606,17 @@ const DDICT = {
         "C22_POP15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_csp_employes_pct": {
       "rawObsvACT": "pct_csp_employes",
-      "short": "CSP Employés",
-      "medium": "Part employés",
+      "short": "% Employés",
+      "medium": "Part des employés",
       "long": "Part des employés dans la population 15ans+",
       "type": "pct",
       "unit": "%",
@@ -2274,14 +2634,17 @@ const DDICT = {
         "C22_POP15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_csp_ouvriers_pct": {
       "rawObsvACT": "pct_csp_ouvriers",
-      "short": "CSP Ouvriers",
-      "medium": "Part ouvriers",
+      "short": "% Ouvriers",
+      "medium": "Part des ouvriers",
       "long": "Part des ouvriers dans la population 15ans+",
       "type": "pct",
       "unit": "%",
@@ -2297,14 +2660,19 @@ const DDICT = {
         "C22_POP15P"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des ouvriers dans la population de 15 ans et plus.",
+      "note": "Marqueur de tissu industriel ou productif. Part élevée = économie à dominante industrielle ou BTP. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_csp_retraites_pct": {
       "rawObsvACT": "pct_csp_retraites",
-      "short": "CSP Retraités",
-      "medium": "Part retraités",
+      "short": "% Retraités",
+      "medium": "Part des retraités",
       "long": "Part des retraités dans la population 15ans+",
       "type": "pct",
       "unit": "%",
@@ -2322,14 +2690,17 @@ const DDICT = {
         "C22_POP15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_csp_inactifs_pct": {
       "rawObsvACT": "pct_csp_inactifs",
-      "short": "CSP Inactifs",
-      "medium": "Part autres inactifs",
+      "short": "% Inactifs",
+      "medium": "Part des autres inactifs",
       "long": "Part des autres sans activité professionnelle dans la population 15ans+",
       "type": "pct",
       "unit": "%",
@@ -2347,6 +2718,9 @@ const DDICT = {
         "C22_POP15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2354,7 +2728,7 @@ const DDICT = {
     "&comment_dsp_dipl": "--- Diplômes 15+ non scolarisés ---",
     "dsp_dipl_aucun_pct": {
       "rawObsvACT": "pct_dipl_aucun",
-      "short": "Sans diplôme",
+      "short": "% Sans diplôme",
       "medium": "Part sans diplôme",
       "long": "Part des 15ans+ non scolarisés sans diplôme ou CEP",
       "type": "pct",
@@ -2371,14 +2745,17 @@ const DDICT = {
         "P22_NSCOL15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_dipl_bepc_pct": {
       "rawObsvACT": "pct_dipl_bepc",
-      "short": "BEPC/Brevet",
-      "medium": "Part BEPC ou brevet",
+      "short": "% BEPC/Brevet",
+      "medium": "Part BEPC-Brevet",
       "long": "Part des 15ans+ non scolarisés avec BEPC, brevet, DNB",
       "type": "pct",
       "unit": "%",
@@ -2394,14 +2771,17 @@ const DDICT = {
         "P22_NSCOL15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_dipl_capbep_pct": {
       "rawObsvACT": "pct_dipl_capbep",
-      "short": "CAP/BEP",
-      "medium": "Part CAP ou BEP",
+      "short": "% CAP/BEP",
+      "medium": "Part CAP-BEP",
       "long": "Part des 15ans+ non scolarisés avec CAP, BEP ou équivalent",
       "type": "pct",
       "unit": "%",
@@ -2417,14 +2797,17 @@ const DDICT = {
         "P22_NSCOL15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_dipl_bac_pct": {
       "rawObsvACT": "pct_dipl_bac",
-      "short": "Bac",
-      "medium": "Part baccalauréat",
+      "short": "% Bac",
+      "medium": "Part Baccalauréat",
       "long": "Part des 15ans+ non scolarisés avec baccalauréat général ou techno",
       "type": "pct",
       "unit": "%",
@@ -2440,14 +2823,17 @@ const DDICT = {
         "P22_NSCOL15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_dipl_bac2_pct": {
       "rawObsvACT": "pct_dipl_bac2",
-      "short": "Bac+2",
-      "medium": "Part diplôme bac+2",
+      "short": "% Bac+2",
+      "medium": "Part Bac+2",
       "long": "Part des 15ans+ non scolarisés avec diplôme bac+2 (BTS, DUT, DEUG)",
       "type": "pct",
       "unit": "%",
@@ -2463,14 +2849,17 @@ const DDICT = {
         "P22_NSCOL15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_dipl_bac34_pct": {
       "rawObsvACT": "pct_dipl_bac34",
-      "short": "Bac+3/4",
-      "medium": "Part diplôme bac+3/4",
+      "short": "% Bac+3/4",
+      "medium": "Part Bac+3/4",
       "long": "Part des 15ans+ non scolarisés avec licence ou maîtrise",
       "type": "pct",
       "unit": "%",
@@ -2486,14 +2875,17 @@ const DDICT = {
         "P22_NSCOL15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_dipl_bac5p_pct": {
       "rawObsvACT": "pct_dipl_bac5p",
-      "short": "Bac+5+",
-      "medium": "Part diplôme bac+5 et plus",
+      "short": "% Bac+5+",
+      "medium": "Part Bac+5 et plus",
       "long": "Part des 15ans+ non scolarisés avec master, doctorat, grande école",
       "type": "pct",
       "unit": "%",
@@ -2509,6 +2901,9 @@ const DDICT = {
         "P22_NSCOL15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2516,8 +2911,8 @@ const DDICT = {
     "&comment_dsp_dipl_grp": "--- Diplômes groupés ---",
     "dsp_dipl_infbac_pct": {
       "rawObsvACT": "pct_dipl_infbac",
-      "short": "Inférieur bac",
-      "medium": "Part inférieur au bac",
+      "short": "% Inférieur bac",
+      "medium": "Part des non-diplômés (inférieur bac)",
       "long": "Part des 15ans+ non scolarisés avec niveau inférieur au bac",
       "type": "pct",
       "unit": "%",
@@ -2535,14 +2930,19 @@ const DDICT = {
         "P22_NSCOL15P"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": -1,
+      "symbol": "",
+      "definition": "Part de la population de 15 ans et plus non diplômée ou avec un diplôme inférieur au baccalauréat.",
+      "note": "Part des personnes sans diplôme ou avec un niveau inférieur au bac. Part élevée = fragilité en termes d'insertion professionnelle. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_dipl_bacbac2_pct": {
       "rawObsvACT": "pct_dipl_bacbac2",
-      "short": "Bac à bac+2",
-      "medium": "Part bac à bac+2",
+      "short": "% Bac à bac+2",
+      "medium": "Part Bac à bac+2",
       "long": "Part des 15ans+ non scolarisés avec bac, bac+1 ou bac+2",
       "type": "pct",
       "unit": "%",
@@ -2559,14 +2959,17 @@ const DDICT = {
         "P22_NSCOL15P"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_dipl_supbac2_pct": {
       "rawObsvACT": "pct_dipl_supbac2",
-      "short": "Supérieur bac+2",
-      "medium": "Part supérieur à bac+2",
+      "short": "% Diplômés sup",
+      "medium": "Part des diplômés du supérieur",
       "long": "Part des 15ans+ non scolarisés avec diplôme supérieur à bac+2",
       "type": "pct",
       "unit": "%",
@@ -2583,6 +2986,11 @@ const DDICT = {
         "P22_NSCOL15P"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Part de la population de 15 ans et plus diplômée du supérieur (bac+2 et au-delà).",
+      "note": "Indicateur de capital humain territorial. Part élevée = territoire attractif pour les emplois qualifiés. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2608,14 +3016,19 @@ const DDICT = {
         "C22_MEN"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Nombre total de ménages (unités de vie) sur le territoire.",
+      "note": "Stock de ménages. Croît plus vite que la population (décohabitation, vieillissement). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "men_seul_pct": {
       "rawObsvACT": "pct_men_seul",
-      "short": "Pers. seules",
-      "medium": "Part personnes seules",
+      "short": "% Pers. seules",
+      "medium": "Part des personnes seules",
       "long": "Part des ménages d'une personne seule",
       "type": "pct",
       "unit": "%",
@@ -2631,14 +3044,17 @@ const DDICT = {
         "C22_MEN"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "men_fam_pct": {
       "rawObsvACT": "pct_men_fam",
-      "short": "Ménages familles",
-      "medium": "Part ménages familiaux",
+      "short": "% Familles",
+      "medium": "Part des ménages familles",
       "long": "Part des ménages composés de familles",
       "type": "pct",
       "unit": "%",
@@ -2654,14 +3070,17 @@ const DDICT = {
         "C22_MEN"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "men_coupsenf_pct": {
       "rawObsvACT": "pct_men_coupsenf",
-      "short": "Couples s/ enf.",
-      "medium": "Part couples sans enfant",
+      "short": "% Couples s/enf.",
+      "medium": "Part des couples sans enfant",
       "long": "Part des ménages couple sans enfant",
       "type": "pct",
       "unit": "%",
@@ -2677,14 +3096,17 @@ const DDICT = {
         "C22_MEN"
       ],
       "volets": ["exd", "exdc"],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "men_coupaenf_pct": {
       "rawObsvACT": "pct_men_coupaenf",
-      "short": "Couples av. enf.",
-      "medium": "Part couples avec enfants",
+      "short": "% Couples av/enf.",
+      "medium": "Part des couples avec enfants",
       "long": "Part des ménages couple avec enfant(s)",
       "type": "pct",
       "unit": "%",
@@ -2701,14 +3123,17 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "men_mono_pct": {
       "rawObsvACT": "pct_men_mono",
-      "short": "Familles mono",
-      "medium": "Part familles monoparentales",
+      "short": "% Fam. monop.",
+      "medium": "Part des familles monoparentales",
       "long": "Part des ménages familles monoparentales",
       "type": "pct",
       "unit": "%",
@@ -2725,6 +3150,9 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2732,8 +3160,8 @@ const DDICT = {
     "&comment_log": "══════════ LOGEMENT (log) ══════════",
     "log_tot_vtcam": {
       "rawObsvACT": "tcam_log",
-      "short": "△ evol. logements",
-      "medium": "△ evolution logements (TCAM)",
+      "short": "△ Logements",
+      "medium": "△ Évolution du parc de logements",
       "long": "Taux de croissance annuel moyen du parc de logements",
       "type": "vtcam",
       "unit": "%/an",
@@ -2752,14 +3180,19 @@ const DDICT = {
         "P22_LOG"
       ],
       "volets": ["exd", "exdc"],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "△",
+      "definition": "Taux de croissance annuel moyen du parc total de logements sur la période.",
+      "note": "Dynamique de construction. Positif = le parc s'agrandit. Négatif extrêmement rare. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "log_vac_pct": {
       "rawObsvACT": "pct_logvac",
-      "short": "Vacance",
-      "medium": "Taux de vacance",
+      "short": "Tx vacance",
+      "medium": "Taux de vacance des logements",
       "long": "Part des logements vacants dans le parc total",
       "type": "pct",
       "unit": "%",
@@ -2778,14 +3211,19 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 1,
+      "polarity": -1,
+      "symbol": "",
+      "definition": "Part des logements vacants (ni occupés, ni résidences secondaires) dans le parc total de logements.",
+      "note": "Taux de vacance : proportion de logements inoccupés. Un taux élevé peut signaler un marché détendu ou un parc dégradé. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "log_vac_vdifp": {
       "rawObsvACT": "var_logvac",
-      "short": "△ evol. vacance",
-      "medium": "△ evolution vacance (pts)",
+      "short": "▲ Vacance",
+      "medium": "▲ Variation du taux de vacance",
       "long": "Variation de la part de logements vacants",
       "type": "vdifp",
       "unit": "pts",
@@ -2799,14 +3237,17 @@ const DDICT = {
         "11_22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "▲",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "log_ressec_pct": {
       "rawObsvACT": "pct_rsecocc",
-      "short": "Rés. secondaires",
-      "medium": "Part résidences secondaires",
+      "short": "% Rés. second.",
+      "medium": "Part des résidences secondaires",
       "long": "Part des résidences secondaires et logements occasionnels",
       "type": "pct",
       "unit": "%",
@@ -2825,14 +3266,19 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des résidences secondaires dans le parc de logements total.",
+      "note": "Part élevée = territoire touristique ou de villégiature (littoral, montagne). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "log_ressec_vdifp": {
       "rawObsvACT": "var_rsecocc",
-      "short": "△ evol. rés. sec.",
-      "medium": "△ evolution rés. secondaires (pts)",
+      "short": "▲ Rés. second.",
+      "medium": "▲ Variation des résidences secondaires",
       "long": "Variation de la part de résidences secondaires",
       "type": "vdifp",
       "unit": "pts",
@@ -2846,6 +3292,9 @@ const DDICT = {
         "11_22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "▲",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2853,8 +3302,8 @@ const DDICT = {
     "&comment_log_type": "--- Type de logement ---",
     "log_appart_pct": {
       "rawObsvACT": "pct_appart",
-      "short": "Part apparts",
-      "medium": "Part appartements",
+      "short": "% Appartements",
+      "medium": "Part des appartements",
       "long": "Part des logements de type appartement",
       "type": "pct",
       "unit": "%",
@@ -2870,14 +3319,19 @@ const DDICT = {
         "P22_LOG"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des appartements dans le parc de logements.",
+      "note": "Dominante appartements = densité urbaine. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "log_maison_pct": {
       "rawObsvACT": "pct_maison",
-      "short": "Part maisons",
-      "medium": "Part maisons",
+      "short": "% Maisons",
+      "medium": "Part des maisons",
       "long": "Part des logements de type maison",
       "type": "pct",
       "unit": "%",
@@ -2893,6 +3347,11 @@ const DDICT = {
         "P22_LOG"
       ],
       "volets": [],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des maisons individuelles dans le parc de logements.",
+      "note": "Dominante maisons = tissu résidentiel diffus (périurbain, rural). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2900,8 +3359,8 @@ const DDICT = {
     "&comment_log_occ": "--- Occupation des RP ---",
     "log_prop_pct": {
       "rawObsvACT": "pct_prop",
-      "short": "Propriétaires",
-      "medium": "Part propriétaires RP",
+      "short": "% Propriétaires",
+      "medium": "Part des propriétaires",
       "long": "Part des résidences principales occupées par propriétaires",
       "type": "pct",
       "unit": "%",
@@ -2918,14 +3377,19 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des ménages propriétaires de leur résidence principale.",
+      "note": "Taux de propriété. Plus élevé en zone rurale et périurbaine, plus faible dans les grandes villes. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "log_loc_pct": {
       "rawObsvACT": "pct_loc",
-      "short": "Locataires",
-      "medium": "Part locataires RP",
+      "short": "% Locataires",
+      "medium": "Part des locataires",
       "long": "Part des résidences principales en location",
       "type": "pct",
       "unit": "%",
@@ -2941,6 +3405,11 @@ const DDICT = {
         "P22_RP"
       ],
       "volets": ["exd", "exdc"],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des ménages locataires de leur résidence principale.",
+      "note": "Complémentaire de la propriété. Part élevée en zone urbaine dense (parc locatif social et privé). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2964,6 +3433,9 @@ const DDICT = {
         "BPE_2024_D307"
       ],
       "volets": [],
+      "priority": 4,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -2986,6 +3458,9 @@ const DDICT = {
         "BPE_2024_D201"
       ],
       "volets": [],
+      "priority": 4,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -3008,6 +3483,9 @@ const DDICT = {
         "BPE_2024_D281"
       ],
       "volets": [],
+      "priority": 4,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -3030,6 +3508,9 @@ const DDICT = {
         "BPE_2024_B207"
       ],
       "volets": [],
+      "priority": 4,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -3052,6 +3533,9 @@ const DDICT = {
         "BPE_2024_B201"
       ],
       "volets": [],
+      "priority": 4,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -3074,6 +3558,9 @@ const DDICT = {
         "BPE_2024_B105"
       ],
       "volets": [],
+      "priority": 4,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -3096,6 +3583,9 @@ const DDICT = {
         "BPE_2024_F307"
       ],
       "volets": [],
+      "priority": 4,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -3118,6 +3608,9 @@ const DDICT = {
         "BPE_2024_A501"
       ],
       "volets": [],
+      "priority": 4,
+      "polarity": 1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -3125,7 +3618,7 @@ const DDICT = {
     "&comment_logd": "══════════ DVF IMMOBILIER (logd) ══════════",
     "logd_px2q2_mai": {
       "short": "Prix m² maisons",
-      "medium": "Prix m² médian maisons",
+      "medium": "Prix médian au m² des maisons",
       "long": "Prix au m² médian des maisons (DVF)",
       "type": "vol",
       "unit": "€/m²",
@@ -3137,13 +3630,18 @@ const DDICT = {
       ],
       "volets": "exdc",
       "eda": true,
+      "priority": 1,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Prix médian au m² des maisons vendues sur la période (source DVF, données de mutations).",
+      "note": "Prix médian au m² des maisons (DVF). La médiane est moins sensible aux biens atypiques que la moyenne. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logd_px2q2_appt": {
       "short": "Prix m² apparts",
-      "medium": "Prix m² médian appartements",
+      "medium": "Prix médian au m² des appartements",
       "long": "Prix au m² médian des appartements (DVF)",
       "type": "vol",
       "unit": "€/m²",
@@ -3155,13 +3653,18 @@ const DDICT = {
       ],
       "volets": "exdc",
       "eda": true,
+      "priority": 1,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Prix médian au m² des appartements vendus sur la période (source DVF, données de mutations).",
+      "note": "Prix médian au m² des appartements (DVF). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logd_px2q1_mai": {
-      "short": "Prix m² Q1 maisons",
-      "medium": "Prix m² Q1 (25%) maisons",
+      "short": "Prix m² Q1 mais.",
+      "medium": "Prix m² Q1 des maisons (25e pct)",
       "long": "Premier quartile prix au m² maisons (DVF)",
       "type": "vol",
       "unit": "€/m²",
@@ -3172,13 +3675,16 @@ const DDICT = {
         "24"
       ],
       "volets": "exdc",
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logd_px2q3_mai": {
-      "short": "Prix m² Q3 maisons",
-      "medium": "Prix m² Q3 (75%) maisons",
+      "short": "Prix m² Q3 mais.",
+      "medium": "Prix m² Q3 des maisons (75e pct)",
       "long": "Troisième quartile prix au m² maisons (DVF)",
       "type": "vol",
       "unit": "€/m²",
@@ -3189,13 +3695,16 @@ const DDICT = {
         "24"
       ],
       "volets": "exdc",
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logd_px2q1_appt": {
-      "short": "Prix m² Q1 apparts",
-      "medium": "Prix m² Q1 (25%) appartements",
+      "short": "Prix m² Q1 appt",
+      "medium": "Prix m² Q1 des appartements",
       "long": "Premier quartile prix au m² appartements (DVF)",
       "type": "vol",
       "unit": "€/m²",
@@ -3206,13 +3715,16 @@ const DDICT = {
         "24"
       ],
       "volets": "exdc",
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logd_px2q3_appt": {
-      "short": "Prix m² Q3 apparts",
-      "medium": "Prix m² Q3 (75%) appartements",
+      "short": "Prix m² Q3 appt",
+      "medium": "Prix m² Q3 des appartements",
       "long": "Troisième quartile prix au m² appartements (DVF)",
       "type": "vol",
       "unit": "€/m²",
@@ -3223,13 +3735,16 @@ const DDICT = {
         "24"
       ],
       "volets": "exdc",
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logd_trans": {
       "short": "Nb transactions",
-      "medium": "Nb transactions total",
+      "medium": "Nombre de transactions immobilières",
       "long": "Nombre total de transactions immobilières (DVF)",
       "type": "vol",
       "unit": "",
@@ -3240,13 +3755,18 @@ const DDICT = {
         "24"
       ],
       "volets": "exdc",
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Nombre total de transactions immobilières enregistrées sur la période (source DVF).",
+      "note": "Volume de transactions. Reflète la profondeur du marché immobilier local. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logd_trans_mai": {
       "short": "Trans. maisons",
-      "medium": "Nb transactions maisons",
+      "medium": "Transactions de maisons",
       "long": "Nombre de transactions maisons (DVF)",
       "type": "vol",
       "unit": "",
@@ -3257,13 +3777,16 @@ const DDICT = {
         "24"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logd_trans_appt": {
       "short": "Trans. apparts",
-      "medium": "Nb transactions appartements",
+      "medium": "Transactions d’appartements",
       "long": "Nombre de transactions appartements (DVF)",
       "type": "vol",
       "unit": "",
@@ -3274,13 +3797,16 @@ const DDICT = {
         "24"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logd_appt_trans_pct": {
-      "short": "Part apparts",
-      "medium": "Part apparts dans transactions",
+      "short": "% Apparts (trans)",
+      "medium": "Part des appartements dans les ventes",
       "long": "Part des appartements dans les transactions (DVF)",
       "type": "pct",
       "unit": "%",
@@ -3291,13 +3817,16 @@ const DDICT = {
         "24"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logd_trans_vevol": {
-      "short": "△ evol. trans.",
-      "medium": "△ evolution transactions",
+      "short": "△ Transactions",
+      "medium": "△ Évolution des transactions",
       "long": "Évolution des transactions immobilières (DVF)",
       "type": "vevol",
       "unit": "△%",
@@ -3310,14 +3839,17 @@ const DDICT = {
         "19_24",
         "22_24"
       ],
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "volets": [
+        "exd",
+        "exdc"
+      ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "△"
     },
     "logd_px2_mai_vevol": {
-      "short": "△ evol. prix maisons",
-      "medium": "△ evolution prix m² maisons",
+      "short": "△ Prix maisons",
+      "medium": "△ Évolution du prix des maisons",
       "long": "Évolution prix m² maisons (DVF)",
       "type": "vevol",
       "unit": "△%",
@@ -3330,14 +3862,19 @@ const DDICT = {
         "19_24",
         "22_24"
       ],
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "volets": [
+        "exd",
+        "exdc"
+      ],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "△",
+      "definition": "Évolution du prix médian au m² des maisons entre deux périodes (source DVF).",
+      "note": "Dynamique des prix des maisons. Positif = marché en hausse. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value})."
     },
     "logd_px2_appt_vevol": {
-      "short": "△ evol. prix apparts",
-      "medium": "△ evolution prix m² appartements",
+      "short": "△ Prix apparts",
+      "medium": "△ Évolution du prix des appartements",
       "long": "Évolution prix m² appartements (DVF)",
       "type": "vevol",
       "unit": "△%",
@@ -3350,14 +3887,19 @@ const DDICT = {
         "19_24",
         "22_24"
       ],
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "volets": [
+        "exd",
+        "exdc"
+      ],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "△",
+      "definition": "Évolution du prix médian au m² des appartements entre deux périodes (source DVF).",
+      "note": "Dynamique des prix des appartements. Positif = marché en hausse. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value})."
     },
     "logd_px2_mai_ecfr": {
-      "short": "± écart prix maisons",
-      "medium": "± écart prix m² maisons vs France",
+      "short": "▲ Prix maisons FR",
+      "medium": "Écart au prix national des maisons",
       "long": "Écart en % du prix m² maisons par rapport à la médiane France (DVF)",
       "type": "ind",
       "unit": "%",
@@ -3369,14 +3911,18 @@ const DDICT = {
       "periodes": [
         "24"
       ],
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "volets": [
+        "exd",
+        "exdc",
+        "exdlog"
+      ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": ""
     },
     "logd_px2_appt_ecfr": {
-      "short": "± écart prix apparts",
-      "medium": "± écart prix m² apparts vs France",
+      "short": "▲ Prix apparts FR",
+      "medium": "Écart au prix national des appartements",
       "long": "Écart en % du prix m² appartements par rapport à la médiane France (DVF)",
       "type": "ind",
       "unit": "%",
@@ -3388,15 +3934,19 @@ const DDICT = {
       "periodes": [
         "24"
       ],
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "volets": [
+        "exd",
+        "exdc",
+        "exdlog"
+      ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": ""
     },
     "&comment_rev": "══════════ REVENUS / PAUVRETÉ - Filosofi (rev) ══════════",
     "rev_med": {
-      "short": "Revenu médian",
-      "medium": "Niveau de vie médian",
+      "short": "Rev. médian",
+      "medium": "Revenu médian disponible",
       "long": "Niveau de vie médian en euros par an (Filosofi)",
       "type": "vol",
       "unit": "€/an",
@@ -3413,13 +3963,18 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 1,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Médiane du revenu disponible par unité de consommation (échelle OCDE modifiée). La moitié gagne plus, l’autre moins.",
+      "note": "Revenu médian : la moitié de la population a un niveau de vie supérieur, l’autre moitié inférieur. Exprimé par unité de consommation (taille du ménage). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "rev_d1": {
       "short": "Décile D1",
-      "medium": "1er décile niveau de vie",
+      "medium": "Premier décile de revenu (D1)",
       "long": "1er décile du niveau de vie en euros (10% les plus modestes)",
       "type": "vol",
       "unit": "€/an",
@@ -3435,13 +3990,18 @@ const DDICT = {
         "D1_SL"
       ],
       "volets": "exdc",
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Premier décile de revenu disponible par unité de consommation : plafond des 10% les plus modestes.",
+      "note": "Niveau de vie des plus modestes. D1 bas = pauvreté intense. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "rev_d9": {
       "short": "Décile D9",
-      "medium": "9e décile niveau de vie",
+      "medium": "Neuvième décile de revenu (D9)",
       "long": "9e décile du niveau de vie en euros (10% les plus aisés)",
       "type": "vol",
       "unit": "€/an",
@@ -3457,6 +4017,11 @@ const DDICT = {
         "D9_SL"
       ],
       "volets": ["exd", "exdc"],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Neuvième décile de revenu disponible par unité de consommation : plancher des 10% les plus aisés.",
+      "note": "Niveau de vie des plus aisés. D9 élevé = présence de hauts revenus. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -3479,13 +4044,18 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Rapport entre le 9e décile (plancher des 10% les plus aisés) et le 1er décile (plafond des 10% les plus modestes).",
+      "note": "Mesure l’écart entre hauts et bas revenus. Valeur 3 = les 10% les plus aisés gagnent au moins 3 fois plus que les 10% les plus modestes. Plus la valeur est élevée, plus les inégalités sont fortes. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "rev_txpauv": {
       "short": "Tx pauvreté",
-      "medium": "Taux de pauvreté 60%",
+      "medium": "Taux de pauvreté",
       "long": "Part population sous 60% du niveau de vie médian national",
       "type": "pct",
       "unit": "%",
@@ -3502,13 +4072,18 @@ const DDICT = {
       ],
       "volets": ["exd", "exdc"],
       "eda": true,
+      "priority": 1,
+      "polarity": -1,
+      "symbol": "",
+      "definition": "Part de la population dont le niveau de vie est inférieur à 60% du revenu médian national.",
+      "note": "Proportion vivant sous le seuil de pauvreté (60% du revenu médian national, environ 1 128€/mois en 2021 pour une personne seule). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "rev_menimi": {
-      "short": "Part imposés",
-      "medium": "Part ménages imposés",
+      "short": "% Imposés",
+      "medium": "Part des ménages imposés",
       "long": "Part des ménages fiscaux imposés à l'impôt sur le revenu",
       "type": "pct",
       "unit": "%",
@@ -3524,13 +4099,18 @@ const DDICT = {
         "S_HH_TAX"
       ],
       "volets": "exdc",
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Part des ménages fiscaux imposés dans l'ensemble des ménages fiscaux.",
+      "note": "Part des ménages imposés. Reflète le niveau de revenus global du territoire. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "rev_prestasoc": {
-      "short": "Part presta. soc.",
-      "medium": "Part prestations sociales",
+      "short": "% Presta. soc.",
+      "medium": "Part des prestations sociales",
       "long": "Part des prestations sociales dans le revenu disponible",
       "type": "pct",
       "unit": "%",
@@ -3546,14 +4126,19 @@ const DDICT = {
         "S_SOC_BEN_DI"
       ],
       "volets": ["exd", "exdc"],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Part des prestations sociales (minima sociaux, allocations) dans le revenu disponible des ménages.",
+      "note": "Poids des transferts sociaux. Part élevée = dépendance aux aides, fragilité économique. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "&comment_rev_evol": "══════════ Évolutions revenus 2019-2021 ══════════",
     "rev_med_vevol": {
-      "short": "Évol. revenu médian",
-      "medium": "Évolution revenu médian",
+      "short": "△ Rev. médian",
+      "medium": "△ Évolution du revenu médian",
       "long": "Évolution du niveau de vie médian entre 2019 et 2021 (%)",
       "type": "vevol",
       "unit": "%",
@@ -3566,13 +4151,16 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "△",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "rev_txpauv_vevol": {
-      "short": "Évol. tx pauvreté",
-      "medium": "Évolution taux pauvreté",
+      "short": "△ Tx pauvreté",
+      "medium": "△ Évolution du taux de pauvreté",
       "long": "Évolution du taux de pauvreté entre 2019 et 2021 (%)",
       "type": "vevol",
       "unit": "%",
@@ -3585,13 +4173,16 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "△",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "rev_d1_vevol": {
-      "short": "Évol. D1",
-      "medium": "Évolution décile D1",
+      "short": "△ Décile D1",
+      "medium": "△ Évolution du premier décile",
       "long": "Évolution du 1er décile (10% les plus modestes) entre 2019 et 2021 (%)",
       "type": "vevol",
       "unit": "%",
@@ -3603,13 +4194,16 @@ const DDICT = {
         "19_21"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "△",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "rev_d9_vevol": {
-      "short": "Évol. D9",
-      "medium": "Évolution décile D9",
+      "short": "△ Décile D9",
+      "medium": "△ Évolution du neuvième décile",
       "long": "Évolution du 9e décile (10% les plus aisés) entre 2019 et 2021 (%)",
       "type": "vevol",
       "unit": "%",
@@ -3621,13 +4215,16 @@ const DDICT = {
         "19_21"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "△",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "rev_menimi_vevol": {
-      "short": "Évol. part imposés",
-      "medium": "Évolution part ménages imposés",
+      "short": "△ % Imposés",
+      "medium": "△ Évolution de la part des imposés",
       "long": "Évolution de la part des ménages imposés entre 2019 et 2021 (%)",
       "type": "vevol",
       "unit": "%",
@@ -3639,13 +4236,16 @@ const DDICT = {
         "19_21"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "△",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "rev_prestasoc_vevol": {
-      "short": "Évol. presta. soc.",
-      "medium": "Évolution part prestations sociales",
+      "short": "△ % Presta. soc.",
+      "medium": "△ Évolution des prestations sociales",
       "long": "Évolution de la part des prestations sociales dans le revenu entre 2019 et 2021 (%)",
       "type": "vevol",
       "unit": "%",
@@ -3657,6 +4257,9 @@ const DDICT = {
         "19_21"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "△",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -3664,7 +4267,7 @@ const DDICT = {
     "&comment_dmf_tmi": "══════════ TMI - Taux Migration Interne par catégorie ══════════",
     "dmf_tmi_cscadre": {
       "short": "TMI Cadres",
-      "medium": "TMI Cadres (%)",
+      "medium": "△ Taux migratoire interne des cadres",
       "long": "Taux de migration interne des cadres = (Entrants - Sortants) / Population × 100",
       "type": "vtcam",
       "unit": "%",
@@ -3678,13 +4281,18 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "△",
+      "definition": "Taux migratoire interne net des cadres : solde entrées-sorties de cadres rapporté à la population.",
+      "note": "Solde net des cadres (entrées moins sorties) rapporté à la population. Positif = le territoire attire plus de cadres qu’il n’en perd. Négatif = fuite de cadres. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_tmi_csouvrier": {
       "short": "TMI Ouvriers",
-      "medium": "TMI Ouvriers (%)",
+      "medium": "△ Taux migratoire interne des ouvriers",
       "long": "Taux de migration interne des ouvriers = (Entrants - Sortants) / Population × 100",
       "type": "vtcam",
       "unit": "%",
@@ -3698,13 +4306,18 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "△",
+      "definition": "Taux migratoire interne net des ouvriers : solde entrées-sorties d’ouvriers rapporté à la population.",
+      "note": "Solde net des ouvriers rapporté à la population. Positif = le territoire attire des ouvriers. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_tmi_a1524": {
       "short": "TMI 15-24",
-      "medium": "TMI 15-24 ans (%)",
+      "medium": "△ Taux migratoire interne des 15-24 ans",
       "long": "Taux de migration interne des 15-24 ans = (Entrants - Sortants) / Population × 100",
       "type": "vtcam",
       "unit": "%",
@@ -3718,13 +4331,18 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "△",
+      "definition": "Taux migratoire interne net des 15-24 ans : solde entrées-sorties de jeunes rapporté à la population.",
+      "note": "Solde net des jeunes 15-24 ans. Souvent négatif en zone rurale (départ pour études/emploi). Positif dans les villes universitaires. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_tmi_a2529": {
       "short": "TMI 25-29",
-      "medium": "TMI 25-29 ans (%)",
+      "medium": "△ Taux migratoire interne des 25-29 ans",
       "long": "Taux de migration interne des 25-29 ans = (Entrants - Sortants) / Population × 100",
       "type": "vtcam",
       "unit": "%",
@@ -3737,13 +4355,18 @@ const DDICT = {
         "22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "△",
+      "definition": "Taux migratoire interne net des 25-29 ans rapporté à la population.",
+      "note": "Tranche charnière entre études et installation professionnelle. Révèle l’attractivité économique pour les jeunes actifs. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_tmi_a3039": {
       "short": "TMI 30-39",
-      "medium": "TMI 30-39 ans (%)",
+      "medium": "△ Taux migratoire interne des 30-39 ans",
       "long": "Taux de migration interne des 30-39 ans = (Entrants - Sortants) / Population × 100",
       "type": "vtcam",
       "unit": "%",
@@ -3757,13 +4380,18 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "△",
+      "definition": "Taux migratoire interne net des 30-39 ans rapporté à la population.",
+      "note": "Tranche des choix résidentiels familiaux (installation, accès propriété, qualité de vie). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_tmi_a65p": {
       "short": "TMI 65+",
-      "medium": "TMI 65 ans et plus (%)",
+      "medium": "△ Taux migratoire interne des 65 ans+",
       "long": "Taux de migration interne des 65+ ans = (Entrants - Sortants) / Population × 100",
       "type": "vtcam",
       "unit": "%",
@@ -3776,13 +4404,18 @@ const DDICT = {
         "22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "△",
+      "definition": "Taux migratoire interne net des 65 ans+ rapporté à la population.",
+      "note": "Révèle l’attractivité résidentielle pour les retraités (cadre de vie, littoral, montagne). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_cscadre_es_ratio": {
-      "short": "E/S Cadres",
-      "medium": "Ratio E/S Cadres",
+      "short": "Ent/Sort Cadres",
+      "medium": "Ratio entrants/sortants des cadres",
       "long": "Ratio Entrants/Sortants cadres (>1 = territoire attractif pour cadres)",
       "type": "ind",
       "unit": "ratio",
@@ -3795,13 +4428,18 @@ const DDICT = {
         "22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Rapport entre cadres entrants et cadres sortants du territoire.",
+      "note": "Nombre de cadres qui s’installent divisé par ceux qui partent. Valeur > 1 = attraction nette de cadres. Valeur < 1 = perte nette. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_csouvrier_es_ratio": {
-      "short": "E/S Ouvriers",
-      "medium": "Ratio E/S Ouvriers",
+      "short": "Ent/Sort Ouvriers",
+      "medium": "Ratio entrants/sortants des ouvriers",
       "long": "Ratio Entrants/Sortants ouvriers (>1 = territoire attractif pour ouvriers)",
       "type": "ind",
       "unit": "ratio",
@@ -3814,13 +4452,18 @@ const DDICT = {
         "22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Rapport entre ouvriers entrants et ouvriers sortants du territoire.",
+      "note": "Nombre d’ouvriers qui arrivent divisé par ceux qui partent. Valeur > 1 = attraction nette. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_a1524_es_ratio": {
-      "short": "E/S 15-24",
-      "medium": "Ratio E/S 15-24 ans",
+      "short": "Ent/Sort 15-24",
+      "medium": "Ratio entrants/sortants des 15-24 ans",
       "long": "Ratio Entrants/Sortants 15-24 ans (>1 = territoire attractif pour jeunes)",
       "type": "ind",
       "unit": "ratio",
@@ -3833,13 +4476,18 @@ const DDICT = {
         "22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Rapport entre 15-24 ans entrants et sortants du territoire.",
+      "note": "Rarement > 1 hors villes universitaires (départ massif des jeunes pour études/emploi). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_a2529_es_ratio": {
-      "short": "E/S 25-29",
-      "medium": "Ratio E/S 25-29 ans",
+      "short": "Ent/Sort 25-29",
+      "medium": "Ratio entrants/sortants des 25-29 ans",
       "long": "Ratio Entrants/Sortants 25-29 ans",
       "type": "ind",
       "unit": "ratio",
@@ -3852,13 +4500,18 @@ const DDICT = {
         "22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Rapport entre 25-29 ans entrants et sortants du territoire.",
+      "note": "Valeur > 1 = le territoire attire des jeunes actifs en début de carrière. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_a3039_es_ratio": {
-      "short": "E/S 30-39",
-      "medium": "Ratio E/S 30-39 ans",
+      "short": "Ent/Sort 30-39",
+      "medium": "Ratio entrants/sortants des 30-39 ans",
       "long": "Ratio Entrants/Sortants 30-39 ans (>1 = attire jeunes actifs)",
       "type": "ind",
       "unit": "ratio",
@@ -3871,13 +4524,18 @@ const DDICT = {
         "22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Rapport entre 30-39 ans entrants et sortants du territoire.",
+      "note": "Tranche des choix résidentiels familiaux. Valeur > 1 = attraction de familles. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmf_a65p_es_ratio": {
-      "short": "E/S 65+",
-      "medium": "Ratio E/S 65 ans et plus",
+      "short": "Ent/Sort 65+",
+      "medium": "Ratio entrants/sortants des 65 ans+",
       "long": "Ratio Entrants/Sortants 65+ ans (>1 = attire retraités)",
       "type": "ind",
       "unit": "ratio",
@@ -3890,6 +4548,11 @@ const DDICT = {
         "22"
       ],
       "volets": [],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Rapport entre 65+ entrants et sortants du territoire.",
+      "note": "Valeur > 1 = le territoire attire des retraités (cadre de vie, climat). Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -4164,7 +4827,7 @@ const DDICT = {
     "&comment_geo": "══════════ GÉOGRAPHIE / ZONAGES (geo) ══════════",
     "geo_littoral_pct": {
       "short": "% Pop littoral",
-      "medium": "Part pop communes littorales",
+      "medium": "Part de la population en zone littorale",
       "long": "Part de la population vivant dans une commune classée loi littoral",
       "type": "pct",
       "unit": "%",
@@ -4181,13 +4844,16 @@ const DDICT = {
       ],
       "volets": [],
       "eda": true,
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dmv_5564_seul_pct": {
-      "short": "55-64 seuls %",
-      "medium": "Part 55-64 ans vivant seuls",
+      "short": "% 55-64 seuls",
+      "medium": "Part des 55-64 ans vivant seuls",
       "long": "Part des 55-64 ans vivant seuls",
       "type": "pct",
       "unit": "%",
@@ -4199,13 +4865,16 @@ const DDICT = {
         "16",
         "11"
       ],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "volets": [],
       "agg_dash": true,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "dsp_csp_artis_pct": {
-      "short": "Artisans %",
+      "short": "% Artisans (CSP)",
       "medium": "Part artisans comm.",
       "long": "Part des artisans, commercants, chefs entreprise",
       "type": "pct",
@@ -4218,14 +4887,17 @@ const DDICT = {
         "16",
         "11"
       ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "volets": [],
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "men_tot_stock_vtcam": {
-      "short": "TCAM menages",
-      "medium": "TCAM nb menages",
+      "short": "▲ Ménages",
+      "medium": "Évolution du nombre de ménages",
       "long": "Taux croissance annuel moyen nombre menages",
       "type": "tcam",
       "unit": "%/an",
@@ -4237,6 +4909,9 @@ const DDICT = {
         "16_22",
         "11_22"
       ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "volets": [],
       "agg_dash": false,
       "agg_ecodash": false,
@@ -4245,8 +4920,8 @@ const DDICT = {
     "dm_1519_seul_pct": {
       "theme": "dm",
       "type": "pct",
-      "short": "15-19 seuls %",
-      "medium": "Part 15-19 ans vivant seuls",
+      "short": "% 15-19 seuls",
+      "medium": "Part des 15-19 ans vivant seuls",
       "long": "Part des 15-19 ans vivant seuls",
       "unit": "%",
       "source": "INSEE RP",
@@ -4254,6 +4929,9 @@ const DDICT = {
         "22",
         "16"
       ],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "volets": [],
       "agg_dash": true,
       "agg_ecodash": false,
@@ -4262,8 +4940,8 @@ const DDICT = {
     "dm_2024_seul_pct": {
       "theme": "dm",
       "type": "pct",
-      "short": "20-24 seuls %",
-      "medium": "Part 20-24 ans vivant seuls",
+      "short": "% 20-24 seuls",
+      "medium": "Part des 20-24 ans vivant seuls",
       "long": "Part des 20-24 ans vivant seuls",
       "unit": "%",
       "source": "INSEE RP",
@@ -4271,6 +4949,9 @@ const DDICT = {
         "22",
         "16"
       ],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "volets": [],
       "agg_dash": true,
       "agg_ecodash": false,
@@ -4279,8 +4960,8 @@ const DDICT = {
     "dm_2539_seul_pct": {
       "theme": "dm",
       "type": "pct",
-      "short": "25-39 seuls %",
-      "medium": "Part 25-39 ans vivant seuls",
+      "short": "% 25-39 seuls",
+      "medium": "Part des 25-39 ans vivant seuls",
       "long": "Part des 25-39 ans vivant seuls",
       "unit": "%",
       "source": "INSEE RP",
@@ -4288,6 +4969,9 @@ const DDICT = {
         "22",
         "16"
       ],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "volets": [],
       "agg_dash": true,
       "agg_ecodash": false,
@@ -4296,8 +4980,8 @@ const DDICT = {
     "dm_4054_seul_pct": {
       "theme": "dm",
       "type": "pct",
-      "short": "40-54 seuls %",
-      "medium": "Part 40-54 ans vivant seuls",
+      "short": "% 40-54 seuls",
+      "medium": "Part des 40-54 ans vivant seuls",
       "long": "Part des 40-54 ans vivant seuls",
       "unit": "%",
       "source": "INSEE RP",
@@ -4305,6 +4989,9 @@ const DDICT = {
         "22",
         "16"
       ],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "volets": [],
       "agg_dash": true,
       "agg_ecodash": false,
@@ -4314,7 +5001,7 @@ const DDICT = {
       "theme": "log",
       "type": "pct",
       "short": "Sous-occup.",
-      "medium": "Part RP sous-occupées",
+      "medium": "Part des logements sous-occupés",
       "long": "Part des résidences principales sous-occupées (toutes intensités)",
       "unit": "%",
       "source": "INSEE RP",
@@ -4322,6 +5009,9 @@ const DDICT = {
         "22",
         "16"
       ],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "volets": [],
       "agg_dash": false,
       "agg_ecodash": false,
@@ -4331,7 +5021,7 @@ const DDICT = {
       "theme": "log",
       "type": "pct",
       "short": "Sur-occup.",
-      "medium": "Part RP sur-occupées",
+      "medium": "Part des logements sur-occupés",
       "long": "Part des résidences principales sur-occupées (toutes intensités)",
       "unit": "%",
       "source": "INSEE RP",
@@ -4339,6 +5029,9 @@ const DDICT = {
         "22",
         "16"
       ],
+      "priority": 3,
+      "polarity": -1,
+      "symbol": "",
       "volets": [],
       "agg_dash": false,
       "agg_ecodash": false,
@@ -4347,14 +5040,17 @@ const DDICT = {
     "log_emmenrec_pct": {
       "theme": "log",
       "type": "pct",
-      "short": "Emménagés récents",
-      "medium": "Part ménages emménagés <4 ans",
+      "short": "% Emménagés réc.",
+      "medium": "Part des emménagés récents",
       "long": "Part des ménages ayant emménagé depuis moins de 4 ans",
       "unit": "%",
       "source": "INSEE RP",
       "periodes": [
         "22"
       ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
       "volets": [],
       "agg_dash": false,
       "agg_ecodash": false,
@@ -4363,8 +5059,8 @@ const DDICT = {
     "&comment_logv": "══════════ VACANCE PARC PRIVÉ (logv) — LOVAC/SDES ══════════",
     "&comment_logv_note": "logv_vac_pct/vdifp NON ajoutés : doublon conceptuel de log_vac_pct (INSEE RP). Seul >2 ans est nouveau.",
     "logv_vac2ans_pct": {
-      "short": "Tx vac >2 ans",
-      "medium": "Taux vacance >2 ans parc privé",
+      "short": "Tx vac. >2 ans",
+      "medium": "Taux de vacance longue >2 ans",
       "long": "Part logements vacants >2 ans dans le parc privé (LOVAC)",
       "type": "pct",
       "unit": "%",
@@ -4378,13 +5074,16 @@ const DDICT = {
       ],
       "volets": [],
       "eda": false,
+      "priority": 4,
+      "polarity": -1,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logv_vac2ans_vdifp": {
-      "short": "△ Vac >2 ans",
-      "medium": "△ vac >2 ans (pts)",
+      "short": "▲ Vac. >2 ans",
+      "medium": "▲ Variation de la vacance >2 ans",
       "long": "Evolution taux vacance >2 ans 2020-2024 (LOVAC, pts %)",
       "type": "vdifp",
       "unit": "pts %",
@@ -4397,6 +5096,9 @@ const DDICT = {
       ],
       "volets": [],
       "eda": false,
+      "priority": 4,
+      "polarity": -1,
+      "symbol": "▲",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -4417,13 +5119,16 @@ const DDICT = {
       ],
       "volets": [],
       "eda": false,
+      "priority": 4,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logsr_resbatcom_vevol": {
       "short": "Évol. logements commencés",
-      "medium": "Évolution logements résid. commencés (TCAM moy. mobile)",
+      "medium": "△ Évolution logements résid. commencés (TCAM moy. mobile)",
       "long": "TCAM des logements résidentiels commencés basé sur moyennes mobiles 3 ans",
       "type": "vevol",
       "unit": "%",
@@ -4439,6 +5144,9 @@ const DDICT = {
       "volets": [],
       "eda": false,
       "&note": "n = distance entre centres des moy. mobiles. 16_24: moy(15,16,17)→moy(23,24,25), n=8. 19_24: moy(17,18,19)→moy(23,24,25), n=6. 22_24: moy(21,22,23)→moy(23,24,25), n=2.",
+      "priority": 4,
+      "polarity": 0,
+      "symbol": "△",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -4458,13 +5166,16 @@ const DDICT = {
       ],
       "volets": [],
       "eda": false,
+      "priority": 4,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logsr_resm2com_vevol": {
       "short": "Évol. surface résid.",
-      "medium": "Évolution surface résidentielle commencée (TCAM moy. mobile)",
+      "medium": "△ Évolution surface résidentielle commencée (TCAM moy. mobile)",
       "long": "TCAM de la surface résidentielle commencée basé sur moyennes mobiles 3 ans",
       "type": "vevol",
       "unit": "%",
@@ -4480,6 +5191,9 @@ const DDICT = {
       "volets": [],
       "eda": false,
       "&note": "n = distance entre centres des moy. mobiles. Mêmes bornes que resbatcom_vevol.",
+      "priority": 4,
+      "polarity": 0,
+      "symbol": "△",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -4501,13 +5215,16 @@ const DDICT = {
       ],
       "volets": [],
       "eda": false,
+      "priority": 4,
+      "polarity": 0,
+      "symbol": "",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
     "logsn_nresm2com_vevol": {
       "short": "Évol. surface locaux",
-      "medium": "Évolution surface non résid. commencée (TCAM moy. mobile)",
+      "medium": "△ Évolution surface non résid. commencée (TCAM moy. mobile)",
       "long": "TCAM de la surface des locaux non résidentiels commencés basé sur moyennes mobiles 3 ans",
       "type": "vevol",
       "unit": "%",
@@ -4523,6 +5240,9 @@ const DDICT = {
       "volets": [],
       "eda": false,
       "&note": "n = distance entre centres des moy. mobiles. 16_24: moy(15,16,17)→moy(23,24,25), n=8. 19_24: moy(17,18,19)→moy(23,24,25), n=6. 22_24: moy(21,22,23)→moy(23,24,25), n=2.",
+      "priority": 4,
+      "polarity": 0,
+      "symbol": "△",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -4543,10 +5263,9 @@ const DDICT = {
       "medium": "Loyer moyen appartement",
       "long": "Loyer moyen au m² appartement (ANIL)",
       "srcVarOpt": "loyer_app_m2",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": ""
     },
     "logl_app12_m2": {
       "label": "Loyer T1-T2 €/m²",
@@ -4564,10 +5283,9 @@ const DDICT = {
       "medium": "Loyer moyen appart 1-2 pièces",
       "long": "Loyer moyen au m² appartement 1-2 pièces (ANIL)",
       "srcVarOpt": "loyer_app12_m2",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": ""
     },
     "logl_app3_m2": {
       "label": "Loyer T3+ €/m²",
@@ -4585,10 +5303,9 @@ const DDICT = {
       "medium": "Loyer moyen appart 3 pièces et plus",
       "long": "Loyer moyen au m² appartement 3+ pièces (ANIL)",
       "srcVarOpt": "loyer_app3_m2",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": ""
     },
     "logl_mai_m2": {
       "label": "Loyer maison €/m²",
@@ -4606,10 +5323,9 @@ const DDICT = {
       "medium": "Loyer moyen maison",
       "long": "Loyer moyen au m² maison (ANIL)",
       "srcVarOpt": "loyer_mai_m2",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": ""
     },
     "logl_app_evol": {
       "label": "Évol loyer appart",
@@ -4625,10 +5341,9 @@ const DDICT = {
       "short": "△ Loyer appt",
       "medium": "△ evol. loyer appartement 22-25",
       "long": "Evolution loyer moyen appartement 2022-2025 (ANIL)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "△"
     },
     "logl_app12_evol": {
       "label": "Évol loyer T1-T2",
@@ -4644,10 +5359,9 @@ const DDICT = {
       "short": "△ Loyer 1-2p",
       "medium": "△ evol. loyer appart 1-2p 22-25",
       "long": "Evolution loyer appart 1-2 pièces 2022-2025 (ANIL)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "△"
     },
     "logl_app3_evol": {
       "label": "Évol loyer T3+",
@@ -4663,10 +5377,9 @@ const DDICT = {
       "short": "△ Loyer 3p+",
       "medium": "△ evol. loyer appart 3p+ 22-25",
       "long": "Evolution loyer appart 3+ pièces 2022-2025 (ANIL)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "△"
     },
     "logl_mai_evol": {
       "label": "Évol loyer maison",
@@ -4682,10 +5395,9 @@ const DDICT = {
       "short": "△ Loyer maison",
       "medium": "△ evol. loyer maison 22-25",
       "long": "Evolution loyer moyen maison 2022-2025 (ANIL)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "△"
     },
     "logl_app_ecart_fr": {
       "label": "Écart loyer/France",
@@ -4693,7 +5405,12 @@ const DDICT = {
       "vartype": "ecart",
       "unit": "%",
       "source": "ANIL",
-      "description": "Écart loyer appart vs moyenne France"
+      "description": "Écart loyer appart vs moyenne France",
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "",
+      "short": "",
+      "medium": ""
     },
     "logl_app12_ecart_fr": {
       "label": "Écart loyer T1-T2/France",
@@ -4701,7 +5418,12 @@ const DDICT = {
       "vartype": "ecart",
       "unit": "%",
       "source": "ANIL",
-      "description": "Écart loyer T1-T2 vs moyenne France"
+      "description": "Écart loyer T1-T2 vs moyenne France",
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "",
+      "short": "",
+      "medium": ""
     },
     "logl_app3_ecart_fr": {
       "label": "Écart loyer T3+/France",
@@ -4709,7 +5431,12 @@ const DDICT = {
       "vartype": "ecart",
       "unit": "%",
       "source": "ANIL",
-      "description": "Écart loyer T3+ vs moyenne France"
+      "description": "Écart loyer T3+ vs moyenne France",
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "",
+      "short": "",
+      "medium": ""
     },
     "logl_mai_ecart_fr": {
       "label": "Écart loyer maison/France",
@@ -4717,7 +5444,12 @@ const DDICT = {
       "vartype": "ecart",
       "unit": "%",
       "source": "ANIL",
-      "description": "Écart loyer maison vs moyenne France"
+      "description": "Écart loyer maison vs moyenne France",
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "",
+      "short": "",
+      "medium": ""
     },
     "logl_nb_communes": {
       "label": "Nb communes loyer",
@@ -4725,7 +5457,12 @@ const DDICT = {
       "vartype": "vol",
       "unit": "nb",
       "source": "ANIL",
-      "description": "Nombre communes avec loyer prédit (EPCI)"
+      "description": "Nombre communes avec loyer prédit (EPCI)",
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "",
+      "short": "",
+      "medium": ""
     },
     "logs_logaut_vol": {
       "label": "Logements autorisés",
@@ -4743,10 +5480,9 @@ const DDICT = {
       "medium": "Logements autorisés",
       "long": "Nombre de logements autorisés (SITADEL)",
       "srcVarOpt": "nb_logaut",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": ""
     },
     "logs_logcom_vol": {
       "label": "Logements commencés",
@@ -4764,10 +5500,9 @@ const DDICT = {
       "medium": "Logements commencés",
       "long": "Nombre de logements commencés (SITADEL)",
       "srcVarOpt": "nb_logcom",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": ""
     },
     "logs_sdpaut_vol": {
       "label": "Surface autorisée",
@@ -4784,10 +5519,9 @@ const DDICT = {
       "short": "Surf autorisée",
       "medium": "Surface autorisée (m²)",
       "long": "Surface de plancher autorisée (SITADEL)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": ""
     },
     "logs_sdpcom_vol": {
       "label": "Surface commencée",
@@ -4804,10 +5538,9 @@ const DDICT = {
       "short": "Surf commencée",
       "medium": "Surface commencée (m²)",
       "long": "Surface de plancher commencée (SITADEL)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": ""
     },
     "logs_logaut_tx1000": {
       "label": "Taux construction autorisée",
@@ -4823,10 +5556,9 @@ const DDICT = {
       "short": "Tx autorisés ‰",
       "medium": "Taux logements autorisés pour 1000 hab",
       "long": "Logements autorisés pour 1000 habitants (SITADEL)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": ""
     },
     "logs_logcom_tx1000": {
       "label": "Taux construction commencée",
@@ -4842,10 +5574,9 @@ const DDICT = {
       "short": "Tx commencés ‰",
       "medium": "Taux logements commencés pour 1000 hab",
       "long": "Logements commencés pour 1000 habitants (SITADEL)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": ""
     },
     "logv_parc_vol": {
       "label": "Parc logements",
@@ -4859,12 +5590,11 @@ const DDICT = {
         "24"
       ],
       "short": "Parc privé",
-      "medium": "Parc privé total",
+      "medium": "Parc de logements privés (LOVAC)",
       "long": "Nombre de logements du parc privé (LOVAC)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 4,
+      "polarity": 0,
+      "symbol": ""
     },
     "logv_vacant_vol": {
       "label": "Logements vacants",
@@ -4878,12 +5608,11 @@ const DDICT = {
         "24"
       ],
       "short": "Vacants",
-      "medium": "Logements vacants parc privé",
+      "medium": "Logements vacants (LOVAC)",
       "long": "Nombre de logements vacants du parc privé (LOVAC)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 4,
+      "polarity": -1,
+      "symbol": ""
     },
     "logv_vac2ans_vol": {
       "label": "Vacance >2 ans",
@@ -4897,12 +5626,11 @@ const DDICT = {
         "24"
       ],
       "short": "Vacants >2 ans",
-      "medium": "Logements vacants >2 ans",
+      "medium": "Logements vacants >2 ans (LOVAC)",
       "long": "Logements vacants depuis plus de 2 ans (LOVAC)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 4,
+      "polarity": -1,
+      "symbol": ""
     },
     "logv_vac2ans_vevol": {
       "label": "Évol vacance >2 ans",
@@ -4915,19 +5643,18 @@ const DDICT = {
       "periodes": [
         "20_24"
       ],
-      "short": "△ Vac >2 ans %",
-      "medium": "△ evol. vacance >2 ans",
+      "short": "△ Vac. >2 ans %",
+      "medium": "△ Évolution de la vacance longue",
       "long": "Evolution volume vacance >2 ans 2020-2024 (LOVAC)",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 4,
+      "polarity": -1,
+      "symbol": "△"
     },
     "logs_logaut_vtcam": {
       "rawObsvACT": "logaut_vtcam",
       "label": "TCAM logements autorisés",
       "short": "△ Logts autorisés",
-      "medium": "TCAM logements autorisés",
+      "medium": "△ TCAM logements autorisés",
       "long": "TCAM logements autorisés (SITADEL)",
       "type": "vtcam",
       "unit": "%/an",
@@ -4937,16 +5664,15 @@ const DDICT = {
         "22_24"
       ],
       "source": "SITADEL",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "△"
     },
     "logs_logcom_vtcam": {
       "rawObsvACT": "logcom_vtcam",
       "label": "TCAM logements commencés",
       "short": "△ Logts commencés",
-      "medium": "TCAM logements commencés",
+      "medium": "△ TCAM logements commencés",
       "long": "TCAM logements commencés (SITADEL)",
       "type": "vtcam",
       "unit": "%/an",
@@ -4956,10 +5682,9 @@ const DDICT = {
         "22_24"
       ],
       "source": "SITADEL",
-      "volets": [],
-      "agg_dash": false,
-      "agg_ecodash": false,
-      "agg_logdash": false
+      "priority": 5,
+      "polarity": 0,
+      "symbol": "△"
     },
     "logd_px2_global": {
       "type": "vol",
@@ -4967,15 +5692,14 @@ const DDICT = {
       "periodes": [
         "24"
       ],
-      "short": "Prix global",
-      "medium": "Prix global pondéré (mai+apt)",
+      "short": "Prix m² global",
+      "medium": "Prix médian au m² tous biens",
       "long": "Prix moyen au m² pondéré maisons+apparts par volume transactions (DVF)",
       "source": "DVF",
       "theme": "logd",
-      "volets": ["exdc", "exde"],
-      "agg_dash": true,
-      "agg_ecodash": false,
-      "agg_logdash": true
+      "priority": 3,
+      "polarity": 0,
+      "symbol": ""
     },
     "logd_px2_global_vevol": {
       "type": "vevol",
@@ -4986,14 +5710,13 @@ const DDICT = {
         "22_24"
       ],
       "short": "△ Prix global",
-      "medium": "△ evol. prix global pondéré",
+      "medium": "△ Évolution du prix global au m²",
       "long": "Evolution prix moyen pondéré maisons+apparts (DVF)",
       "source": "DVF",
       "theme": "logd",
-      "volets": ["exdc", "exde"],
-      "agg_dash": true,
-      "agg_ecodash": false,
-      "agg_logdash": true
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "△"
     },
     "logd_px2_global_ecfr": {
       "type": "ecfr",
@@ -5001,15 +5724,14 @@ const DDICT = {
       "periodes": [
         "24"
       ],
-      "short": "Écart FR prix global",
-      "medium": "Écart France prix global pondéré",
+      "short": "▲ Prix global FR",
+      "medium": "Écart au prix national global",
       "long": "Écart au prix moyen national pondéré (DVF)",
       "source": "DVF",
       "theme": "logd",
-      "volets": ["exdc", "exde"],
-      "agg_dash": true,
-      "agg_ecodash": false,
-      "agg_logdash": true
+      "priority": 3,
+      "polarity": 0,
+      "symbol": ""
     }
   },
   "mapping_observable_to_new": {
@@ -5170,6 +5892,11 @@ for (const [key, val] of Object.entries(DDICT.indicateurs || {})) {
     unit: val.unit,
     theme: val.theme,
     ordre: val.ordre,
+    priority: val.priority || 5,
+    polarity: val.polarity || 0,
+    symbol: val.symbol || "",
+    definition: val.definition || "",
+    note: val.note || "",
     source: val.source,
     formula: val.formula,
     periodes: val.periodes || [],
@@ -5317,10 +6044,14 @@ export function formatValue(indicKey, value) {
 
 // === PARSE COL KEY ===
 // dm_pop_vtcam_1622 → { indic: "dm_pop_vtcam", periode: "1622" }
+// Utilise lookup PERIODES (dynamique, pas de regex figée)
 export function parseColKey(colKey) {
-  const match = colKey.match(/^(.+?)_(1116|1622|1623|1122|1924|2224|22|16|11|23|24)$/);
-  if (!match) return { indic: colKey, periode: null };
-  return { indic: match[1], periode: match[2] };
+  if (!colKey || typeof colKey !== "string") return { indic: colKey, periode: null };
+  const lastUnderscore = colKey.lastIndexOf("_");
+  if (lastUnderscore === -1) return { indic: colKey, periode: null };
+  const suffix = colKey.slice(lastUnderscore + 1);
+  if (PERIODES[suffix]) return { indic: colKey.slice(0, lastUnderscore), periode: suffix };
+  return { indic: colKey, periode: null };
 }
 
 // === GET COL LABEL ===
@@ -5373,7 +6104,20 @@ export function getSource(indicKey) {
 export function getTooltip(indicKey) {
   const indic = INDICATEURS[indicKey];
   if (!indic) return "";
-  return `${indic.long || indic.medium}\nFormule: ${indic.formula || "—"}\nSource: ${indic.source || "INSEE"}`;
+  if (indic.definition) {
+    return `${indic.definition}${indic.note ? "\n" + indic.note : ""}`;
+  }
+  return `${indic.long || indic.medium}\nSource: ${indic.source || "INSEE"}`;
+}
+
+// === GET DEFINITION ===
+export function getDefinition(indicKey) {
+  return INDICATEURS[indicKey]?.definition || "";
+}
+
+// === GET NOTE ===
+export function getNote(indicKey) {
+  return INDICATEURS[indicKey]?.note || "";
 }
 
 // === GET INDICATOR TYPE ===

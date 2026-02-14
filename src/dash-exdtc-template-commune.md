@@ -47,7 +47,9 @@ import {
   DEFAULT_TABLE_INDICS,   // Indicateurs tableau par défaut
   ECHELONS_SIDEBAR,       // Liste échelons radio
   MIN_POP_DEFAULT,        // Seuil pop minimum (10000)
-  PAGE_SIZE_DEFAULT       // Taille page (200)
+  PAGE_SIZE_DEFAULT,      // Taille page (200)
+  DENS_COLORS,            // Couleurs densité scatter
+  DENS_LABELS             // Labels densité scatter
 } from "./helpers/constants.js";
 
 // === selection.js — Gestion sélection multi-territoires ===
@@ -126,6 +128,12 @@ import { exportSVG } from "./helpers/graph-options.js";
 
 // === scatter.js — Scatter plots EPCI ===
 import { renderScatter, createScatterWithZoom, addScatterClickHandlers } from "./helpers/scatter.js";
+
+// === size-scale.js — Échelle taille adaptative (IQR outliers) ===
+import { autoSizeScale, createSizeLegendVertical } from "./helpers/size-scale.js";
+
+// === tooltip.js — Tooltip centralisé (scatter) ===
+import { buildScatterTooltip } from "./helpers/tooltip.js";
 
 // === tableterr-comp.js — Tableau comparaison territoires ===
 import {
@@ -272,6 +280,52 @@ const setTableSearch = (v) => { tableSearchState.value = v; pageState.value = 0;
   box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 .table-help-wrap:hover .help-tooltip { display: block; }
+
+/* Sidebar compact (aligné sur exdattract) */
+.sidebar {
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+}
+.sidebar select {
+  font-size: 12px !important;
+  background: #fff !important;
+  border: 1px solid #e2e8f0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+.sidebar select[multiple] {
+  height: 280px !important;
+}
+.sidebar form {
+  width: 100% !important;
+  max-width: 260px !important;
+  box-sizing: border-box !important;
+  margin: 0 0 3px 0 !important;
+  padding: 0 !important;
+  align-items: center !important;
+  gap: 0 6px !important;
+}
+.sidebar form > label:first-child {
+  max-width: 250px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+}
+.sidebar form > div,
+.sidebar form > select,
+.sidebar form > input {
+  margin-top: 0 !important;
+}
+.sidebar form > div[style*="flex"] label {
+  overflow: visible !important;
+  white-space: nowrap !important;
+  font-size: 11px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.sidebar .panel { margin-bottom: 6px !important; }
+.sidebar .panel-title { margin-bottom: 2px !important; }
 </style>
 <div class="sub-banner">
 <div style="display:flex;flex-wrap:nowrap;padding:6px 16px;gap:0;align-items:flex-start;">
@@ -339,41 +393,29 @@ const echelon = view(Inputs.radio(
 </section>
 
 <section class="panel">
-<div class="panel-title">SÉLECTION TERRITOIRES</div>
-<div id="search-container" style="margin-top:6px;"></div>
+<div class="panel-title">SÉLECTION</div>
+<div id="search-container" style="margin-top:6px;min-height:100px;"></div>
 </section>
 
 <section class="panel">
 <div class="panel-title">OPTIONS CARTES</div>
 
 ```js
-const _colorModeInput = Inputs.radio(["Répartition", "Écart France", "Gradient"], { value: "Répartition", label: "Mode représ." });
-// Tooltips (?) info sur chaque option radio
-const _radioTips = {
-  "Répartition": "Découpe en classes de taille égale (quantiles). Chaque couleur contient environ le même nombre de territoires.",
-  "Écart France": "Compare chaque territoire à la valeur France. 9 niveaux symétriques autour de la référence nationale (écart-type winsorisé).",
-  "Gradient": "Dégradé continu proportionnel à la valeur brute. Outliers atténués aux percentiles P02-P98."
-};
-_colorModeInput.querySelectorAll("label").forEach(lbl => {
-  const input = lbl.querySelector("input");
-  const txt = input?.value;
-  if (_radioTips[txt]) {
-    const tip = document.createElement("span");
-    tip.className = "panel-tooltip-wrap";
-    tip.style.marginLeft = "2px";
-    tip.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">${_radioTips[txt]}</span>`;
-    lbl.appendChild(tip);
-  }
-});
+const _colorModeInput = Inputs.radio(["%", "±Fr.", "Grad."], { value: "%", label: "Palette" });
+{ const d = _colorModeInput.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:6px;"; d.querySelectorAll("label").forEach(l => l.style.display = "inline"); } }
+const _cmLbl = Array.from(_colorModeInput.querySelectorAll("label")).find(l => !l.querySelector("input"));
+if (_cmLbl) { const t = document.createElement("span"); t.className = "panel-tooltip-wrap"; t.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">% = quantiles (classes effectifs égaux)<br>±Fr. = écart à la valeur France (σ winsorisé)<br>Grad. = dégradé continu</span>`; _cmLbl.appendChild(t); }
 const colorMode = view(_colorModeInput);
-const showValuesOnMap = view(Inputs.toggle({ label: "Afficher labels", value: true }));
+const showValuesOnMap = view(Inputs.toggle({ label: "Show labels", value: true }));
 const labelBy = view(Inputs.select(new Map([
   ["Principaux terr.", "population"],
   ["Top 20 + Bot 20", "top5_bot5"],
   ["Top 20 indic", "indicator_top"],
   ["Bottom 20 indic", "indicator_bottom"]
 ]), { value: "population", label: "Labels" }));
-const labelMode = view(Inputs.radio(["values", "names", "both"], { value: "both", label: "Contenu" }));
+const _lmInput = Inputs.radio(["both", "val.", "noms"], { value: "both", label: "Contenu" });
+{ const d = _lmInput.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:4px;"; d.querySelectorAll("label").forEach(l => { l.style.display = "inline"; l.style.fontSize = "11px"; }); } }
+const labelMode = view(_lmInput);
 const showOverlay = view(Inputs.toggle({ label: "Contours départ.", value: false }));
 ```
 
@@ -393,7 +435,7 @@ const densiteFilter = view(Inputs.radio(
 </section>
 
 <section class="panel">
-<div class="panel-title">Colonnes tableau <span class="panel-tooltip-wrap"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">Sélectionner des indicateurs supplémentaires à ajouter au tableau.<br><b>Ctrl+clic</b> : ajouter/retirer un indicateur.<br><b>Shift+clic</b> : sélection continue.</span></span></div>
+<div class="panel-title">INDICATEURS TABLEAU <span class="table-help-wrap"><span class="table-help-icon">?</span><span class="help-tooltip">ctrl/shift click pour multi-sélection</span></span></div>
 
 ```js
 // Multi-select indicateurs supplémentaires (dans sidebar)
@@ -480,8 +522,8 @@ const { bins: bins2, palette: PAL2, isDiv: isDiv2, getColor: getColorBins2 } = i
 // Mode gradient : échelles continues
 const gradient1 = createGradientScale(dataNoFrance, colKey1);
 const gradient2 = createGradientScale(dataNoFrance, colKey2);
-const isGradient = colorMode === "Gradient";
-const isEcart = colorMode === "Écart France";
+const isGradient = colorMode === "Grad.";
+const isEcart = colorMode === "±Fr.";
 
 // Mode écart France : bins basées sur σ winsorisé autour de la valeur 00FR
 const ecart1 = computeEcartFrance(dataNoFrance, colKey1, frData?.[colKey1], { indicType: INDICATEURS[indic1]?.type });
@@ -556,22 +598,40 @@ const map1 = renderChoropleth({
 const counts1 = countBins(dataNoFrance, colKey1, bins1.thresholds || []);
 const ecartCounts1 = isEcart ? countBins(dataNoFrance, colKey1, ecart1.thresholds || []) : [];
 const unit1 = getIndicUnit(colKey1);
+const _filterMap = (mapEl, geoRef, ck, getBi, getCol) => (activeIndices) => {
+  const zc = mapEl.querySelector("g.zoom-content") || mapEl.querySelector("svg");
+  const groups = Array.from(zc.children).filter(c => c.tagName === 'g');
+  const fp = groups.length >= 2 ? Array.from(groups[1].children).filter(c => c.tagName === 'path') : null;
+  if (!fp || fp.length < geoRef.features.length * 0.9) return;
+  fp.forEach((p, i) => {
+    if (i >= geoRef.features.length) return;
+    const v = geoRef.features[i].properties[ck];
+    const bi = getBi(v);
+    if (bi >= 0 && !activeIndices.has(bi)) {
+      p.setAttribute("fill", "#f3f4f6"); p.setAttribute("fill-opacity", "0.15");
+    } else {
+      p.setAttribute("fill", getCol(v)); p.setAttribute("fill-opacity", "1");
+    }
+  });
+};
 const legend1 = isEcart
   ? createEcartFranceLegend({
       palette: ecart1.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecart1.pctLabels,
-      counts: ecartCounts1, title: `Écart France (en ${ecart1.isAbsoluteEcart ? "pts" : "%"})`
+      counts: ecartCounts1, title: `±Fr. (en ${ecart1.isAbsoluteEcart ? "pts" : "%"})`,
+      interactive: true, onFilter: _filterMap(map1, currentGeo, colKey1, ecart1.getBinIdx, getColor1)
     })
   : isGradient
   ? createGradientLegend({
       colors: gradient1.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient1.min, max: gradient1.max, showZero: gradient1.divergent,
-      decimals: 2, title: `Légende${unit1 ? " (" + unit1 + ")" : ""}`,
+      decimals: 2, title: unit1 || "",
       capped: true, rawMin: gradient1.rawMin, rawMax: gradient1.rawMax
     })
   : createBinsLegend({
       colors: PAL1, labels: bins1.labels || [], counts: counts1,
-      vertical: true, title: "Légende", unit: unit1, reverse: !isDiv1
+      vertical: true, unit: unit1, reverse: !isDiv1,
+      interactive: true, onFilter: _filterMap(map1, currentGeo, colKey1, indic1Bins.getBinIdx, getColor1)
     });
 // Tooltip : toujours passer la ref France + getEcartInfo pour symbole au survol
 if (map1._tipConfig) {
@@ -641,18 +701,20 @@ const legend2 = isEcart
   ? createEcartFranceLegend({
       palette: ecart2.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecart2.pctLabels,
-      counts: ecartCounts2, title: `Écart France (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`
+      counts: ecartCounts2, title: `±Fr. (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`,
+      interactive: true, onFilter: _filterMap(map2, currentGeo, colKey2, ecart2.getBinIdx, getColor2)
     })
   : isGradient
   ? createGradientLegend({
       colors: gradient2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient2.min, max: gradient2.max, showZero: gradient2.divergent,
-      decimals: 2, title: `Légende${unit2 ? " (" + unit2 + ")" : ""}`,
+      decimals: 2, title: unit2 || "",
       capped: true, rawMin: gradient2.rawMin, rawMax: gradient2.rawMax
     })
   : createBinsLegend({
       colors: PAL2, labels: bins2.labels || [], counts: counts2,
-      vertical: true, title: "Légende", unit: unit2, reverse: !isDiv2
+      vertical: true, unit: unit2, reverse: !isDiv2,
+      interactive: true, onFilter: _filterMap(map2, currentGeo, colKey2, indic2Bins.getBinIdx, getColor2)
     });
 // Tooltip : toujours passer la ref France + getEcartInfo pour symbole au survol
 if (map2._tipConfig) {
@@ -779,18 +841,20 @@ const legendC1 = isEcart
   ? createEcartFranceLegend({
       palette: ecartC1.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecartC1.pctLabels,
-      counts: ecartCountsC1, title: `Écart France (en ${ecart1.isAbsoluteEcart ? "pts" : "%"})`
+      counts: ecartCountsC1, title: `±Fr. (en ${ecart1.isAbsoluteEcart ? "pts" : "%"})`,
+      interactive: true, onFilter: _filterMap(mapC1, zoomGeo, colKey1, ecartC1.getBinIdx, getColorC1)
     })
   : isGradient
   ? createGradientLegend({
       colors: gradientC1.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradientC1.min, max: gradientC1.max, showZero: gradientC1.divergent,
-      decimals: 2, title: `Légende${unit1 ? " (" + unit1 + ")" : ""}`,
+      decimals: 2, title: unit1 || "",
       capped: true, rawMin: gradientC1.rawMin, rawMax: gradientC1.rawMax
     })
   : createBinsLegend({
       colors: zoomBins1.palette, labels: binsC1.labels || [], counts: countsC1,
-      vertical: true, title: "Légende", unit: unit1, reverse: !zoomBins1.isDiv
+      vertical: true, unit: unit1, reverse: !zoomBins1.isDiv,
+      interactive: true, onFilter: _filterMap(mapC1, zoomGeo, colKey1, zoomBins1.getBinIdx, getColorC1)
     });
 // Tooltip : ref France + getEcartInfo pour symbole au survol (zoom communes)
 if (mapC1?._tipConfig) {
@@ -827,18 +891,20 @@ const legendC2 = isEcart
   ? createEcartFranceLegend({
       palette: ecartC2.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecartC2.pctLabels,
-      counts: ecartCountsC2, title: `Écart France (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`
+      counts: ecartCountsC2, title: `±Fr. (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`,
+      interactive: true, onFilter: _filterMap(mapC2, zoomGeo, colKey2, ecartC2.getBinIdx, getColorC2)
     })
   : isGradient
   ? createGradientLegend({
       colors: gradientC2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradientC2.min, max: gradientC2.max, showZero: gradientC2.divergent,
-      decimals: 2, title: `Légende${unit2 ? " (" + unit2 + ")" : ""}`,
+      decimals: 2, title: unit2 || "",
       capped: true, rawMin: gradientC2.rawMin, rawMax: gradientC2.rawMax
     })
   : createBinsLegend({
       colors: zoomBins2.palette, labels: binsC2.labels || [], counts: countsC2,
-      vertical: true, title: "Légende", unit: unit2, reverse: !zoomBins2.isDiv
+      vertical: true, unit: unit2, reverse: !zoomBins2.isDiv,
+      interactive: true, onFilter: _filterMap(mapC2, zoomGeo, colKey2, zoomBins2.getBinIdx, getColorC2)
     });
 // Tooltip : ref France + getEcartInfo pour symbole au survol (zoom communes)
 if (mapC2?._tipConfig) {
@@ -858,198 +924,116 @@ display(createMapWrapper(mapC2, null, legendC2, addZoomBehavior(mapC2, {
 </div>
 <!-- Fin cards-row Zoom -->
 
-<!-- &s SCATTER_EMP — Scatter plot Emploi vs SMA (échelon courant) avec zoom -->
+<!-- &s SCATTER_DYN — Scatter dynamique indic1 × indic2 (suit sidebar) -->
 
 ```js
-// === SCATTER EMPLOI — Suit l'échelon sélectionné ===
-// Filtre CA/CU/Métro uniquement si échelon = EPCI
+// === SCATTER DYNAMIQUE — Croisement indic1 × indic2 ===
+{
+  const xCol = colKey1;
+  const yCol = colKey2;
+  const xLbl = `${getIndicLabel(indic1, "medium")} (${getPeriodeLabel(periode1, "short")})`;
+  const yLbl = `${getIndicLabel(indic2, "medium")} (${getPeriodeLabel(periode2, "short")})`;
+  const mX = frData?.[xCol];
+  const mY = frData?.[yCol];
 
-// Mapping densité (INSEE: 1=Urbain dense, 2=Intermédiaire, 3=Rural)
-const dens3Map = { "Rural": "3", "Intermédiaire": "2", "Urbain": "1" };
-// Label densité pour titre
-const densiteLabel = densiteFilter !== "Tous" ? ` — ${densiteFilter}` : "";
+  // Mapping densité (INSEE: 1=Urbain dense, 2=Intermédiaire, 3=Rural)
+  const dens3Map = { "Rural": "3", "Intermédiaire": "2", "Urbain": "1" };
+  const densiteLabel = densiteFilter !== "Tous" ? ` — ${densiteFilter}` : "";
 
-// Filtrer données selon échelon
-const scatterEmpData = (() => {
-  let filtered = dataNoFrance.filter(d => d.P23_POP != null);
-
-  // Si EPCI, filtrer CA/CU/Métropoles/EPT via type_epci (exclut CC)
+  // Filtrer données selon échelon + densité
+  let filtered = dataNoFrance.filter(d => d.P23_POP != null && d[xCol] != null && d[yCol] != null);
   if (echelon === "EPCI") {
     filtered = filtered.filter(d => {
       const t = d.type_epci || "";
       return t === "CA" || t === "CU" || t === "MET" || t === "EPT";
     });
   }
-
-  // Appliquer filtre densité (seulement si colonne dens3 existe: DEP, EPCI, BV)
   if (densiteFilter !== "Tous" && filtered.some(d => d.dens3 != null)) {
     filtered = filtered.filter(d => d.dens3 === dens3Map[densiteFilter]);
   }
+  filtered = filtered.sort((a, b) => b.P23_POP - a.P23_POP);
 
-  return filtered.sort((a, b) => b.P23_POP - a.P23_POP);
-})();
+  if (filtered.length > 5) {
+    // Domaines P01-P99 avec padding
+    const xV = filtered.map(d => d[xCol]).sort((a, b) => a - b);
+    const yV = filtered.map(d => d[yCol]).sort((a, b) => a - b);
+    const xP01 = xV[Math.floor(xV.length * 0.01)];
+    const xP99 = xV[Math.min(Math.floor(xV.length * 0.99), xV.length - 1)];
+    const yP01 = yV[Math.floor(yV.length * 0.01)];
+    const yP99 = yV[Math.min(Math.floor(yV.length * 0.99), yV.length - 1)];
+    const xPad = (xP99 - xP01) * 0.08;
+    const yPad = (yP99 - yP01) * 0.08;
 
-// Scale pow(0.5) pour taille bulles — domaine capé P90 pour éviter que Paris écrase tout
-const popExtentEmp = d3.extent(scatterEmpData, d => d.P23_POP);
-const popSortedEmp = scatterEmpData.map(d => d.P23_POP || 0).sort((a, b) => a - b);
-const popP90Emp = popSortedEmp[Math.floor(popSortedEmp.length * 0.90)] || popExtentEmp[1];
-const minRadiusEmp = scatterEmpData.length < 20 ? 8 : scatterEmpData.length < 50 ? 5 : 3;
-const radiusScaleEmp = d3.scalePow().exponent(0.5).domain([popExtentEmp[0], popP90Emp]).range([minRadiusEmp, 40]).clamp(true);
+    // Inclure 0 si proche du range (TCAM autour de 0)
+    let xMin = xP01 - xPad, xMax = xP99 + xPad;
+    let yMin = yP01 - yPad, yMax = yP99 + yPad;
+    if (xMin > 0 && xMin < (xMax - xMin) * 0.5) xMin = Math.min(0, xMin);
+    if (xMax < 0 && Math.abs(xMax) < (xMax - xMin) * 0.5) xMax = Math.max(0, xMax);
+    if (yMin > 0 && yMin < (yMax - yMin) * 0.5) yMin = Math.min(0, yMin);
+    if (yMax < 0 && Math.abs(yMax) < (yMax - yMin) * 0.5) yMax = Math.max(0, yMax);
 
-// Couleur par densité
-const getDensColorEmp = (d) => {
-  if (d.dens3 === "1") return "#dc2626";  // Urbain = rouge
-  if (d.dens3 === "2") return "#f59e0b";  // Intermédiaire = orange
-  return "#22c55e";  // Rural = vert
-};
+    // Échelle taille adaptative IQR
+    const sz = autoSizeScale(filtered.map(d => d.P23_POP), { label: "Population", rRange: [3, 14] });
 
-// Domaines avec padding
-const validEmp = scatterEmpData.filter(d => d.eco_emp_vtcam_1622 != null && d.dm_sma_vtcam_1622 != null);
-const xExtEmp = d3.extent(validEmp, d => d.eco_emp_vtcam_1622);
-const yExtEmp = d3.extent(validEmp, d => d.dm_sma_vtcam_1622);
-const xPadEmp = (xExtEmp[1] - xExtEmp[0]) * 0.12 || 0.5;
-const yPadEmp = (yExtEmp[1] - yExtEmp[0]) * 0.12 || 0.5;
+    // Couleur par densité (dens3: 1=Dense, 2=Intermédiaire, 3=Rural) — DENS_COLORS importé de constants.js
+    const densColor = (d) => DENS_COLORS[d.dens3] || "#999";
 
-// Calcul Top5/Bot5 pour labels scatter (lié au labelBy sidebar)
-const scatterEmpLabelCodes = (() => {
-  if (labelBy === "population") {
-    // Top 10 par population (déjà triés)
-    return validEmp.slice(0, 10).map(d => d.code);
-  } else if (labelBy === "top5_bot5") {
-    // Top 5 + Bottom 5 par indicateur X (emploi)
-    const sorted = [...validEmp].sort((a, b) => b.eco_emp_vtcam_1622 - a.eco_emp_vtcam_1622);
-    return [...sorted.slice(0, 5), ...sorted.slice(-5)].map(d => d.code);
-  } else if (labelBy === "indicator_top") {
-    return [...validEmp].sort((a, b) => b.eco_emp_vtcam_1622 - a.eco_emp_vtcam_1622).slice(0, 10).map(d => d.code);
-  } else if (labelBy === "indicator_bottom") {
-    return [...validEmp].sort((a, b) => a.eco_emp_vtcam_1622 - b.eco_emp_vtcam_1622).slice(0, 10).map(d => d.code);
-  }
-  return [];
-})();
+    // Annotations quadrants (basées sur moyennes France)
+    const annotations = [];
+    if (mX != null && mY != null) {
+      const midXR = (mX + xMax) / 2, midXL = (xMin + mX) / 2;
+      const midYT = (mY + yMax) / 2, midYB = (yMin + mY) / 2;
+      const isXEvol = indic1.includes("vtcam") || indic1.includes("vevol") || indic1.includes("vdifp");
+      const isYEvol = indic2.includes("vtcam") || indic2.includes("vevol") || indic2.includes("vdifp");
+      const qL = isXEvol && isYEvol
+        ? { tr: "Hausse continue", tl: "Rebond", br: "Déclin récent", bl: "Déclin continu" }
+        : { tr: "↑↑ Les 2", tl: `↑ ${yLbl.substring(0, 15)}`, br: `↑ ${xLbl.substring(0, 15)}`, bl: "↓↓ Les 2" };
+      annotations.push(
+        { x: midXR, y: midYT, text: qL.tr, color: "rgba(80,80,80,0.35)", fontSize: 11, fontWeight: 600 },
+        { x: midXL, y: midYT, text: qL.tl, color: "rgba(80,80,80,0.35)", fontSize: 11, fontWeight: 600 },
+        { x: midXR, y: midYB, text: qL.br, color: "rgba(80,80,80,0.35)", fontSize: 11, fontWeight: 600 },
+        { x: midXL, y: midYB, text: qL.bl, color: "rgba(80,80,80,0.35)", fontSize: 11, fontWeight: 600 }
+      );
+    }
 
-// Scatter emploi vs SMA
-const scatterEmpContainer = createScatterWithZoom({
-  title: `Dynamiques ${echelon} (${scatterEmpData.length}${densiteLabel}) — Emploi vs Solde Migratoire 2016-2022`,
-  legend: [
-    { label: "Urbain", color: "#dc2626" },
-    { label: "Intermédiaire", color: "#f59e0b" },
-    { label: "Rural", color: "#22c55e" }
-  ],
-  sizeLabel: "Taille = Population 2023",
-  data: scatterEmpData,
-  xCol: "eco_emp_vtcam_1622",
-  yCol: "dm_sma_vtcam_1622",
-  xDomain: [xExtEmp[0] - xPadEmp, xExtEmp[1] + xPadEmp],
-  yDomain: [yExtEmp[0] - yPadEmp, yExtEmp[1] + yPadEmp],
-  xLabel: "Croissance Emploi (TCAM %/an) →",
-  yLabel: "↑ Solde Migratoire Apparent (TCAM %/an)",
-  meanX: frData?.eco_emp_vtcam_1622,
-  meanY: frData?.dm_sma_vtcam_1622,
-  getRadius: d => radiusScaleEmp(d.P23_POP || 50000),
-  getColor: getDensColorEmp,
-  isSelected: d => mapSelectionState.has(d.code),
-  getTooltip: d => `${d.libelle || d.code}\nEmploi: ${d.eco_emp_vtcam_1622?.toFixed(2)}%/an\nSMA: ${d.dm_sma_vtcam_1622?.toFixed(2)}%/an\nPop 2023: ${d.P23_POP?.toLocaleString("fr-FR")}\nDensité: ${d.dens3 === "1" ? "Urbain" : d.dens3 === "2" ? "Intermédiaire" : "Rural"}`,
-  fillOpacity: 0.6,
-  width: 820,
-  height: 400,
-  labelCodes: scatterEmpLabelCodes,
-  labelMode: labelMode
-});
-display(scatterEmpContainer);
-```
+    // Labels scatter : sélection + top pop
+    const sCodes = [...mapSelectionState];
+    const topPop = filtered.slice(0, 8).map(d => d.code);
+    const lCodes = [...new Set([...sCodes, ...topPop])];
 
-<!-- &e SCATTER_EMP -->
-
-<!-- &s SCATTER_IDX — Scatter plot Attractivité Résidentielle vs Économique (échelon courant, centré 50) -->
-
-```js
-// === SCATTER IDX — Suit l'échelon sélectionné ===
-// X = idxresid_dyn_ind_1622, Y = idxeco_tot_ind_1724
-
-// Filtrer données selon échelon (même logique que scatter emploi)
-const scatterIdxData = (() => {
-  let filtered = dataNoFrance.filter(d => d.P23_POP != null);
-
-  // Si EPCI, filtrer CA/CU/Métropoles/EPT via type_epci (exclut CC)
-  if (echelon === "EPCI") {
-    filtered = filtered.filter(d => {
-      const t = d.type_epci || "";
-      return t === "CA" || t === "CU" || t === "MET" || t === "EPT";
+    const sc = createScatterWithZoom({
+      data: filtered, xCol, yCol,
+      xDomain: [xMin, xMax],
+      yDomain: [yMin, yMax],
+      xLabel: xLbl, yLabel: yLbl,
+      xUnit: getIndicUnit(colKey1), yUnit: getIndicUnit(colKey2),
+      meanX: mX, meanY: mY,
+      getRadius: d => sz.getRadius(d.P23_POP),
+      getColor: densColor,
+      isSelected: d => sCodes.includes(d.code),
+      getTooltip: d => buildScatterTooltip(d, xCol, yCol, filtered, mX, mY),
+      _customTooltip: true,
+      width: 820, height: 400,
+      labelCodes: lCodes, labelMode,
+      annotations,
+      title: `${getIndicLabel(indic1, "medium")} — ${getIndicLabel(indic2, "medium")} (${echelon})`,
+      subtitle: `${filtered.length} territoires${densiteLabel}`,
+      legend: [
+        { label: `${DENS_LABELS["1"]} (${filtered.filter(d => d.dens3 === "1").length})`, color: DENS_COLORS["1"] },
+        { label: `${DENS_LABELS["2"]} (${filtered.filter(d => d.dens3 === "2").length})`, color: DENS_COLORS["2"] },
+        { label: `${DENS_LABELS["3"]} (${filtered.filter(d => d.dens3 === "3").length})`, color: DENS_COLORS["3"] }
+      ],
+      sizeLabel: createSizeLegendVertical(sz.bins, "Population"),
+      fillOpacity: 0.65
     });
+    display(sc);
+  } else {
+    display(html`<div style="padding:20px;text-align:center;color:#6b7280;font-size:11px;">Données insuffisantes pour le scatter (${filtered.length} obs.)</div>`);
   }
-
-  // Filtrer indices disponibles + densité
-  filtered = filtered
-    .filter(d => d.idxresid_dyn_ind_1622 != null && d.idxeco_tot_ind_1724 != null)
-    .filter(d => densiteFilter === "Tous" || d.dens3 === dens3Map[densiteFilter]);
-
-  return filtered.sort((a, b) => b.P23_POP - a.P23_POP);
-})();
-
-// Scale pow(0.5) pour taille bulles — domaine capé P90
-const popExtentIdx = d3.extent(scatterIdxData, d => d.P23_POP);
-const popSortedIdx = scatterIdxData.map(d => d.P23_POP || 0).sort((a, b) => a - b);
-const popP90Idx = popSortedIdx[Math.floor(popSortedIdx.length * 0.90)] || popExtentIdx[1];
-const minRadiusIdx = scatterIdxData.length < 20 ? 8 : scatterIdxData.length < 50 ? 5 : 3;
-const radiusScaleIdx = d3.scalePow().exponent(0.5).domain([popExtentIdx[0], popP90Idx]).range([minRadiusIdx, 40]).clamp(true);
-
-// Couleur par densité
-const getDensColorIdx = (d) => {
-  if (d.dens3 === "1") return "#dc2626";  // Urbain = rouge
-  if (d.dens3 === "2") return "#f59e0b";  // Intermédiaire = orange
-  return "#22c55e";  // Rural = vert
-};
-
-// Calcul Top5/Bot5 pour labels scatter idx (lié au labelBy sidebar)
-const scatterIdxLabelCodes = (() => {
-  if (labelBy === "population") {
-    return scatterIdxData.slice(0, 10).map(d => d.code);
-  } else if (labelBy === "top5_bot5") {
-    // Top 5 + Bottom 5 par indicateur X (idx résidentiel)
-    const sorted = [...scatterIdxData].sort((a, b) => b.idxresid_dyn_ind_1622 - a.idxresid_dyn_ind_1622);
-    return [...sorted.slice(0, 5), ...sorted.slice(-5)].map(d => d.code);
-  } else if (labelBy === "indicator_top") {
-    return [...scatterIdxData].sort((a, b) => b.idxresid_dyn_ind_1622 - a.idxresid_dyn_ind_1622).slice(0, 10).map(d => d.code);
-  } else if (labelBy === "indicator_bottom") {
-    return [...scatterIdxData].sort((a, b) => a.idxresid_dyn_ind_1622 - b.idxresid_dyn_ind_1622).slice(0, 10).map(d => d.code);
-  }
-  return [];
-})();
-
-// Scatter indices attractivité (centré 50, grille tous les 10)
-const scatterIdxContainer = createScatterWithZoom({
-  title: `Attractivité ${echelon} (${scatterIdxData.length}${densiteLabel}) — Résidentielle vs Économique`,
-  legend: [
-    { label: "Urbain", color: "#dc2626" },
-    { label: "Intermédiaire", color: "#f59e0b" },
-    { label: "Rural", color: "#22c55e" }
-  ],
-  sizeLabel: "Taille = Population 2023",
-  data: scatterIdxData,
-  xCol: "idxresid_dyn_ind_1622",
-  yCol: "idxeco_tot_ind_1724",
-  xDomain: [0, 100],
-  yDomain: [0, 100],
-  xLabel: "Idx Résidentiel (16-22) →",
-  yLabel: "↑ Idx Économique (17-24)",
-  meanX: 50,
-  meanY: 50,
-  xTicks: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-  yTicks: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-  getRadius: d => radiusScaleIdx(d.P23_POP || 50000),
-  getColor: getDensColorIdx,
-  isSelected: d => mapSelectionState.has(d.code),
-  getTooltip: d => `${d.libelle || d.code}\nRésid: ${d.idxresid_dyn_ind_1622?.toFixed(1)}\nÉco: ${d.idxeco_tot_ind_1724?.toFixed(1)}\nPop 2023: ${d.P23_POP?.toLocaleString("fr-FR")}\nDensité: ${d.dens3 === "1" ? "Urbain" : d.dens3 === "2" ? "Intermédiaire" : "Rural"}`,
-  fillOpacity: 0.6,
-  width: 820,
-  height: 400,
-  labelCodes: scatterIdxLabelCodes,
-  labelMode: labelMode
-});
-display(scatterIdxContainer);
+}
 ```
 
-<!-- &e SCATTER_IDX -->
+<!-- &e SCATTER_DYN -->
 
 </div>
 <!-- Fin COLONNE GAUCHE (4 cartes + scatter) -->

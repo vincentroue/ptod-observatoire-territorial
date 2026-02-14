@@ -244,7 +244,6 @@ function clearSelection() {
 
   <!-- [TPL-PANEL-LEGEND] Panel Légende -->
   <section class="panel">
-    <div class="panel-title">Légende</div>
     <div id="legend-container"></div>
   </section>
 

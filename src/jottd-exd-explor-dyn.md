@@ -80,6 +80,9 @@ import {
   addScatterClickHandlers
 } from "./helpers/scatter.js";
 
+// Tooltip helpers (centralized HTML tooltips)
+import { buildScatterTooltip } from "./helpers/tooltip.js";
+
 // Maps helpers (Phase 5b refactoring)
 import {
   renderChoropleth,
@@ -656,26 +659,17 @@ document.getElementById("btn-clear-sel")?.addEventListener("click", () => {
 <div class="panel-title">OPTIONS CARTES</div>
 
 ```js
-const _colorModeInput = Inputs.radio(["Répartition", "Écart France", "Gradient"], {value: "Répartition", label: "Mode représ."});
-const _radioTips = {
-  "Répartition": "Découpe en classes de taille égale (quantiles). Chaque couleur contient environ le même nombre de territoires.",
-  "Écart France": "Compare chaque territoire à la valeur France. 9 niveaux symétriques autour de la référence nationale (écart-type winsorisé).",
-  "Gradient": "Dégradé continu proportionnel à la valeur brute. Outliers atténués aux percentiles P02-P98."
-};
-_colorModeInput.querySelectorAll("label").forEach(lbl => {
-  const input = lbl.querySelector("input");
-  const txt = input?.value;
-  if (_radioTips[txt]) {
-    const tip = document.createElement("span");
-    tip.className = "panel-tooltip-wrap";
-    tip.style.marginLeft = "2px";
-    tip.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">${_radioTips[txt]}</span>`;
-    lbl.appendChild(tip);
-  }
-});
+const _colorModeInput = Inputs.radio(["%", "±Fr.", "Grad."], {value: "%", label: "Palette"});
+{ const d = _colorModeInput.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:6px;"; d.querySelectorAll("label").forEach(l => l.style.display = "inline"); } }
+const _cmLbl = Array.from(_colorModeInput.querySelectorAll("label")).find(l => !l.querySelector("input"));
+if (_cmLbl) { const t = document.createElement("span"); t.className = "panel-tooltip-wrap"; t.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">% = quantiles (classes effectifs égaux)<br>±Fr. = écart à la valeur France (σ winsorisé, 9 niveaux)<br>Grad. = dégradé continu (cap P02-P98)</span>`; _cmLbl.appendChild(t); }
 const colorMode = view(_colorModeInput);
-const paletteChoice = view(Inputs.radio(["Violet-Vert", "Bleu-Jaune"], {value: "Violet-Vert", label: "Palette"}));
-const colorBy = view(Inputs.radio(["Indicateur", "Rur/Urb 3"], {value: "Indicateur", label: "Couleur par"}));
+const _palInput = Inputs.radio(["Violet-Vert", "Bleu-Jaune"], {value: "Violet-Vert", label: "Colors"});
+{ const d = _palInput.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:6px;"; d.querySelectorAll("label").forEach(l => l.style.display = "inline"); } }
+const paletteChoice = view(_palInput);
+const _cbInput = Inputs.radio(["Indicateur", "Rur/Urb 3"], {value: "Indicateur", label: "Couleur par"});
+{ const d = _cbInput.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:6px;"; d.querySelectorAll("label").forEach(l => l.style.display = "inline"); } }
+const colorBy = view(_cbInput);
 ```
 
 </div>
@@ -685,7 +679,7 @@ const colorBy = view(Inputs.radio(["Indicateur", "Rur/Urb 3"], {value: "Indicate
 
 ```js
 const showTrendLine = view(Inputs.toggle({label: "Droite régression (R²)", value: false}));
-const showLabelsOnMap = view(Inputs.toggle({label: "Étiquettes territoires", value: false}));
+const showLabelsOnMap = view(Inputs.toggle({label: "Show labels", value: false}));
 const scatterColorBy = view(Inputs.radio(["Valeur", "Typo Rur/Urb"], {value: "Valeur", label: "Couleurs bulles"}));
 ```
 
@@ -815,6 +809,8 @@ const indicXSource_L = getSource(indicX_L);
 const indicXSource_R = getSource(indicX_R);
 const indicXUnit_L = INDICATEURS[indicX_L]?.unit || "%/an";
 const indicXUnit_R = INDICATEURS[indicX_R]?.unit || "%/an";
+const indicYUnit_L = INDICATEURS[indicY_L]?.unit || "%/an";
+const indicYUnit_R = INDICATEURS[indicY_R]?.unit || "%/an";
 const indicXTooltip_L = getTooltip(indicX_L);
 const indicXTooltip_R = getTooltip(indicX_R);
 const indicYTooltip_L = getTooltip(indicY_L);
@@ -831,6 +827,14 @@ const getPeriodeLong = (p) => {
   }
   // Sinon période stock (2 chars): "22" → lookup direct
   return PERIODES[p]?.long || `20${p}`;
+};
+const getPeriodeShort = (p) => {
+  if (!p) return "";
+  if (p.length === 4) {
+    const periodeKey = p.slice(0, 2) + "_" + p.slice(2);
+    return PERIODES[periodeKey]?.short || `${p.slice(0,2)}-${p.slice(2)}`;
+  }
+  return PERIODES[p]?.short || `20${p}`;
 };
 const periodeLabel_XL = getPeriodeLong(periode_XL);  // "2016-2022"
 const periodeLabel_XR = getPeriodeLong(periode_XR);  // "2011-2016"
@@ -963,11 +967,11 @@ const frY_1116 = frData?.[colY1116] ?? null;
 const frY_1622 = frData?.[colY1622] ?? null;
 
 // Mode Écart France : bins sigma autour de la valeur 00FR
-const isEcart = colorMode === "Écart France";
+const isEcart = colorMode === "±Fr.";
 const ecartL = computeEcartFrance(tableData, col1622, frX_1622, { indicType: INDICATEURS[indicX_L]?.type });
 
 // Coloration indicateur (écart / gradient / bins)
-const getColorIndic = (v) => isEcart ? ecartL.getColor(v) : colorMode === "Gradient" ? getColorGradient(v) : getColorBins(v);
+const getColorIndic = (v) => isEcart ? ecartL.getColor(v) : colorMode === "Grad." ? getColorGradient(v) : getColorBins(v);
 
 // Coloration finale : typo catégoriel OU indicateur
 const getColor = (v, d = null) => {
@@ -1009,7 +1013,7 @@ function getColorGradientR(v) {
 // Mode Écart France carte droite
 const ecartR = computeEcartFrance(tableData, col1116, frX_1116, { indicType: INDICATEURS[indicX_R]?.type });
 
-const getColorIndicR = (v) => isEcart ? ecartR.getColor(v) : colorMode === "Gradient" ? getColorGradientR(v) : getColorBinsR(v);
+const getColorIndicR = (v) => isEcart ? ecartR.getColor(v) : colorMode === "Grad." ? getColorGradientR(v) : getColorBinsR(v);
 
 const getColorR = (v, d = null) => {
   if (isTypoMode && d) {
@@ -1150,16 +1154,34 @@ if (map1622) {
 
   // P4.8: Légende intégrée carte gauche - écart / gradient / bins selon mode
   const binCountsL = countBins(tableData, col1622, BINS);
-  const legendTitleL = indicUnit ? `Légende (${indicUnit})` : "Légende";
-  const isGradientMode = colorMode === "Gradient";
+  const legendTitleL = indicUnit || "";
+  const isGradientMode = colorMode === "Grad.";
   let mapLegend1622 = null;
+  // Helper filtrage carte par légende
+  const _filterMapL = (activeIndices) => {
+    const zc = map1622.querySelector("g.zoom-content") || map1622.querySelector("svg");
+    const groups = Array.from(zc.children).filter(c => c.tagName === 'g');
+    const fp = groups.length >= 2 ? Array.from(groups[1].children).filter(c => c.tagName === 'path') : null;
+    if (!fp || fp.length < geoData.features.length * 0.9) return;
+    fp.forEach((p, i) => {
+      if (i >= geoData.features.length) return;
+      const v = geoData.features[i].properties[col1622];
+      const bi = isEcart ? ecartL.getBinIdx(v) : (() => { if (v == null) return -1; const idx = BINS.findIndex(t => v < t); return idx === -1 ? PAL_BINS.length - 1 : idx; })();
+      if (bi >= 0 && !activeIndices.has(bi)) {
+        p.setAttribute("fill", "#f3f4f6"); p.setAttribute("fill-opacity", "0.15");
+      } else {
+        p.setAttribute("fill", getColor(v)); p.setAttribute("fill-opacity", "1");
+      }
+    });
+  };
   if (!isTypoMode) {
     if (isEcart) {
       const ecartCountsL = countBins(tableData, col1622, ecartL.thresholds || []);
       mapLegend1622 = createEcartFranceLegend({
         palette: ecartL.palette, symbols: ECART_FRANCE_SYMBOLS,
         pctLabels: ecartL.pctLabels,
-        counts: ecartCountsL, title: `Écart France (en ${ecartL.isAbsoluteEcart ? "pts" : "%"})`
+        counts: ecartCountsL, title: `±Fr. (en ${ecartL.isAbsoluteEcart ? "pts" : "%"})`,
+        interactive: true, onFilter: _filterMapL
       });
     } else if (isGradientMode) {
       mapLegend1622 = createGradientLegend({
@@ -1177,7 +1199,8 @@ if (map1622) {
         counts: binCountsL,
         vertical: true,
         reverse: !isDivergent,
-        title: legendTitleL
+        title: legendTitleL,
+        interactive: true, onFilter: _filterMapL
       });
     }
   }
@@ -1302,16 +1325,34 @@ if (map1116) {
 
   // P4.8: Légende intégrée carte droite - écart / gradient / bins selon mode
   const binCountsR = countBins(tableData, col1116, BINS_R);
-  const legendTitleR = indicUnitR ? `Légende (${indicUnitR})` : "Légende";
-  const isGradientModeR = colorMode === "Gradient";
+  const legendTitleR = indicUnitR || "";
+  const isGradientModeR = colorMode === "Grad.";
   let mapLegend1116 = null;
+  // Helper filtrage carte droite par légende
+  const _filterMapR = (activeIndices) => {
+    const zc = map1116.querySelector("g.zoom-content") || map1116.querySelector("svg");
+    const groups = Array.from(zc.children).filter(c => c.tagName === 'g');
+    const fp = groups.length >= 2 ? Array.from(groups[1].children).filter(c => c.tagName === 'path') : null;
+    if (!fp || fp.length < geoData.features.length * 0.9) return;
+    fp.forEach((p, i) => {
+      if (i >= geoData.features.length) return;
+      const v = geoData.features[i].properties[col1116];
+      const bi = isEcart ? ecartR.getBinIdx(v) : (() => { if (v == null) return -1; const idx = BINS_R.findIndex(t => v < t); return idx === -1 ? PAL_BINS_R.length - 1 : idx; })();
+      if (bi >= 0 && !activeIndices.has(bi)) {
+        p.setAttribute("fill", "#f3f4f6"); p.setAttribute("fill-opacity", "0.15");
+      } else {
+        p.setAttribute("fill", getColorR(v)); p.setAttribute("fill-opacity", "1");
+      }
+    });
+  };
   if (!isTypoMode) {
     if (isEcart) {
       const ecartCountsR = countBins(tableData, col1116, ecartR.thresholds || []);
       mapLegend1116 = createEcartFranceLegend({
         palette: ecartR.palette, symbols: ECART_FRANCE_SYMBOLS,
         pctLabels: ecartR.pctLabels,
-        counts: ecartCountsR, title: `Écart France (en ${ecartR.isAbsoluteEcart ? "pts" : "%"})`
+        counts: ecartCountsR, title: `±Fr. (en ${ecartR.isAbsoluteEcart ? "pts" : "%"})`,
+        interactive: true, onFilter: _filterMapR
       });
     } else if (isGradientModeR) {
       mapLegend1116 = createGradientLegend({
@@ -1329,7 +1370,8 @@ if (map1116) {
         counts: binCountsR,
         vertical: true,
         reverse: !isDivergentR,
-        title: legendTitleR
+        title: legendTitleR,
+        interactive: true, onFilter: _filterMapR
       });
     }
   }
@@ -1435,8 +1477,8 @@ const scatter1622 = renderScatter({
   yCol: colY1622,
   xDomain,
   yDomain,
-  xLabel: `→ ${indicLabel} (%/an)`,
-  yLabel: `↑ ${indicYLabel} (%/an)`,
+  xLabel: `${indicLabel} (${indicXUnit_L}, ${getPeriodeShort(periode_XL)})`,
+  yLabel: `${indicYLabel} (${indicYUnit_L}, ${getPeriodeShort(periode_YL)})`,
   meanX: meanX_1622,
   meanY: meanY_1622,
   regression: reg1622,
@@ -1444,7 +1486,8 @@ const scatter1622 = renderScatter({
   getRadius: d => radiusScale(d.P22_POP || 0),
   getColor: d => getScatterColor(d[col1622], d),
   isSelected: d => (selectedTerritoires || []).includes(d.code),
-  getTooltip: d => getLabel(d) + "\n" + indicLabel + ": " + formatValue(col1622, d[col1622]) + "\n" + indicYLabel + ": " + formatValue(colY1622, d[colY1622]) + "\nPop: " + (d.P22_POP || 0).toLocaleString("fr-FR"),
+  getTooltip: d => buildScatterTooltip(d, col1622, colY1622, tableData, frX_1622, frY_1622),
+  _customTooltip: true,
   width: 540,
   height: 440
 });
@@ -1510,8 +1553,8 @@ const scatter1116 = renderScatter({
   yCol: colY1116,
   xDomain,
   yDomain,
-  xLabel: `→ ${indicLabelR} (%/an)`,  // P4.2: indicLabelR
-  yLabel: `↑ ${indicYLabelR} (%/an)`, // P4.2: indicYLabelR
+  xLabel: `${indicLabelR} (${indicXUnit_R}, ${getPeriodeShort(periode_XR)})`,
+  yLabel: `${indicYLabelR} (${indicYUnit_R}, ${getPeriodeShort(periode_YR)})`,
   meanX: meanX_1116,
   meanY: meanY_1116,
   regression: reg1116,
@@ -1519,7 +1562,8 @@ const scatter1116 = renderScatter({
   getRadius: d => radiusScale(d.P22_POP || 0),
   getColor: d => getScatterColorR(d[col1116], d),
   isSelected: d => (selectedTerritoires || []).includes(d.code),
-  getTooltip: d => getLabel(d) + "\n" + indicLabelR + ": " + formatValue(col1116, d[col1116]) + "\n" + indicYLabelR + ": " + formatValue(colY1116, d[colY1116]) + "\nPop: " + (d.P22_POP || 0).toLocaleString("fr-FR"),
+  getTooltip: d => buildScatterTooltip(d, col1116, colY1116, tableData, frX_1116, frY_1116),
+  _customTooltip: true,
   width: 540,
   height: 440
 });

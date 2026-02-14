@@ -164,7 +164,6 @@ const codeToLabel = new Map(dataJson.map(d => [d.code, d.label || d.libelle]));
 
   <!-- Panel Légende -->
   <section class="panel" id="panel-legend">
-    <div class="panel-title">Légende</div>
     <div id="legend-container"></div>
   </section>
 

@@ -86,7 +86,7 @@ export function createGradientLegend(config) {
   // Fallback colors si undefined
   const safeColors = Array.isArray(colors) && colors.length > 0
     ? colors
-    : ["#761548", "#c44d8a", "#e8a0c0", "#f5f5f5", "#a8d4a0", "#5ba55b", "#2c5c2d"];
+    : ["#761548", "#af1f6b", "#d96fa3", "#f5f5f5", "#c8e8bf", "#5ba55b", "#2c5c2d"];
 
   // Formatage avec indicateur cap si nécessaire
   const formatVal = (val, isMin) => {
@@ -151,28 +151,86 @@ export function createEcartFranceLegend(config) {
     symbols = [],
     pctLabels,
     counts = [],
-    title = "Écart France",
-    reverse = true
+    title = "",
+    reverse = true,
+    interactive = false,
+    onFilter = null,
   } = config;
 
   const items = palette.map((color, i) => ({
     color,
     symbol: symbols[i] || "",
     pctLabel: pctLabels[i] || "",
-    count: counts[i] || 0
+    count: counts[i] || 0,
+    realIdx: i
   }));
 
   const orderedItems = reverse ? [...items].reverse() : items;
 
-  return html`<div class="legend-vertical">
+  const wrapper = html`<div class="legend-vertical">
     ${title ? html`<div class="legend-title">${title}</div>` : ''}
-    ${orderedItems.map(item => html`<div style="display:flex;align-items:center;gap:2px;line-height:1.1;">
+  </div>`;
+
+  const allRows = [];
+  const allItemsRef = [];
+  let selectedSet = null;
+
+  orderedItems.forEach((item) => {
+    const row = html`<div style="display:flex;align-items:center;gap:2px;line-height:1.1;${interactive ? 'cursor:pointer;user-select:none;' : ''}">
       <span class="legend-color-v" style="background:${item.color}"></span>
       <span style="font-size:10px;width:16px;text-align:center;font-weight:600;">${item.symbol}</span>
-      <span style="font-size:9px;color:#6b7280;">${item.pctLabel}</span>
-      <span style="font-size:8px;color:#888;margin-left:1px;">(${item.count})</span>
-    </div>`)}
-  </div>`;
+      <span class="legend-text-v" style="font-size:9px;color:#6b7280;">${item.pctLabel}</span>
+      <span class="legend-count-v" style="font-size:8px;color:#888;margin-left:1px;">(${item.count})</span>
+    </div>`;
+
+    allRows.push(row);
+    allItemsRef.push(item);
+
+    if (interactive) {
+      row.addEventListener('click', (e) => {
+        const ri = item.realIdx;
+        const allIndices = new Set(allItemsRef.map(it => it.realIdx));
+
+        if (e.ctrlKey || e.metaKey) {
+          if (selectedSet === null) {
+            selectedSet = new Set(allIndices);
+            selectedSet.delete(ri);
+          } else if (selectedSet.has(ri)) {
+            selectedSet.delete(ri);
+            if (selectedSet.size === 0) selectedSet = null;
+          } else {
+            selectedSet.add(ri);
+            if (selectedSet.size === allIndices.size) selectedSet = null;
+          }
+        } else {
+          if (selectedSet !== null && selectedSet.size === 1 && selectedSet.has(ri)) {
+            selectedSet = null;
+          } else {
+            selectedSet = new Set([ri]);
+          }
+        }
+
+        const active = selectedSet === null ? allIndices : selectedSet;
+
+        allRows.forEach((r, j) => {
+          const it = allItemsRef[j];
+          const isActive = active.has(it.realIdx);
+          const sw = r.querySelector('.legend-color-v');
+          const tx = r.querySelector('.legend-text-v');
+          const ct = r.querySelector('.legend-count-v');
+          if (sw) sw.style.background = isActive ? it.color : '#d1d5db';
+          if (tx) tx.style.opacity = isActive ? '1' : '0.35';
+          if (ct) ct.style.opacity = isActive ? '1' : '0.35';
+          r.style.opacity = isActive ? '1' : '0.55';
+        });
+
+        if (onFilter) onFilter(active);
+      });
+    }
+    wrapper.appendChild(row);
+  });
+
+  return wrapper;
 }
 
 // &e
@@ -201,7 +259,7 @@ export function createBinsLegend(config) {
     counts = [],
     vertical = true,
     reverse = true,
-    title = 'Légende',
+    title = '',
     unit = '',
     interactive = false,
     onFilter = null,
@@ -224,10 +282,10 @@ export function createBinsLegend(config) {
       ${unit ? html`<div class="legend-unit">${unit}</div>` : ''}
     </div>`;
 
-    // Mode interactif : isoler un bin (click = montrer SEULEMENT ce bin, re-click = tout montrer)
+    // Mode interactif : click = isoler, Ctrl+click = multi-select
     const allRows = [];
     const allItemsRef = [];
-    let isolatedIdx = null;
+    let selectedSet = null; // null = tout actif, Set = indices actifs
 
     orderedItems.forEach((item) => {
       const row = html`<div class="legend-row-v" style="${interactive ? 'cursor:pointer;user-select:none;' : ''}">
@@ -242,18 +300,35 @@ export function createBinsLegend(config) {
       allItemsRef.push(item);
 
       if (interactive) {
-        row.addEventListener('click', () => {
+        row.addEventListener('click', (e) => {
           const ri = item.realIdx;
-          // Click sur l'isolé → reset tout ; sinon → isoler ce bin
-          isolatedIdx = (isolatedIdx === ri) ? null : ri;
+          const allIndices = new Set(allItemsRef.map(it => it.realIdx));
+
+          if (e.ctrlKey || e.metaKey) {
+            // Ctrl+click : toggle individuel dans la sélection
+            if (selectedSet === null) {
+              // Premier Ctrl+click : partir de tout sauf cet item (= le retirer)
+              selectedSet = new Set(allIndices);
+              selectedSet.delete(ri);
+            } else if (selectedSet.has(ri)) {
+              selectedSet.delete(ri);
+              if (selectedSet.size === 0) selectedSet = null; // Reset si plus rien
+            } else {
+              selectedSet.add(ri);
+              // Si tout est re-sélectionné → reset
+              if (selectedSet.size === allIndices.size) selectedSet = null;
+            }
+          } else {
+            // Click normal : isoler ce bin (toggle)
+            if (selectedSet !== null && selectedSet.size === 1 && selectedSet.has(ri)) {
+              selectedSet = null; // Re-click sur l'isolé → reset
+            } else {
+              selectedSet = new Set([ri]);
+            }
+          }
 
           // Calculer set actif
-          const active = new Set();
-          if (isolatedIdx == null) {
-            allItemsRef.forEach(it => active.add(it.realIdx));
-          } else {
-            active.add(isolatedIdx);
-          }
+          const active = selectedSet === null ? allIndices : selectedSet;
 
           // Mettre à jour les styles de TOUTES les lignes
           allRows.forEach((r, j) => {

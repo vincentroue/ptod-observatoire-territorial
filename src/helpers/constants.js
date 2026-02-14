@@ -74,10 +74,34 @@ export const ECHELONS_WITH_GEO = [
   // "Bassin de vie" - disabled pour perf
 ];
 
+// Échelons pour volet Attractivité
+export const ECHELONS_ATTRACT = [
+  "Zone d'emploi",
+  'Département',
+  'Région',
+  'EPCI',
+  "Aire d'attraction",
+  'Commune'
+];
+
+// Indicateurs par défaut pour volet Attractivité (tab Libre)
+export const DEFAULT_ATTRACT_TABLE_INDICS = [
+  'idxresid_dyn_ind',
+  'idxeco_soc_ind',
+  'idxgentri_ind',
+  'idxlogtens_ind',
+  'idxeco_tot_ind',
+];
+
 // Seuil population minimum par défaut pour tableau communes
 export const MIN_POP_DEFAULT = 10000;
 
 // Taille page tableau par défaut
 export const PAGE_SIZE_DEFAULT = 200;
+
+// Couleurs densité territoriale pour scatter plots (palette classique orange-jaune-vert)
+// 1=Urbain dense (orange), 2=Urbain intermédiaire (jaune doré), 3=Rural (vert)
+export const DENS_COLORS = { "1": "#e67e22", "2": "#f4c542", "3": "#27ae60" };
+export const DENS_LABELS = { "1": "Urbain dense", "2": "Urbain interméd.", "3": "Rural" };
 
 // &e

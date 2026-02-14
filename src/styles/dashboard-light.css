@@ -16,9 +16,11 @@
 /* === FONT INTER === */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-body, html, * {
+* {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
-  font-size: 10px;
+}
+body {
+  font-size: 12px;
 }
 
 /* Overrides tailles spécifiques */
@@ -31,7 +33,7 @@ h3 { font-size: 12px; }
 /* === FOND GLOBAL === */
 body {
   background-color: #f5f6f7 !important;
-  padding-top: 54px !important;  /* Compense banner fixed */
+  padding-top: 50px !important;  /* Compense banner fixed */
 }
 
 /* === OVERRIDE LIENS TITRES === */
@@ -42,9 +44,10 @@ h1, h2, h3, h4, h5, h6,
 }
 
 /* =======================================================
- * &s BANNER — Bannière sticky 42px spacegray
+ * &s BANNER — Bannière v4 : OTTD — ◆ volet + Observatoire ligne 2
  * ======================================================= */
 .banner {
+  --volet-color: #2563eb;
   position: fixed;
   top: 0;
   left: 0;
@@ -59,80 +62,205 @@ h1, h2, h3, h4, h5, h6,
 .banner-inner {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 20px;
+  gap: 12px;
+  padding: 6px 18px 6px;
   width: 100%;
   max-width: 100%;
 }
 
 .banner-titles {
-  flex: 1;
+  flex: 1 1 0;
+  min-width: 100px;
+  overflow: hidden;
 }
 
+/* Logo losange stylé */
+.ottd-logo {
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
+  margin-right: 6px;
+  opacity: 0.7;
+}
+
+/* Ligne 1 : ◇ OTTD — Titre volet */
+.banner-line1 {
+  font-size: 0.95rem;
+  font-weight: 400;
+  line-height: 1.3;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+}
+
+.ottd-brand {
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.ottd-dash {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.ottd-volet {
+  font-weight: 400;
+  color: #ffffff;
+}
+
+/* ⓘ tooltip info à côté du titre */
+.banner-info {
+  margin-left: 8px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: help;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.banner-info[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: rgba(15, 23, 42, 0.95);
+  color: #e2e8f0;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 400;
+  white-space: normal;
+  width: 320px;
+  max-width: 400px;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  line-height: 1.5;
+}
+
+.banner-info[data-tip]:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Ligne 2 : Observatoire des trajectoires territoriales */
+.banner-line2 {
+  font-size: 0.72rem;
+  line-height: 1.3;
+  color: rgba(255, 255, 255, 0.6);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+  letter-spacing: 0.3px;
+}
+
+/* Legacy : volets pas encore migrés vers createBanner v4 */
 .banner-titles h1 {
   margin: 0;
-  font-size: 15px;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 700;
   color: #ffffff !important;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .banner-titles p {
   margin: 1px 0 0 0;
-  font-size: 11px;
-  color: #d1d5db;
+  font-size: 0.72rem;
+  color: rgba(255, 255, 255, 0.6);
 }
 
 /* ------- Navigation bannière ------- */
 .nav-banner {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   margin-left: auto;
-  padding: 4px 6px;
-  background: rgba(37, 99, 235, 0.25);
-  border: 2px solid #2563eb;
+  padding: 3px 5px;
+  background: rgba(37, 99, 235, 0.15);
+  border: 1px solid rgba(96, 165, 250, 0.4);
   border-radius: 6px;
+  flex-shrink: 0;
 }
 
 .nav-btn {
   display: inline-block;
-  padding: 5px 12px;
+  padding: 5px 10px;
   font-size: 12px;
   font-weight: 500;
   color: #e8eaed;
   text-decoration: none;
   border-radius: 4px;
   transition: all 0.15s;
+  position: relative;
 }
 
 .nav-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(96, 165, 250, 0.25);
   color: #ffffff;
 }
 
 .nav-btn.active {
-  background: #2563eb;
+  background: var(--volet-color);
   color: #ffffff;
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.5);
+}
+
+/* Tooltip CSS custom sur nav buttons (data-tip) */
+.nav-btn[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.95);
+  color: #e2e8f0;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 10.5px;
+  font-weight: 400;
+  white-space: nowrap;
+  max-width: 360px;
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.15s, visibility 0.15s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.nav-btn[data-tip]:hover::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 /* ------- Bouton sources avec tooltip ------- */
 .sources-btn {
   display: inline-block;
-  background: #e8eaed;
-  border: 1px solid #9ca3af;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 4px;
-  padding: 5px 12px;
+  padding: 5px 10px;
   font-size: 12px;
-  color: #374151;
+  color: #d1d5db;
   cursor: pointer;
   flex-shrink: 0;
+  white-space: nowrap;
   transition: all 0.15s;
   position: relative;
 }
 
 .sources-btn:hover {
-  background: #d5d8dc;
-  border-color: #6b7280;
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #ffffff;
 }
 
 /* Tooltip personnalisé au survol */
@@ -347,10 +475,10 @@ h1, h2, h3, h4, h5, h6,
 }
 
 .sidebar select, .left-panel select {
-  font-size: 11px !important;
-  padding: 3px 5px !important;
+  font-size: 10.5px !important;
+  padding: 2px 4px !important;
   width: 100% !important;
-  max-width: 230px !important;
+  max-width: 220px !important;
 }
 
 /* Multi-select pour colonnes tableau - hauteur augmentée +70% */
@@ -848,17 +976,23 @@ td.num, th.num {
 }
 
 .map-title {
-  font-size: 12.5px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 600;
   color: #1f2937;
   line-height: 1.3;
 }
 
 .map-subtitle {
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 400;
   color: #6b7280;
   margin-top: 1px;
+}
+
+.map-source-line {
+  font-size: 9px;
+  color: #9ca3af;
+  font-style: italic;
 }
 
 /* Bouton expand plein écran */
@@ -951,11 +1085,11 @@ td.num, th.num {
 }
 
 .map-content.modal-open .modal-title-clone .map-title {
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .map-content.modal-open .modal-title-clone .map-subtitle {
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .map-content.modal-open .map-expand-btn {
@@ -978,32 +1112,107 @@ td.num, th.num {
   font-size: 13px;
   padding: 7px 12px;
 }
-/* Tooltip carte custom (HTML, instantané) */
+/* Tooltip carte custom (HTML, instantané) — position:fixed pour éviter clipping sidebar */
 .map-tooltip {
   display: none;
-  position: absolute;
-  background: rgba(15, 23, 42, 0.82);
-  color: #f1f5f9;
-  font-size: 10.5px;
-  line-height: 1.4;
-  padding: 5px 8px;
-  border-radius: 4px;
+  position: fixed;
+  background: rgba(15, 23, 42, 0.88);
+  color: #e2e8f0;
+  font-size: 11.5px;
+  z-index: 10000;
+  line-height: 1.45;
+  padding: 7px 10px;
+  border-radius: 5px;
   pointer-events: none;
   z-index: 50;
-  white-space: nowrap;
-  max-width: 200px;
+  white-space: normal;
+  max-width: 280px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  font-family: Inter, system-ui, sans-serif;
 }
 
 .map-tooltip b {
   color: #fff;
   font-weight: 600;
+  font-size: 12px;
+}
+
+.map-tooltip-val {
+  color: #f8fafc;
+  font-weight: 500;
+  font-size: 12px;
+}
+
+.map-tooltip-ecart {
+  color: #cbd5e1;
+  font-size: 10.5px;
+  font-style: italic;
 }
 
 .map-tooltip-pop {
   color: #94a3b8;
-  font-size: 9.5px;
+  font-size: 10px;
 }
 /* &e MAP */
+
+/* &s OTTD_TOOLTIP — Tooltip centralisé (tooltip.js) */
+.ottd-tooltip {
+  display: none;
+  position: fixed;
+  pointer-events: none;
+  background: rgba(15, 23, 42, 0.92);
+  color: #e2e8f0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  padding: 8px 11px;
+  border-radius: 5px;
+  z-index: 9999;
+  white-space: normal;
+  max-width: 300px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  font-family: Inter, system-ui, sans-serif;
+  opacity: 0;
+  transition: opacity 0.1s ease-out;
+}
+.ottd-tooltip b { color: #fff; font-weight: 600; font-size: 12px; }
+.ottd-tooltip .map-tooltip-val { color: #f8fafc; font-weight: 500; font-size: 12px; }
+.ottd-tooltip .map-tooltip-pop { color: #94a3b8; font-size: 10px; }
+/* &e OTTD_TOOLTIP */
+
+/* &s TITLE_INFO — ⓘ hover définition indicateur */
+.title-with-tip { position: relative; }
+.tip-icon {
+  color: #9ca3af;
+  cursor: help;
+  position: relative;
+  font-size: 12px;
+  font-style: normal;
+  margin-left: 2px;
+}
+.tip-content {
+  display: none;
+  position: absolute;
+  bottom: 130%;
+  left: -120px;
+  width: 280px;
+  padding: 9px 12px;
+  background: #1f2937;
+  color: #e2e8f0;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  z-index: 200;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.35);
+  white-space: normal;
+  text-align: left;
+}
+.tip-content b { color: #fff; font-size: 12px; display: block; margin-bottom: 4px; }
+.tip-content em { color: #94a3b8; font-size: 11px; display: block; margin-top: 4px; }
+.tip-content .tip-note { color: #cbd5e1; font-size: 11.5px; display: block; margin-top: 5px; line-height: 1.4; }
+.tip-content .tip-source { color: #94a3b8; font-size: 10.5px; display: block; margin-top: 5px; font-style: italic; }
+.tip-icon:hover .tip-content { display: block; }
+/* &e TITLE_INFO */
 
 /* =======================================================
  * &s UTILS — Classes utilitaires
@@ -1030,7 +1239,7 @@ td.num, th.num {
 
 /* ------- Chips/Tags (pour search.js) ------- */
 .chip {
-  background: #2563eb;
+  background: #64748b;
   color: white;
   padding: 2px 6px;
   border-radius: 10px;

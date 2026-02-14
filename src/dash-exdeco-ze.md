@@ -1,5 +1,5 @@
 ---
-title: OTTD — Économie ZE
+title: OTTD — Économie
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css
@@ -42,8 +42,8 @@ style: styles/dashboard-light.css
 ```js
 import { createBanner, createNav, OTTD_PAGES } from "./helpers/layout.js";
 display(createBanner({
-  title: "OTTD — Économie ZE",
-  subtitle: "Emploi, spécialisation, dynamiques sectorielles",
+  title: "OTTD — Économie",
+  subtitle: "Quels moteurs économiques portent les territoires ? Quelles trajectoires depuis 2011 ?",
   navElement: createNav(OTTD_PAGES, 'exdeco'),
   sourcesText: "? Sources",
   sourcesTooltip: "URSSAF 2014-2024, FLORES 2022, INSEE RP 2011/16/22"
@@ -58,7 +58,7 @@ import rewind from "npm:@mapbox/geojson-rewind";
 import * as Plot from "npm:@observablehq/plot";
 
 import { getEchelonMeta, getLabelMap, setLabelMap, getFranceData, getDataNoFrance } from "./helpers/0loader.js";
-import { DEFAULT_ECO_TABLE_INDICS, getDefaultZoomCode } from "./helpers/constants.js";
+import { DEFAULT_ECO_TABLE_INDICS, getDefaultZoomCode, DENS_COLORS, DENS_LABELS } from "./helpers/constants.js";
 import { getIndicOptionsByVolet, getPeriodesForIndicateur, getDefaultPeriode, buildColKey, getIndicLabel, getPeriodeLabel } from "./helpers/selectindic.js";
 import { formatValue, INDICATEURS } from "./helpers/indicators-ddict-js.js";
 import { computeIndicBins, countBins, createGradientScale, GRADIENT_PALETTES, computeEcartFrance, PAL_ECART_FRANCE, ECART_FRANCE_SYMBOLS } from "./helpers/colors.js";
@@ -72,6 +72,8 @@ import { renderSlopeChart, renderIndice100Chart, renderIndice100Multi, LABELS_A5
 import { renderTreemapA5A21, renderTreemapSimple } from "./helpers/graph-treemap.js";
 import { renderButterflyVertical } from "./helpers/graph-butterfly-vertical.js";
 import { createScatterWithZoom } from "./helpers/scatter.js";
+import { buildScatterTooltip } from "./helpers/tooltip.js";
+import { autoSizeScale, createSizeLegendVertical } from "./helpers/size-scale.js";
 import { createSelectionManager, createMapClickHandler } from "./helpers/selection.js";
 
 // === duckdb.js — Queries Parquet communes ===
@@ -211,6 +213,7 @@ const setSort = (col) => {
 <style>
 .sidebar {
   overflow-x: hidden !important;
+  overflow-y: auto !important;
 }
 .sidebar select {
   font-size: 12px !important;
@@ -222,17 +225,39 @@ const setSort = (col) => {
 .sidebar select[multiple] {
   height: 280px !important;
 }
+/* Compacter + aligner tous les form Observable (grille label|control) */
 .sidebar form {
   width: 100% !important;
-  max-width: 230px !important;
+  max-width: 280px !important;
   box-sizing: border-box !important;
-  overflow: hidden !important;
+  margin: 0 0 3px 0 !important;
+  padding: 0 !important;
+  align-items: center !important;
+  gap: 0 6px !important;
 }
-.sidebar label {
-  max-width: 220px !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
+.sidebar form > label:first-child {
+  max-width: 250px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
 }
+.sidebar form > div,
+.sidebar form > select,
+.sidebar form > input {
+  margin-top: 0 !important;
+}
+/* Radios inline : compacts, lisibles */
+.sidebar form > div[style*="flex"] label {
+  overflow: visible !important;
+  white-space: nowrap !important;
+  font-size: 11px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+/* Sections panels */
+.sidebar .panel { margin-bottom: 6px !important; }
+.sidebar .panel-title { margin-bottom: 5px !important; }
 </style>
 
 <!-- &s SIDEBAR -->
@@ -248,11 +273,11 @@ const echelon = view(Inputs.radio(["Zone d'emploi"], { value: "Zone d'emploi", l
 </section>
 
 <section class="panel">
-<div class="panel-title">INDICATEUR CARTE 1</div>
+<div class="panel-title">INDICATEUR CARTE 1 · AXE X</div>
 
 ```js
-const defaultIndic1 = _ecoVals.has("eco_krugman_a38") ? "eco_krugman_a38" : "eco_krugman_a5";
-const indic1 = view(Inputs.select(ecoIndicOptions, { value: defaultIndic1, label: "" }));
+const defaultIndic1 = _ecoVals.has("eco_emp_vtcam") ? "eco_emp_vtcam" : "eco_emppriv_vtcam";
+const indic1 = view(Inputs.select(ecoIndicOptions, { value: defaultIndic1, label: "Indic." }));
 ```
 
 ```js
@@ -261,17 +286,21 @@ const periode1 = view(Inputs.select(perMap1, { value: [...perMap1.values()][0], 
 ```
 
 ```js
-const colorMode1 = view(Inputs.radio(["Répart.", "Écart Fr.", "Gradient"], { value: "Répart.", label: "" }));
+const _cm1Input = Inputs.radio(["%", "±Fr.", "Grad."], { value: "%", label: "Palette" });
+{ const d = _cm1Input.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:6px;justify-content:flex-end;"; d.querySelectorAll("label").forEach(l => l.style.display = "inline"); } }
+const _cm1Lbl = Array.from(_cm1Input.querySelectorAll("label")).find(l => !l.querySelector("input"));
+if (_cm1Lbl) { const t = document.createElement("span"); t.className = "panel-tooltip-wrap"; t.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">% = quantiles (classes effectifs égaux)<br>±Fr. = écart à la valeur France (σ winsorisé)<br>Grad. = dégradé continu</span>`; _cm1Lbl.appendChild(t); }
+const colorMode1 = view(_cm1Input);
 ```
 
 </section>
 
 <section class="panel">
-<div class="panel-title">INDICATEUR CARTE 2</div>
+<div class="panel-title">INDICATEUR CARTE 2 · AXE Y</div>
 
 ```js
-const defaultIndic2 = _ecoVals.has("eco_emp_vtcam") ? "eco_emp_vtcam" : "eco_emppriv_vtcam";
-const indic2 = view(Inputs.select(ecoIndicOptions, { value: defaultIndic2, label: "" }));
+const defaultIndic2 = _ecoVals.has("eco_emppriv_vtcam") ? "eco_emppriv_vtcam" : "eco_emp_vtcam";
+const indic2 = view(Inputs.select(ecoIndicOptions, { value: defaultIndic2, label: "Indic." }));
 ```
 
 ```js
@@ -280,7 +309,11 @@ const periode2 = view(Inputs.select(perMap2, { value: [...perMap2.values()][0], 
 ```
 
 ```js
-const colorMode2 = view(Inputs.radio(["Répart.", "Écart Fr.", "Gradient"], { value: "Écart Fr.", label: "" }));
+const _cm2Input = Inputs.radio(["%", "±Fr.", "Grad."], { value: "±Fr.", label: "Palette" });
+{ const d = _cm2Input.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:6px;justify-content:flex-end;"; d.querySelectorAll("label").forEach(l => l.style.display = "inline"); } }
+const _cm2Lbl = Array.from(_cm2Input.querySelectorAll("label")).find(l => !l.querySelector("input"));
+if (_cm2Lbl) { const t = document.createElement("span"); t.className = "panel-tooltip-wrap"; t.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">% = quantiles (classes effectifs égaux)<br>±Fr. = écart à la valeur France (σ winsorisé)<br>Grad. = dégradé continu</span>`; _cm2Lbl.appendChild(t); }
+const colorMode2 = view(_cm2Input);
 ```
 
 </section>
@@ -294,14 +327,16 @@ const colorMode2 = view(Inputs.radio(["Répart.", "Écart Fr.", "Gradient"], { v
 <div class="panel-title">OPTIONS CARTES</div>
 
 ```js
-const showValuesOnMap = view(Inputs.toggle({ label: "Afficher labels", value: true }));
+const showValuesOnMap = view(Inputs.toggle({ label: "Show labels", value: true }));
 const labelBy = view(Inputs.select(new Map([
   ["Principaux terr.", "population"],
   ["Top 20 + Bot 20", "top5_bot5"],
   ["Top 20 indic", "indicator_top"],
   ["Bottom 20 indic", "indicator_bottom"]
 ]), { value: "population", label: "Labels" }));
-const labelMode = view(Inputs.radio(["values", "names", "both"], { value: "both", label: "Contenu" }));
+const _lmInput = Inputs.radio(["both", "val.", "noms"], { value: "both", label: "Contenu" });
+{ const d = _lmInput.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:4px;justify-content:flex-end;"; d.querySelectorAll("label").forEach(l => { l.style.display = "inline"; l.style.fontSize = "11px"; }); } }
+const labelMode = view(_lmInput);
 ```
 
 </section>
@@ -312,7 +347,7 @@ const labelMode = view(Inputs.radio(["values", "names", "both"], { value: "both"
 ```js
 const extraIndics = view(Inputs.select(
   ecoIndicOptions,
-  { label: "", multiple: true, value: [], width: 230 }
+  { label: "", multiple: true, value: [] }
 ));
 ```
 
@@ -357,7 +392,7 @@ const kpiTable = renderTable({
   compact: true, maxHeight: 160, scrollX: true, stickyFirstCol: 1
 });
 const _kpiWrap = document.createElement("div");
-_kpiWrap.style.cssText = "padding:0 16px;background:#fff;";
+_kpiWrap.style.cssText = "padding:0 16px 10px 16px;background:#fff;border-bottom:1px solid #d1d5db;margin-bottom:12px;";
 kpiTable.style.cssText = (kpiTable.style.cssText || "") + "background:#fff;width:100%;";
 _kpiWrap.appendChild(kpiTable);
 _sbBlock.appendChild(_kpiWrap);
@@ -375,6 +410,9 @@ const colKey = colKey1;
 const colKeyCarte = colKey1;
 const indicLabel = getIndicLabel(indic1, "medium");
 const indicLabel2 = getIndicLabel(indic2, "medium");
+// Labels avec période pour axes scatter
+const indicLabelPer = periode1 ? `${indicLabel} (${getPeriodeLabel(periode1, "short")})` : indicLabel;
+const indicLabelPer2 = periode2 ? `${indicLabel2} (${getPeriodeLabel(periode2, "short")})` : indicLabel2;
 const labelCarte = indicLabel;
 
 // Joindre données aux géométries (les 2 colKeys)
@@ -392,8 +430,8 @@ const _cm1 = colorMode1;
 const indicBins = computeIndicBins(dataNoFrance, colKey1, indic1);
 const { bins, palette: PAL, isDiv, getColor: getColorBins } = indicBins;
 const gradient = createGradientScale(dataNoFrance, colKey1);
-const isGradient = _cm1 === "Gradient";
-const isEcart = _cm1 === "Écart Fr.";
+const isGradient = _cm1 === "Grad.";
+const isEcart = _cm1 === "±Fr.";
 const ecart = computeEcartFrance(dataNoFrance, colKey1, frData?.[colKey1], { indicType: INDICATEURS[indic1]?.type });
 const getColor = isEcart ? ecart.getColor : isGradient ? gradient.getColor : getColorBins;
 
@@ -401,8 +439,8 @@ const getColor = isEcart ? ecart.getColor : isGradient ? gradient.getColor : get
 const _cm2 = colorMode2;
 const indicBins2 = computeIndicBins(dataNoFrance, colKey2, indic2);
 const gradient2 = createGradientScale(dataNoFrance, colKey2);
-const isGradient2 = _cm2 === "Gradient";
-const isEcart2 = _cm2 === "Écart Fr.";
+const isGradient2 = _cm2 === "Grad.";
+const isEcart2 = _cm2 === "±Fr.";
 const ecart2 = computeEcartFrance(dataNoFrance, colKey2, frData?.[colKey2], { indicType: INDICATEURS[indic2]?.type });
 const getColor2 = isEcart2 ? ecart2.getColor : isGradient2 ? gradient2.getColor : indicBins2.getColor;
 
@@ -464,15 +502,15 @@ function buildCommMap(tCode, tData, w, h, opts = {}) {
   const tGrad = tData.length >= 10 ? createGradientScale(tData, _ck) : _gr;
   const tEcart = _isE ? computeEcartFrance(tData, _ck, _ec.ref, { sigma: _ec.sigma, indicType: INDICATEURS[_ind]?.type }) : null;
   const tGetColor = _isE ? tEcart.getColor : _isG ? tGrad.getColor : tBins.getColor;
-  const cMap = renderChoropleth({ geoData: tGeo, valueCol: _ck, getColor: tGetColor, getCode: f => f.properties.CODGEO, getLabel: ({ code }) => tMap.get(code)?.libelle || code, formatValue: (k, v) => formatValue(_ind, v), indicLabel: _il, showLabels: showValuesOnMap, labelMode, labelBy, topN: 200, title: tLabel, maxLabelsAuto: 80, echelon: "Commune", width: w, height: h });
+  const cMap = renderChoropleth({ geoData: tGeo, valueCol: _ck, getColor: tGetColor, getCode: f => f.properties.CODGEO, getLabel: ({ code }) => tMap.get(code)?.libelle || code, formatValue: (k, v) => formatValue(_ind, v), indicLabel: _il, showLabels: showValuesOnMap, labelMode, labelBy, topN: 200, title: `${_il} — ${tLabel}`, maxLabelsAuto: 80, echelon: "Commune", width: w, height: h });
   if (!cMap) return null;
   if (cMap._tipConfig) { cMap._tipConfig.frRef = frData?.[_ck]; cMap._tipConfig.frGetEcartInfo = _isE ? tEcart?.getEcartInfo : _ec.getEcartInfo; }
   const tEcartCounts = _isE ? countBins(tData, _ck, tEcart.thresholds || []) : [];
   const cLegend = _isE
-    ? createEcartFranceLegend({ palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS, pctLabels: tEcart.pctLabels, counts: tEcartCounts, title: "Écart France" })
+    ? createEcartFranceLegend({ palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS, pctLabels: tEcart.pctLabels, counts: tEcartCounts, title: "±Fr." })
     : _isG
-    ? createGradientLegend({ colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential, min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent, decimals: 2, title: "Légende", capped: true, rawMin: tGrad.rawMin, rawMax: tGrad.rawMax })
-    : createBinsLegend({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, _ck, tBins.bins.thresholds || []), vertical: true, title: "Légende", unit: getIndicUnit(_ck), reverse: !tBins.isDiv });
+    ? createGradientLegend({ colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential, min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent, decimals: 2, capped: true, rawMin: tGrad.rawMin, rawMax: tGrad.rawMax })
+    : createBinsLegend({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, _ck, tBins.bins.thresholds || []), vertical: true, unit: getIndicUnit(_ck), reverse: !tBins.isDiv });
   const card = document.createElement("div");
   card.style.cssText = "padding:4px;";
   card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), { exportSVGFn: exportSVG, echelon: tLabel, colKey: _ck, title: `${_il} — ${tLabel}` }));
@@ -487,7 +525,7 @@ function buildCommMap(tCode, tData, w, h, opts = {}) {
 <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:4px;padding-left:6px;">
 
 ```js
-display(html`<h3 style="margin:0 0 4px 0;">Économie — Zones d'emploi</h3>`);
+display(html`<h3 style="margin:0 0 4px 0;">Où se concentrent les dynamiques d'emploi ?</h3>`);
 ```
 
 <!-- Cartes nationales côte à côte -->
@@ -515,18 +553,35 @@ const legend = isEcart
   ? createEcartFranceLegend({
       palette: ecart.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecart.pctLabels,
-      counts: ecartCounts, title: `Écart France (en ${ecart.isAbsoluteEcart ? "pts" : "%"})`
+      counts: ecartCounts, title: `±Fr. (en ${ecart.isAbsoluteEcart ? "pts" : "%"})`,
+      interactive: true,
+      onFilter: (activeIndices) => {
+        const zc = map.querySelector("g.zoom-content") || map.querySelector("svg");
+        const groups = Array.from(zc.children).filter(c => c.tagName === 'g');
+        const fp = groups.length >= 2 ? Array.from(groups[1].children).filter(c => c.tagName === 'path') : null;
+        if (!fp || fp.length < zeGeo.features.length * 0.9) return;
+        fp.forEach((p, i) => {
+          if (i >= zeGeo.features.length) return;
+          const v = zeGeo.features[i].properties[colKey1];
+          const bi = ecart.getBinIdx(v);
+          if (bi >= 0 && !activeIndices.has(bi)) {
+            p.setAttribute("fill", "#f3f4f6"); p.setAttribute("fill-opacity", "0.15");
+          } else {
+            p.setAttribute("fill", getColor(v)); p.setAttribute("fill-opacity", "1");
+          }
+        });
+      }
     })
   : isGradient
   ? createGradientLegend({
       colors: gradient.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient.min, max: gradient.max, showZero: gradient.divergent,
-      decimals: 2, title: `Légende${unit ? " (" + unit + ")" : ""}`,
+      decimals: 2, title: unit || "",
       capped: true, rawMin: gradient.rawMin, rawMax: gradient.rawMax
     })
   : createBinsLegend({
       colors: PAL, labels: bins.labels || [], counts,
-      vertical: true, title: "Légende", unit, reverse: !isDiv,
+      vertical: true, unit, reverse: !isDiv,
       interactive: true,
       onFilter: (activeIndices) => {
         // Cibler le 2e groupe <g> (fill paths), PAS le 1er (contour fill="none")
@@ -611,18 +666,35 @@ const legend2 = isEcart2
   ? createEcartFranceLegend({
       palette: ecart2.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecart2.pctLabels,
-      counts: ecartCounts2, title: `Écart Fr. (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`
+      counts: ecartCounts2, title: `±Fr. (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`,
+      interactive: true,
+      onFilter: (activeIndices) => {
+        const zc2 = map2.querySelector("g.zoom-content") || map2.querySelector("svg");
+        const groups2 = Array.from(zc2.children).filter(c => c.tagName === 'g');
+        const fp2 = groups2.length >= 2 ? Array.from(groups2[1].children).filter(c => c.tagName === 'path') : null;
+        if (!fp2 || fp2.length < zeGeo.features.length * 0.9) return;
+        fp2.forEach((p, i) => {
+          if (i >= zeGeo.features.length) return;
+          const v = zeGeo.features[i].properties[colKey2];
+          const bi = ecart2.getBinIdx(v);
+          if (bi >= 0 && !activeIndices.has(bi)) {
+            p.setAttribute("fill", "#f3f4f6"); p.setAttribute("fill-opacity", "0.15");
+          } else {
+            p.setAttribute("fill", getColor2(v)); p.setAttribute("fill-opacity", "1");
+          }
+        });
+      }
     })
   : isGradient2
   ? createGradientLegend({
       colors: gradient2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient2.min, max: gradient2.max, showZero: gradient2.divergent,
-      decimals: 2, title: `Légende${unit2 ? " (" + unit2 + ")" : ""}`,
+      decimals: 2, title: unit2 || "",
       capped: true, rawMin: gradient2.rawMin, rawMax: gradient2.rawMax
     })
   : createBinsLegend({
       colors: indicBins2.palette, labels: indicBins2.bins.labels || [], counts: counts2,
-      vertical: true, title: "Légende", unit: unit2, reverse: !indicBins2.isDiv,
+      vertical: true, unit: unit2, reverse: !indicBins2.isDiv,
       interactive: true,
       onFilter: (activeIndices) => {
         const zc2 = map2.querySelector("g.zoom-content") || map2.querySelector("svg");
@@ -692,8 +764,8 @@ display(wrapper2);
 {
   const xCol = colKey1;
   const yCol = colKey2;
-  const xLbl = indicLabel;
-  const yLbl = indicLabel2;
+  const xLbl = indicLabelPer;
+  const yLbl = indicLabelPer2;
   const mX = frData?.[xCol];
   const mY = frData?.[yCol];
 
@@ -708,48 +780,37 @@ display(wrapper2);
     const xPad = (xP99 - xP01) * 0.08;
     const yPad = (yP99 - yP01) * 0.08;
 
-    const popMax = d3.max(dataNoFrance, d => d.P23_POP) || 1;
-    const rScale = d3.scaleSqrt().domain([0, popMax]).range([3, 22]);
+    // Échelle taille adaptative avec détection outliers IQR
+    const sz = autoSizeScale(dataNoFrance.map(d => d.P23_POP), { label: "Population", rRange: [3, 14] });
 
-    // Couleur par quadrant (relatif aux moyennes France)
-    const qColor = (d) => {
-      const x = d[xCol], y = d[yCol];
-      if (x == null || y == null) return "#ccc";
-      if (x >= mX && y >= mY) return "#2ca02c";
-      if (x < mX && y >= mY) return "#1f77b4";
-      if (x >= mX && y < mY) return "#ff7f0e";
-      return "#d62728";
-    };
+    // Couleur par densité (dens3: 1=Dense, 2=Intermédiaire, 3=Rural) — DENS_COLORS importé de constants.js
+    const densColor = (d) => DENS_COLORS[d.dens3] || "#999";
 
-    // Détection : les 2 indicateurs sont des évolutions ?
-    const isXEvol = indic1.includes("vtcam") || indic1.includes("vevol") || indic1.includes("vdifp");
-    const isYEvol = indic2.includes("vtcam") || indic2.includes("vevol") || indic2.includes("vdifp");
+    // Domaine : inclure 0 si proche du range (TCAM autour de 0)
+    let xMin = xP01 - xPad, xMax = xP99 + xPad;
+    let yMin = yP01 - yPad, yMax = yP99 + yPad;
+    if (xMin > 0 && xMin < (xMax - xMin) * 0.5) xMin = Math.min(0, xMin);
+    if (xMax < 0 && Math.abs(xMax) < (xMax - xMin) * 0.5) xMax = Math.max(0, xMax);
+    if (yMin > 0 && yMin < (yMax - yMin) * 0.5) yMin = Math.min(0, yMin);
+    if (yMax < 0 && Math.abs(yMax) < (yMax - yMin) * 0.5) yMax = Math.max(0, yMax);
 
-    // Labels quadrants adaptés au contexte
-    let qLabels;
-    if (isXEvol && isYEvol) {
-      qLabels = {
-        tr: "Hausse continue", tl: "Rebond",
-        br: "Déclin récent", bl: "Déclin continu"
-      };
-    } else {
-      qLabels = {
-        tr: "Les 2 au-dessus", tl: `${yLbl} seul ↑`,
-        br: `${xLbl} seul ↑`, bl: "Les 2 en-dessous"
-      };
+    // Annotations quadrants (basées sur moyennes France)
+    const annotations = [];
+    if (mX != null && mY != null) {
+      const midXR = (mX + xMax) / 2, midXL = (xMin + mX) / 2;
+      const midYT = (mY + yMax) / 2, midYB = (yMin + mY) / 2;
+      const isXEvol = indic1.includes("vtcam") || indic1.includes("vevol") || indic1.includes("vdifp");
+      const isYEvol = indic2.includes("vtcam") || indic2.includes("vevol") || indic2.includes("vdifp");
+      const qL = isXEvol && isYEvol
+        ? { tr: "Hausse continue", tl: "Rebond", br: "Déclin récent", bl: "Déclin continu" }
+        : { tr: "↑↑ Les 2", tl: `↑ ${yLbl.substring(0, 15)}`, br: `↑ ${xLbl.substring(0, 15)}`, bl: "↓↓ Les 2" };
+      annotations.push(
+        { x: midXR, y: midYT, text: qL.tr, color: "rgba(80,80,80,0.35)", fontSize: 11, fontWeight: 600 },
+        { x: midXL, y: midYT, text: qL.tl, color: "rgba(80,80,80,0.35)", fontSize: 11, fontWeight: 600 },
+        { x: midXR, y: midYB, text: qL.br, color: "rgba(80,80,80,0.35)", fontSize: 11, fontWeight: 600 },
+        { x: midXL, y: midYB, text: qL.bl, color: "rgba(80,80,80,0.35)", fontSize: 11, fontWeight: 600 }
+      );
     }
-
-    // Annotations positionnées au centre de chaque quadrant
-    const midXR = mX != null ? (mX + xP99 + xPad) / 2 : (xP01 + xP99) / 2;
-    const midXL = mX != null ? (xP01 - xPad + mX) / 2 : (xP01 + xP99) / 2;
-    const midYT = mY != null ? (mY + yP99 + yPad) / 2 : (yP01 + yP99) / 2;
-    const midYB = mY != null ? (yP01 - yPad + mY) / 2 : (yP01 + yP99) / 2;
-    const annotations = [
-      { x: midXR, y: midYT, text: qLabels.tr, color: "rgba(44,160,44,0.3)", fontSize: 12, fontWeight: 600 },
-      { x: midXL, y: midYT, text: qLabels.tl, color: "rgba(31,119,180,0.3)", fontSize: 12, fontWeight: 600 },
-      { x: midXR, y: midYB, text: qLabels.br, color: "rgba(255,127,14,0.3)", fontSize: 12, fontWeight: 600 },
-      { x: midXL, y: midYB, text: qLabels.bl, color: "rgba(214,39,40,0.3)", fontSize: 12, fontWeight: 600 }
-    ];
 
     const sCodes = [...mapSelectionState];
     const topPop = dataNoFrance
@@ -760,27 +821,28 @@ display(wrapper2);
 
     const sc = createScatterWithZoom({
       data: dataNoFrance, xCol, yCol,
-      xDomain: [xP01 - xPad, xP99 + xPad],
-      yDomain: [yP01 - yPad, yP99 + yPad],
+      xDomain: [xMin, xMax],
+      yDomain: [yMin, yMax],
       xLabel: xLbl, yLabel: yLbl,
+      xUnit: getIndicUnit(colKey1), yUnit: getIndicUnit(colKey2),
       meanX: mX, meanY: mY,
-      getRadius: d => rScale(d.P23_POP || 0),
-      getColor: qColor,
+      getRadius: d => sz.getRadius(d.P23_POP),
+      getColor: densColor,
       isSelected: d => sCodes.includes(d.code),
-      getTooltip: d => `${d.libelle || d.code}\nPop: ${(d.P23_POP || 0).toLocaleString("fr")}\n${xLbl}: ${formatValue(indic1, d[xCol])}\n${yLbl}: ${formatValue(indic2, d[yCol])}`,
-      width: 820, height: 400,
+      getTooltip: d => buildScatterTooltip(d, xCol, yCol, dataNoFrance, mX, mY),
+      width: 820, height: 350,
       labelCodes: lCodes, labelMode,
       _customTooltip: true,
       annotations,
-      title: `${xLbl} × ${yLbl} — Zones d'emploi (${dataNoFrance.length})`,
+      title: `${indicLabel} — ${indicLabel2} (Zones d'emploi)`,
+      subtitle: `${dataNoFrance.length} territoires`,
       legend: [
-        { label: qLabels.tr, color: "#2ca02c" },
-        { label: qLabels.tl, color: "#1f77b4" },
-        { label: qLabels.br, color: "#ff7f0e" },
-        { label: qLabels.bl, color: "#d62728" }
+        { label: `${DENS_LABELS["1"]} (${dataNoFrance.filter(d => d.dens3 === "1").length})`, color: DENS_COLORS["1"] },
+        { label: `${DENS_LABELS["2"]} (${dataNoFrance.filter(d => d.dens3 === "2").length})`, color: DENS_COLORS["2"] },
+        { label: `${DENS_LABELS["3"]} (${dataNoFrance.filter(d => d.dens3 === "3").length})`, color: DENS_COLORS["3"] }
       ],
-      sizeLabel: "Taille = population · Sélectionnées = bordure jaune",
-      fillOpacity: 0.6
+      sizeLabel: createSizeLegendVertical(sz.bins, "Population"),
+      fillOpacity: 0.65
     });
 
     display(sc);
