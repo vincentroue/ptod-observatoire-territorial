@@ -291,6 +291,7 @@ const setPage = (p) => { pageState.value = p; };
 <style>
 .sidebar {
   overflow-x: hidden !important;
+  overflow-y: auto !important;
 }
 .sidebar select {
   font-size: 12px !important;
@@ -306,13 +307,34 @@ const setPage = (p) => { pageState.value = p; };
   width: 100% !important;
   max-width: 230px !important;
   box-sizing: border-box !important;
-  overflow: hidden !important;
+  margin: 0 0 3px 0 !important;
+  padding: 0 !important;
+  align-items: center !important;
+  gap: 0 6px !important;
 }
-.sidebar label {
+.sidebar form > label:first-child {
   max-width: 220px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
   overflow: hidden !important;
   text-overflow: ellipsis !important;
 }
+.sidebar form > div,
+.sidebar form > select,
+.sidebar form > input {
+  margin-top: 0 !important;
+}
+.sidebar form > div[style*="flex"] label {
+  overflow: visible !important;
+  white-space: nowrap !important;
+  font-size: 11px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+.sidebar .panel { margin-bottom: 6px !important; }
+.sidebar .panel-title { margin-bottom: 5px !important; }
 </style>
 
 <!-- &s SIDEBAR -->
@@ -1120,6 +1142,16 @@ const _frChart = Plot.plot({
     Plot.dot(seriesFrance.filter(d => d.pxm2_apt), {
       x: "annee", y: "pxm2_apt", fill: "#0ea5e9", r: 3,
       tip: true, title: d => `Appart ${d.annee}: ${d.pxm2_apt?.toFixed(0)}€/m²`
+    }),
+    // Data labels 2022 + 2024 maison (au-dessus)
+    Plot.text(seriesFrance.filter(d => d.pxm2_mai && (d.annee === 2022 || d.annee === 2024)), {
+      x: "annee", y: "pxm2_mai", text: d => d.pxm2_mai.toFixed(0),
+      dy: -10, fontSize: 9, fontWeight: 600, fill: "#0369a1"
+    }),
+    // Data labels 2022 + 2024 appart (en dessous)
+    Plot.text(seriesFrance.filter(d => d.pxm2_apt && (d.annee === 2022 || d.annee === 2024)), {
+      x: "annee", y: "pxm2_apt", text: d => d.pxm2_apt.toFixed(0),
+      dy: 12, fontSize: 9, fontWeight: 600, fill: "#0ea5e9"
     })
   ]
 });
@@ -1237,7 +1269,7 @@ const barHtml = (val) => {
   if (val == null) return "";
   const maxVal = commColStats["logd_px2_global_24"]?.max || 1;
   const pct = Math.min(100, (val / maxVal) * 100);
-  return `<div style="position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:#64748b;opacity:0.28;border-radius:1px;"></div>`;
+  return `<div style="position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:#94a3b8;opacity:0.18;border-radius:1px;"></div>`;
 };
 
 // Abréviation Arrondissement → Arr.
@@ -1247,8 +1279,8 @@ const fmtPct = v => v != null ? (v > 0 ? "+" : "") + v.toFixed(1) + "%" : "—";
 const fmtVol = v => v != null ? Math.round(v).toLocaleString("fr") : "—";
 
 const colDefs = [
-  { key: "libelle", label: "Commune", sub: "", w: 110, align: "left", fmt: shortLib, type: "text" },
-  { key: "logd_px2_global_24", label: "Prix m²", sub: "global 2024", w: 65, align: "right", fmt: fmtPrix, type: "bar" },
+  { key: "libelle", label: "Commune", sub: "", w: 75, align: "left", fmt: shortLib, type: "text" },
+  { key: "logd_px2_global_24", label: "Prix m²", sub: "global 2024", w: 55, align: "right", fmt: fmtPrix, type: "bar" },
   { key: "logd_px2_global_vevol_1924", label: "Δ Prix", sub: "% 19-24", w: 48, align: "right", fmt: fmtPct, type: "zscore" },
   { key: "logd_px2_global_vevol_2224", label: "Δ Prix", sub: "% 22-24", w: 48, align: "right", fmt: fmtPct, type: "zscore" }
 ];
