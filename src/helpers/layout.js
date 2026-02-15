@@ -44,18 +44,12 @@ export function createBanner(options) {
   const titles = document.createElement('div');
   titles.className = 'banner-titles';
 
-  // Logo losange stylé
-  const logo = document.createElement('span');
-  logo.className = 'ottd-logo';
-  logo.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L22 12L12 22L2 12Z" stroke="white" stroke-width="1.5" fill="rgba(255,255,255,0.08)"/><path d="M12 7L17 12L12 17L7 12Z" stroke="white" stroke-width="1" opacity="0.45"/></svg>`;
-
-  // Ligne 1 : ◇ OTTD — Titre volet + ⓘ
+  // Ligne 1 : OTTD — Titre volet + (i)
   const line1 = document.createElement('div');
   line1.className = 'banner-line1';
-  line1.appendChild(logo);
   const ottdSpan = document.createElement('span');
   ottdSpan.className = 'ottd-brand';
-  ottdSpan.textContent = 'OTTD';
+  ottdSpan.textContent = 'OTERT';
   line1.appendChild(ottdSpan);
   const dashSpan = document.createElement('span');
   dashSpan.className = 'ottd-dash';
@@ -68,8 +62,24 @@ export function createBanner(options) {
   if (voletTooltip) {
     const info = document.createElement('span');
     info.className = 'banner-info';
-    info.setAttribute('data-tip', voletTooltip);
-    info.textContent = 'ⓘ';
+    info.textContent = 'i';
+
+    // Tooltip JS (position: fixed) — fiable, pas clippé par overflow
+    const tip = document.createElement('div');
+    tip.className = 'banner-tooltip';
+    tip.textContent = voletTooltip;
+    document.body.appendChild(tip);
+
+    info.addEventListener('mouseenter', () => {
+      const r = info.getBoundingClientRect();
+      tip.style.top = (r.bottom + 8) + 'px';
+      tip.style.left = Math.max(8, r.left - 40) + 'px';
+      tip.classList.add('visible');
+    });
+    info.addEventListener('mouseleave', () => {
+      tip.classList.remove('visible');
+    });
+
     line1.appendChild(info);
   }
   titles.appendChild(line1);
@@ -77,7 +87,7 @@ export function createBanner(options) {
   // Ligne 2 : Observatoire des trajectoires territoriales
   const line2 = document.createElement('div');
   line2.className = 'banner-line2';
-  line2.textContent = 'Observatoire des trajectoires territoriales';
+  line2.textContent = 'Observatoire Territorial des Évolutions, Recompositions et Trajectoires';
   titles.appendChild(line2);
 
   inner.appendChild(titles);
@@ -227,22 +237,22 @@ export function createSubBanner(groups) {
  */
 export const OTTD_PAGES = [
   { id: 'exd', label: '◇ Exploratoire', href: './jottd-exd-explor-dyn',
-    title: 'Vue exploratoire multi-échelon — tous indicateurs, 7 niveaux géographiques',
+    title: 'Exploration libre — tous indicateurs, 7 niveaux géographiques',
     color: '#8e44ad' },
   { id: 'exdtc', label: '◎ Communes', href: './dash-exdtc-template-commune',
-    title: 'Zoom territorial par commune — carte détaillée, comparaison inter-communale',
+    title: 'Communes : portrait, comparaison et zoom territorial',
     color: '#27ae60' },
   { id: 'exdeco', label: '▤ Économie', href: './dash-exdeco-ze',
-    title: 'Économie sectorielle — emploi FLORES, URSSAF, spécialisation par zone d\'emploi',
+    title: 'Économie : emploi, secteurs et spécialisation',
     color: '#e67e22' },
   { id: 'exdlog', label: '⌂ Logement', href: './dash-exdlog',
-    title: 'Marché du logement — prix DVF, vacance LOVAC, construction SITADEL',
+    title: 'Logement : prix, construction et vacance',
     color: '#16a085' },
   { id: 'exdattract', label: '◆ Attractivité', href: './dash-exdattract',
-    title: 'Attractivité résidentielle et productive — indices composites multi-échelon',
-    color: '#2980b9' },
+    title: 'Attractivité : indices résidentiels et productifs',
+    color: '#2563eb' },
   { id: 'exdf', label: '⇄ Flux', href: './dash-exdf-flux-migr', disabled: true,
-    title: 'Flux migratoires — MIGCOM détaillé (à venir)',
+    title: 'Flux migratoires : MIGCOM détaillé (à venir)',
     color: '#c0392b' }
 ];
 

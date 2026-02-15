@@ -361,14 +361,14 @@ export function createMapWrapper(map, statsOverlay, legendElement = null, zoomCo
     }
     if (zoomControls) {
       const zoomBtns = html`<div class="zoom-controls">
+        <button class="zoom-btn" title="Réinitialiser">⌂</button>
         <button class="zoom-btn" title="Zoom +">+</button>
         <button class="zoom-btn" title="Zoom -">−</button>
-        <button class="zoom-btn" title="Réinitialiser">⌂</button>
       </div>`;
-      const [btnIn, btnOut, btnReset] = zoomBtns.querySelectorAll("button");
+      const [btnReset, btnIn, btnOut] = zoomBtns.querySelectorAll("button");
+      btnReset.onclick = () => zoomControls.zoomReset();
       btnIn.onclick = () => zoomControls.zoomIn();
       btnOut.onclick = () => zoomControls.zoomOut();
-      btnReset.onclick = () => zoomControls.zoomReset();
       mapContent.appendChild(zoomBtns);
     }
     const expandBtn = html`<button class="map-expand-btn" title="Agrandir">

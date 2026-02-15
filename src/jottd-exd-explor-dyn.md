@@ -2,32 +2,21 @@
 title: Exploration Multi-échelons
 toc: false
 theme: dashboard
-style: styles/dashboard.css
+style: styles/dashboard-light.css
 ---
 
-<!-- BANNIÈRE PLEINE LARGEUR -->
-<div class="banner-full">
-  <div class="banner-inner">
-    <svg width="32" height="32" viewBox="0 0 40 40" fill="none">
-      <circle cx="20" cy="20" r="18" stroke="#2563eb" stroke-width="2" fill="#e8f0fe"/>
-      <path d="M12 28 L20 12 L28 28 Z" fill="#2563eb" opacity="0.8"/>
-      <circle cx="20" cy="22" r="4" fill="#1e40af"/>
-    </svg>
-    <div class="banner-titles">
-      <h1>OTTD — Observatoire des Trajectoires Territoriales de Développement</h1>
-      <p>Structure des migrations et évolution socio-éco-démographique des territoires français 2011-2023 — Vincent Roué</p>
-    </div>
-    <span class="sources-btn" title="Sources : INSEE RP 2011/2016/2022, FLORES emploi. Calculs : TCAM, soldes naturel/migratoire apparents. Géométries : IGN Admin Express 2025.">? Sources</span>
-    <div class="nav-banner">
-      <a href="./jottd-exd-explor-dyn" class="nav-btn active">EXD</a>
-      <a href="./dash-exdtc-template-commune" class="nav-btn">Communes</a>
-      <a href="./jottd-exdc-comm-bis" class="nav-btn">Comm-bis</a>
-      <a href="#" class="nav-btn disabled" style="opacity:0.4;pointer-events:none;">Flux</a>
-      <a href="#" class="nav-btn disabled" style="opacity:0.4;pointer-events:none;">Logement</a>
-      <a href="#" class="nav-btn disabled" style="opacity:0.4;pointer-events:none;">Économie</a>
-    </div>
-  </div>
-</div>
+<!-- &s BANNER -->
+```js
+import { createBanner, createNav, OTTD_PAGES } from "./helpers/layout.js";
+const _voletCfg = OTTD_PAGES.find(p => p.id === 'exd');
+display(createBanner({
+  voletTitle: "Exploration libre : tous indicateurs, 7 échelons",
+  voletTooltip: "Vue exploratoire libre — tous indicateurs, 7 niveaux géographiques (commune à région). Structure des migrations et évolution socio-éco-démographique 2011-2023. Sources : INSEE RP, FLORES, DVF, Filosofi, URSSAF. Géométries : IGN Admin Express 2025.",
+  color: _voletCfg?.color || "#8e44ad",
+  navElement: createNav(OTTD_PAGES, 'exd')
+}));
+```
+<!-- &e BANNER -->
 
 ```js
 // === IMPORTS ===

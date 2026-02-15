@@ -1,5 +1,5 @@
 ---
-title: OTTD — Communes
+title: OTERT — Communes
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css
@@ -14,12 +14,12 @@ style: styles/dashboard-light.css
 <!-- &s BANNER -->
 ```js
 import { createBanner, createNav, OTTD_PAGES } from "./helpers/layout.js";
+const _voletCfg = OTTD_PAGES.find(p => p.id === 'exdtc');
 display(createBanner({
-  title: "Observatoire des trajectoires territoriales de développement",
-  subtitle: "35 000 communes — comparaison multi-indicateurs",
-  navElement: createNav(OTTD_PAGES, 'exdtc'),
-  sourcesText: "? Sources",
-  sourcesTooltip: "INSEE RP 2011/2016/2022, DVF 2024, Filosofi 2021"
+  voletTitle: "Communes : portrait, comparaison et zoom",
+  voletTooltip: "35 000 communes — 2 indicateurs simultanés, cartes nationales et zoom communal, tableau multi-colonnes filtrable. Sources : INSEE RP 2011/2016/2022, DVF 2024, Filosofi 2021.",
+  color: _voletCfg?.color || "#27ae60",
+  navElement: createNav(OTTD_PAGES, 'exdtc')
 }));
 ```
 <!-- &e BANNER -->
@@ -370,7 +370,7 @@ const periode2 = view(Inputs.select(per2Map, { value: [...per2Map.values()][0], 
 <div class="sub-banner-instructions">
 <span>Comparez 2 indicateurs sur cartes choroplèthes. <b>Clic</b> = zoom, <b>Ctrl+clic</b> = multi-sélection.</span>
 <span>Le tableau liste les communes ; <b>clic header</b> = tri, la sélection carte filtre les lignes.</span>
-<span class="version">OTTD v2.0</span>
+<span class="version">OTERT v2.0</span>
 </div>
 
 </div>
@@ -931,8 +931,9 @@ display(createMapWrapper(mapC2, null, legendC2, addZoomBehavior(mapC2, {
 {
   const xCol = colKey1;
   const yCol = colKey2;
-  const xLbl = `${getIndicLabel(indic1, "medium")} (${getPeriodeLabel(periode1, "short")})`;
-  const yLbl = `${getIndicLabel(indic2, "medium")} (${getPeriodeLabel(periode2, "short")})`;
+  // Labels axes = nom indicateur sans période (période dans l'unité)
+  const xLbl = getIndicLabel(indic1, "medium");
+  const yLbl = getIndicLabel(indic2, "medium");
   const mX = frData?.[xCol];
   const mY = frData?.[yCol];
 
@@ -1006,7 +1007,8 @@ display(createMapWrapper(mapC2, null, legendC2, addZoomBehavior(mapC2, {
       xDomain: [xMin, xMax],
       yDomain: [yMin, yMax],
       xLabel: xLbl, yLabel: yLbl,
-      xUnit: getIndicUnit(colKey1), yUnit: getIndicUnit(colKey2),
+      xUnit: `${getIndicUnit(colKey1)}, ${getPeriodeLabel(periode1, "short")}`,
+      yUnit: `${getIndicUnit(colKey2)}, ${getPeriodeLabel(periode2, "short")}`,
       meanX: mX, meanY: mY,
       getRadius: d => sz.getRadius(d.P23_POP),
       getColor: densColor,

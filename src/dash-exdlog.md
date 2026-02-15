@@ -1,5 +1,5 @@
 ---
-title: OTTD — Logement
+title: OTERT — Logement
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css
@@ -15,12 +15,12 @@ style: styles/dashboard-light.css
 <!-- &s BANNER -->
 ```js
 import { createBanner, createNav, OTTD_PAGES } from "./helpers/layout.js";
+const _voletCfg = OTTD_PAGES.find(p => p.id === 'exdlog');
 display(createBanner({
-  title: "Observatoire des trajectoires territoriales de développement",
-  subtitle: "Dynamiques Logement — Prix, Construction, Vacance",
-  navElement: createNav(OTTD_PAGES, 'exdlog'),
-  sourcesText: "? Sources",
-  sourcesTooltip: "DVF 2016-2024, SITADEL 2011-2024, LOVAC 2020-2024, ANIL 2022-2025"
+  voletTitle: "Logement : prix, construction et vacance",
+  voletTooltip: "Dynamiques du marché du logement : prix immobiliers (DVF), construction neuve (SITADEL), vacance (LOVAC), tension locative (ANIL). Sources : DVF 2016-2024, SITADEL 2011-2024, LOVAC 2020-2024, ANIL 2022-2025.",
+  color: _voletCfg?.color || "#16a085",
+  navElement: createNav(OTTD_PAGES, 'exdlog')
 }));
 ```
 <!-- &e BANNER -->
@@ -479,15 +479,50 @@ const bannerCols = [
 ```
 
 ```js
-// === BANNIÈRE KPI : fond coloré + titre + table ===
-const selSetB = mapSelectionState;
-const selCodesB = [...(selSetB || [])];
-const selDataB = selCodesB.length > 0 ? dataNoFrance.filter(d => selCodesB.includes(d.code)) : [];
-const bannerData = [frData, ...selDataB.slice(0, 5)].filter(Boolean).map(d => ({
+// === SOUS-BANNIÈRE : Profil comparé (collapsible) ===
+const _sbBlock = document.createElement("div");
+_sbBlock.style.cssText = "margin:-8px -20px 0 -16px;padding:0;";
+
+// Header bar : toggle gauche + breadcrumb droite
+const _sbBar = document.createElement("div");
+_sbBar.style.cssText = "background:#e8eaed;padding:5px 16px;font-size:11.5px;color:#374151;font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;gap:12px;";
+
+const _sbToggle = document.createElement("button");
+_sbToggle.style.cssText = "background:#f8fafc;border:1px solid #cbd5e1;border-radius:20px;padding:4px 14px 4px 10px;font-size:11.5px;color:#475569;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;transition:all 0.15s;white-space:nowrap;flex-shrink:0;font-weight:500;";
+_sbToggle.innerHTML = `<span style="font-size:9px;transition:transform 0.2s;display:inline-block;${mapSelectionState.size > 0 ? "transform:rotate(90deg);" : ""}" id="_kpi-chevron-log">▶</span> Profil comparé territoires sélectionnés`;
+_sbToggle.onmouseenter = () => { _sbToggle.style.borderColor = "#94a3b8"; _sbToggle.style.background = "#f1f5f9"; };
+_sbToggle.onmouseleave = () => { _sbToggle.style.borderColor = "#cbd5e1"; _sbToggle.style.background = "#f8fafc"; };
+
+const _sbBreadcrumb = document.createElement("span");
+_sbBreadcrumb.style.cssText = "color:#6b7280;font-size:11px;margin-left:auto;white-space:nowrap;";
+_sbBreadcrumb.textContent = `${echLabel} · Sources : DVF 2016-2024, SITADEL, LOVAC, ANIL`;
+
+_sbBar.appendChild(_sbToggle);
+_sbBar.appendChild(_sbBreadcrumb);
+_sbBlock.appendChild(_sbBar);
+
+// Contenu rétractable — auto-déplié si sélection active
+const _hasSelection = mapSelectionState.size > 0;
+const _kpiBody = document.createElement("div");
+_kpiBody.style.cssText = `overflow:hidden;transition:max-height 0.3s ease, border-color 0.3s;max-height:${_hasSelection ? "600px" : "0px"};border-left:${_hasSelection ? "3px solid #16a085" : "3px solid transparent"};`;
+
+// Toggle
+_sbToggle.onclick = () => {
+  const collapsed = _kpiBody.style.maxHeight === "0px";
+  _kpiBody.style.maxHeight = collapsed ? "600px" : "0px";
+  _kpiBody.style.borderLeftColor = collapsed ? "#16a085" : "transparent";
+  const chevron = document.getElementById("_kpi-chevron-log");
+  if (chevron) chevron.style.transform = collapsed ? "rotate(90deg)" : "";
+};
+
+// KPI Table compact — France + territoires sélectionnés (max 5)
+const kpiSelCodes = [...mapSelectionState].slice(0, 5);
+const kpiSelData = kpiSelCodes.map(c => dataNoFrance.find(d => d.code === c)).filter(Boolean);
+const kpiData = [frData, ...kpiSelData].filter(Boolean).map(d => ({
   ...d, regshort: d.regdep ? d.regdep.split("/")[0] : ""
 }));
 
-const bannerColumns = [
+const kpiCols = [
   { key: "libelle", label: "", type: "text", width: 140 },
   ...bannerCols.map(col => {
     const indicKey = col.replace(/_\d+$/, "");
@@ -496,25 +531,25 @@ const bannerColumns = [
   })
 ];
 
-const bannerStats = computeBarStats(bannerData, bannerCols);
-const bannerTable = renderTable({
-  data: bannerData, columns: bannerColumns, stats: bannerStats,
-  compact: true, maxHeight: 220, scrollX: true, stickyFirstCol: 1
+const kpiStats = computeBarStats(kpiData, bannerCols);
+const kpiTable = renderTable({
+  data: kpiData, columns: kpiCols, stats: kpiStats,
+  compact: true, maxHeight: 160, scrollX: true, stickyFirstCol: 1
 });
+const _kpiWrap = document.createElement("div");
+_kpiWrap.style.cssText = "padding:4px 16px 8px;background:#fff;";
+kpiTable.style.cssText = (kpiTable.style.cssText || "") + "background:#fff;width:100%;";
+_kpiWrap.appendChild(kpiTable);
+_kpiBody.appendChild(_kpiWrap);
 
-// Titre + tableau KPI — flush en haut (compense padding layout-main)
-const bannerBlock = document.createElement("div");
-bannerBlock.style.cssText = "margin:-8px -20px 0 -16px;padding:0;";
-const bannerTitle = document.createElement("div");
-bannerTitle.style.cssText = "background:#e8eaed;padding:5px 16px;font-size:12px;font-weight:600;color:#374151;font-family:Inter,system-ui,sans-serif;";
-bannerTitle.textContent = "Métriques clés — France et territoires sélectionnés";
-bannerBlock.appendChild(bannerTitle);
-const bannerTableWrap = document.createElement("div");
-bannerTableWrap.style.cssText = "padding:0 16px;background:#fff;";
-bannerTable.style.cssText = (bannerTable.style.cssText || "") + "background:#fff;width:100%;";
-bannerTableWrap.appendChild(bannerTable);
-bannerBlock.appendChild(bannerTableWrap);
-display(bannerBlock);
+_sbBlock.appendChild(_kpiBody);
+
+// Espacement sous le bloc
+const _spacerLog = document.createElement("div");
+_spacerLog.style.cssText = "height:4px;background:#f5f6f7;";
+_sbBlock.appendChild(_spacerLog);
+
+display(_sbBlock);
 ```
 
 ```js
@@ -1027,8 +1062,87 @@ Prix global pondéré (mai+apt) | Base 100 = 2010 | — France ref | Ctrl+clic c
 </div>
 <!-- fin COLONNE GAUCHE (cartes + graphs) -->
 
-<!-- COLONNE DROITE : Table communes >50K -->
+<!-- COLONNE DROITE : Graphique France + Table communes >50K -->
 <div style="flex:1;min-width:300px;display:flex;flex-direction:column;">
+
+```js
+// === GRAPHIQUE FRANCE dépliable au-dessus du tableau ===
+const _chartBlock = document.createElement("div");
+_chartBlock.style.cssText = "margin-bottom:8px;border:1px solid #e5e7eb;border-radius:6px;overflow:hidden;";
+
+const _chartBar = document.createElement("div");
+_chartBar.style.cssText = "background:#f0fdf4;padding:5px 12px;font-size:11.5px;color:#374151;font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;gap:8px;cursor:pointer;";
+_chartBar.innerHTML = `<span style="font-size:9px;transition:transform 0.2s;display:inline-block;transform:rotate(90deg);" id="_chart-chevron-log">▶</span><span style="font-weight:600;color:#166534;">France — Volumes et Prix (2010-2024)</span>`;
+
+const _chartBody = document.createElement("div");
+_chartBody.style.cssText = "overflow:hidden;transition:max-height 0.3s ease;max-height:260px;padding:6px 10px;background:#fff;";
+
+// Chart content
+const anneesFrC = seriesFrance.map(d => d.annee).sort((a, b) => a - b);
+const maxTransC = Math.max(...seriesFrance.map(d => d.nbtrans || 0));
+const maxLogautC = Math.max(...seriesFrance.map(d => d.logaut || 0));
+const volScaleC = 3000 / Math.max(maxTransC, maxLogautC);
+
+const _frChart = Plot.plot({
+  style: { fontFamily: "Inter, system-ui, sans-serif" },
+  width: 420,
+  height: 180,
+  marginLeft: 42,
+  marginRight: 40,
+  marginBottom: 22,
+  x: {
+    label: null,
+    tickFormat: d => String(Math.round(d)),
+    ticks: anneesFrC.filter(y => y % 2 === 0)
+  },
+  y: { label: "€/m²", grid: true, domain: [0, 2500] },
+  marks: [
+    Plot.barY(seriesFrance.filter(d => d.nbtrans), {
+      x: "annee", y: d => d.nbtrans * volScaleC,
+      fill: "#c4c9d0", fillOpacity: 0.7,
+      tip: true, title: d => `Transactions: ${(d.nbtrans/1000).toFixed(0)}k`
+    }),
+    Plot.barY(seriesFrance.filter(d => d.logaut), {
+      x: d => d.annee + 0.3, y: d => d.logaut * volScaleC,
+      fill: "#6b7280", fillOpacity: 0.7,
+      tip: true, title: d => `Construction: ${(d.logaut/1000).toFixed(0)}k logements`
+    }),
+    Plot.line(seriesFrance.filter(d => d.pxm2_mai), {
+      x: "annee", y: "pxm2_mai", stroke: "#0369a1", strokeWidth: 1.8, curve: "natural"
+    }),
+    Plot.line(seriesFrance.filter(d => d.pxm2_apt), {
+      x: "annee", y: "pxm2_apt", stroke: "#0ea5e9", strokeWidth: 1.5, strokeDasharray: "2,2", curve: "natural"
+    }),
+    Plot.dot(seriesFrance, {
+      x: "annee", y: "pxm2_mai", fill: "#0369a1", r: 3,
+      tip: true, title: d => `Maison ${d.annee}: ${d.pxm2_mai?.toFixed(0)}€/m²`
+    }),
+    Plot.dot(seriesFrance.filter(d => d.pxm2_apt), {
+      x: "annee", y: "pxm2_apt", fill: "#0ea5e9", r: 3,
+      tip: true, title: d => `Appart ${d.annee}: ${d.pxm2_apt?.toFixed(0)}€/m²`
+    })
+  ]
+});
+_chartBody.appendChild(_frChart);
+
+// Légende inline
+const _chartLegend = document.createElement("div");
+_chartLegend.style.cssText = "font-size:9px;color:#64748b;display:flex;gap:10px;flex-wrap:wrap;margin-top:2px;";
+_chartLegend.innerHTML = `<span style="display:flex;align-items:center;gap:3px;"><span style="width:14px;height:2px;background:#0369a1;"></span> Maison €/m²</span><span style="display:flex;align-items:center;gap:3px;"><span style="width:14px;height:2px;background:#0ea5e9;border-bottom:1px dotted #0ea5e9;"></span> Appart €/m²</span><span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:#c4c9d0;"></span> Transactions</span><span style="display:flex;align-items:center;gap:3px;"><span style="width:10px;height:10px;background:#6b7280;"></span> Construction</span>`;
+_chartBody.appendChild(_chartLegend);
+
+// Toggle
+_chartBar.onclick = () => {
+  const collapsed = _chartBody.style.maxHeight === "0px";
+  _chartBody.style.maxHeight = collapsed ? "260px" : "0px";
+  const chevron = document.getElementById("_chart-chevron-log");
+  if (chevron) chevron.style.transform = collapsed ? "rotate(90deg)" : "";
+};
+
+_chartBlock.appendChild(_chartBar);
+_chartBlock.appendChild(_chartBody);
+display(_chartBlock);
+```
 
 ```js
 // === SORT STATE COMMUNES (bloc séparé pour réactivité) ===

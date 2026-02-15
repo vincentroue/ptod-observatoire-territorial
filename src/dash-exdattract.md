@@ -1,5 +1,5 @@
 ---
-title: OTTD — Attractivité
+title: OTERT — Attractivité
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css
@@ -20,7 +20,7 @@ style: styles/dashboard-light.css
 import { createBanner, createNav, OTTD_PAGES } from "./helpers/layout.js"
 const _voletCfg = OTTD_PAGES.find(p => p.id === 'exdattract')
 display(createBanner({
-  voletTitle: "Attractivité résidentielle × productive",
+  voletTitle: "Attractivité : indices résidentiels et productifs",
   voletTooltip: "Indices composites croisant dynamiques migratoires (SMA, rotation, profils CSP) et économiques (emploi total/privé, créations, cadres). Calcul en z-scores normalisés sur 2 périodes (2011-16 / 2016-22). Sources : INSEE RP 2011-2023, MIGCOM, URSSAF, DVF, SIDE.",
   color: _voletCfg?.color || "#2980b9",
   navElement: createNav(OTTD_PAGES, 'exdattract')
@@ -156,17 +156,23 @@ const IDX = {
 // Carte 1 (gauche) = axe X scatter, Carte 2 (droite) = axe Y scatter
 const TAB_DEFS = {
   libre: {
-    label: "Libre",
+    label: "Exploration libre",
     tableCols: [IDX.RESID_T2, IDX.ECO_T2, IDX.GENTRI_T2, IDX.LOGTENS]
   },
+  t1: {
+    label: "Indice T1",
+    mapLeft: IDX.RESID_T1, mapRight: IDX.ECO_T1,
+    mapLeftIndic: "idxresid_dyn_ind", mapRightIndic: "idxeco_soc_ind",
+    tableCols: [IDX.RESID_T1, IDX.ECO_T1, IDX.GENTRI_T2, IDX.LOGTENS, IDX.ECO_TOT_T2]
+  },
   niveau: {
-    label: "Niveau",
+    label: "Indice T2",
     mapLeft: IDX.RESID_T2, mapRight: IDX.ECO_T2,
     mapLeftIndic: "idxresid_dyn_ind", mapRightIndic: "idxeco_soc_ind",
     tableCols: [IDX.RESID_T2, IDX.ECO_T2, IDX.GENTRI_T2, IDX.LOGTENS, IDX.ECO_TOT_T2]
   },
   trajectoire: {
-    label: "Trajectoire",
+    label: "Trajectoire T2−T1",
     mapLeft: "delta_resid", mapRight: "delta_eco",
     mapLeftIndic: "_delta_resid", mapRightIndic: "_delta_eco",
     tableCols: [IDX.RESID_T1, IDX.RESID_T2, "delta_resid", IDX.ECO_T1, IDX.ECO_T2, "delta_eco"]
@@ -219,13 +225,20 @@ async function ensureDuckDB() {
   if (!_duckReady) {
     _duckReady = (async () => {
       try {
+        console.log("[EXDATTRACT] DuckDB init start...")
         const { db, conn } = await initDuckDB()
-        await registerParquet(db, "communes", await COMMUNES_PARQUET.url())
+        if (!conn) throw new Error("conn is null after initDuckDB")
+        const pqUrl = await COMMUNES_PARQUET.url()
+        console.log("[EXDATTRACT] Registering parquet:", pqUrl)
+        await registerParquet(db, "communes", pqUrl)
         _duckDB = db; _duckConn = conn
+        console.log("[EXDATTRACT] DuckDB ready, loading topo...")
         const topoRaw = await COMMUNES_TOPO.json()
         _communesGeo = rewind(topojson.feature(topoRaw, topoRaw.objects[Object.keys(topoRaw.objects)[0]]), true)
+        console.log("[EXDATTRACT] Communes geo loaded:", _communesGeo.features.length, "features")
       } catch (err) {
-        console.error("[EXDATTRACT] DuckDB init failed:", err.message)
+        console.error("[EXDATTRACT] DuckDB init failed:", err.message, err)
+        _duckReady = null // reset pour permettre retry
       }
     })()
   }
@@ -299,7 +312,7 @@ const { addToSelection, removeFromSelection, setZoomOnly, toggleMapSelection, cl
   overflow-y: auto !important;
 }
 .sidebar select {
-  font-size: 12px !important;
+  font-size: 11px !important;
   background: #fff !important;
   border: 1px solid #e2e8f0 !important;
   width: 100% !important;
@@ -321,7 +334,7 @@ const { addToSelection, removeFromSelection, setZoomOnly, toggleMapSelection, cl
   max-width: 250px !important;
   margin: 0 !important;
   padding: 0 !important;
-  font-size: 12px !important;
+  font-size: 11px !important;
   line-height: 1.2 !important;
 }
 .sidebar form > div,
@@ -345,12 +358,12 @@ const { addToSelection, removeFromSelection, setZoomOnly, toggleMapSelection, cl
 
 ```js
 const _tabInput = Inputs.radio(
-  new Map([["Libre", "libre"], ["Niveau", "niveau"], ["Trajectoire", "trajectoire"]]),
+  new Map([["Exploration libre", "libre"], ["Indice T1", "t1"], ["Indice T2", "niveau"], ["Trajectoire T2−T1", "trajectoire"]]),
   { value: "libre", label: "" }
 )
 _tabInput.classList.add("tab-radio")
 // Compact pour sidebar
-{ const d = _tabInput.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:0;"; d.querySelectorAll("label").forEach(l => { l.style.cssText = "padding:3px 8px;font-size:11px;"; }); } }
+{ const d = _tabInput.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:0;flex-wrap:wrap;"; d.querySelectorAll("label").forEach(l => { l.style.cssText = "padding:3px 8px;font-size:10px;"; }); } }
 const activeTab = view(_tabInput)
 ```
 
@@ -381,6 +394,8 @@ const periode1 = view(Inputs.select(perMap1, { value: [...perMap1.values()][0], 
 ```js
 const _cm1Input = Inputs.radio(["%", "±Fr.", "Grad."], { value: "%", label: "Palette" })
 { const d = _cm1Input.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:6px;"; d.querySelectorAll("label").forEach(l => l.style.display = "inline"); } }
+const _cm1Lbl = Array.from(_cm1Input.querySelectorAll("label")).find(l => !l.querySelector("input"))
+if (_cm1Lbl) { const t = document.createElement("span"); t.className = "panel-tooltip-wrap"; t.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">% = quantiles (classes effectifs égaux)<br>±Fr. = écart à la valeur France (σ winsorisé)<br>Grad. = dégradé continu</span>`; _cm1Lbl.appendChild(t); }
 const colorMode1 = view(_cm1Input)
 ```
 
@@ -401,6 +416,8 @@ const periode2 = view(Inputs.select(perMap2, { value: [...perMap2.values()][0], 
 ```js
 const _cm2Input = Inputs.radio(["%", "±Fr.", "Grad."], { value: "±Fr.", label: "Palette" })
 { const d = _cm2Input.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:6px;"; d.querySelectorAll("label").forEach(l => l.style.display = "inline"); } }
+const _cm2Lbl = Array.from(_cm2Input.querySelectorAll("label")).find(l => !l.querySelector("input"))
+if (_cm2Lbl) { const t = document.createElement("span"); t.className = "panel-tooltip-wrap"; t.innerHTML = `<span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text">% = quantiles (classes effectifs égaux)<br>±Fr. = écart à la valeur France (σ winsorisé)<br>Grad. = dégradé continu</span>`; _cm2Lbl.appendChild(t); }
 const colorMode2 = view(_cm2Input)
 ```
 
@@ -458,7 +475,12 @@ const _loadResult = await (async () => {
   if (isCommune) {
     // Commune: EPCI geo+data for maps, commune data for scatter/table
     await ensureDuckDB()
-    const idxCols = [IDX.RESID_T1, IDX.RESID_T2, IDX.ECO_T1, IDX.ECO_T2, IDX.ECO_TOT_T2, IDX.GENTRI_T2, IDX.LOGTENS]
+    if (!_duckConn) {
+      console.error("[EXDATTRACT] DuckDB conn still null — commune mode unavailable")
+      return { data: [], geo: null, geoKey: "code", labelKey: "libelle", frData: null, mapData: [], mapGeo: null, mapGeoKey: "code", mapLabelKey: "libelle", communeRows: [] }
+    }
+    // GENTRI et LOGTENS ne sont PAS calculés au niveau commune
+    const idxCols = [IDX.RESID_T1, IDX.RESID_T2, IDX.ECO_T1, IDX.ECO_T2, IDX.ECO_TOT_T2]
     // Commune data for scatter + table — SELECT * to support libre mode any indicator
     const communeRows = await queryCommunes({ conn: _duckConn }, {
       tableName: "communes",
@@ -514,11 +536,11 @@ const _loadResult = await (async () => {
 const { frData, currentGeo, currentMeta, currentLabelMap } = _loadResult
 const _rawDataNoFrance = _loadResult.dataNoFrance
 
-// Filtrage échelon : EPCI hors CC (si TYPE_EPCI dispo), commune déjà ≥5K côté DuckDB
+// Filtrage échelon : EPCI hors CC (si type_epci dispo), commune déjà ≥5K côté DuckDB
 const isEPCI = echelon === "EPCI"
-const _hasTypeEPCI = _rawDataNoFrance.length > 0 && "TYPE_EPCI" in (_rawDataNoFrance[0] || {})
+const _hasTypeEPCI = _rawDataNoFrance.length > 0 && "type_epci" in (_rawDataNoFrance[0] || {})
 const dataNoFrance = isEPCI && _hasTypeEPCI
-  ? _rawDataNoFrance.filter(d => d.TYPE_EPCI && d.TYPE_EPCI !== "CC")
+  ? _rawDataNoFrance.filter(d => d.type_epci && d.type_epci !== "CC")
   : _rawDataNoFrance
 
 // Commune sous-ensembles : scatter ≥30K, table scatter ≥30K, table globale = toutes ≥5K
@@ -527,7 +549,7 @@ const dataCommTable = dataCommScatter  // même filtre pour table à côté du s
 
 // For commune: maps use EPCI data (hors CC), scatter/table use commune data
 const _mapDataAll = _loadResult._mapData || dataNoFrance
-const _mapDataRaw = isCommune && _hasTypeEPCI ? _mapDataAll.filter(d => d.TYPE_EPCI && d.TYPE_EPCI !== "CC") : _mapDataAll
+const _mapDataRaw = isCommune && _hasTypeEPCI ? _mapDataAll.filter(d => d.type_epci && d.type_epci !== "CC") : _mapDataAll
 const _mapFrData = _loadResult._mapFrData || frData
 const _mapLabelMap = _loadResult._mapLabelMap || currentLabelMap
 
@@ -555,25 +577,31 @@ const colKey1 = activeTab === "libre" ? buildColKey(indic1, periode1) : TAB_DEFS
 const colKey2 = activeTab === "libre" ? buildColKey(indic2, periode2) : TAB_DEFS[activeTab].mapRight
 
 const indicLabel = activeTab === "libre" ? getIndicLabel(indic1, "medium")
-  : activeTab === "niveau" ? "Indice attractivité résidentielle" : "△ Résidentiel (T2−T1)"
+  : activeTab === "trajectoire" ? "△ Résidentiel"
+  : activeTab === "t1" ? "Indice résidentiel T1" : "Indice résidentiel T2"
 const indicLabel2 = activeTab === "libre" ? getIndicLabel(indic2, "medium")
-  : activeTab === "niveau" ? "Indice attractivité économique" : "△ Productif (T2−T1)"
+  : activeTab === "trajectoire" ? "△ Productif"
+  : activeTab === "t1" ? "Indice productif T1" : "Indice productif T2"
 
 // Labels avec période pour axes scatter (pas pour trajectoire = delta sans période)
 const indicLabelPer = activeTab === "libre"
   ? (periode1 ? `${indicLabel} (${getPeriodeLabel(periode1, "short")})` : indicLabel)
+  : activeTab === "t1"
+  ? `${indicLabel} (${getPeriodeLabel(IDX.RESID_T1.match(/_(\d+)$/)?.[1] || "", "short")})`
   : activeTab === "niveau"
   ? `${indicLabel} (${getPeriodeLabel(IDX.RESID_T2.match(/_(\d+)$/)?.[1] || "", "short")})`
   : indicLabel
 const indicLabelPer2 = activeTab === "libre"
   ? (periode2 ? `${indicLabel2} (${getPeriodeLabel(periode2, "short")})` : indicLabel2)
+  : activeTab === "t1"
+  ? `${indicLabel2} (${getPeriodeLabel(IDX.ECO_T1.match(/_(\d+)$/)?.[1] || "", "short")})`
   : activeTab === "niveau"
   ? `${indicLabel2} (${getPeriodeLabel(IDX.ECO_T2.match(/_(\d+)$/)?.[1] || "", "short")})`
   : indicLabel2
 
 const echLabel = isCommune ? "Commune >5K" : isEPCI ? "EPCI hors CC" : echelon
 
-const _tabLabel = activeTab === "niveau" ? "Mode Niveau" : activeTab === "trajectoire" ? "Mode Trajectoire" : "Mode Libre"
+const _tabLabel = TAB_DEFS[activeTab]?.label || "Exploration libre"
 ```
 <!-- &e REACTIVE_DATA -->
 
@@ -588,7 +616,7 @@ _sbBar.style.cssText = "background:#e8eaed;padding:5px 16px;font-size:11.5px;col
 
 const _sbToggle = document.createElement("button")
 _sbToggle.style.cssText = "background:#f8fafc;border:1px solid #cbd5e1;border-radius:20px;padding:4px 14px 4px 10px;font-size:11.5px;color:#475569;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;transition:all 0.15s;white-space:nowrap;flex-shrink:0;font-weight:500;"
-_sbToggle.innerHTML = `<span style="font-size:9px;transition:transform 0.2s;display:inline-block;" id="_kpi-chevron">▶</span> Profil comparé territoires sélectionnés`
+_sbToggle.innerHTML = `<span style="font-size:9px;transition:transform 0.2s;display:inline-block;${mapSelectionState.size > 0 ? "transform:rotate(90deg);" : ""}" id="_kpi-chevron">▶</span> Profil comparé territoires sélectionnés`
 _sbToggle.onmouseenter = () => { _sbToggle.style.borderColor = "#94a3b8"; _sbToggle.style.background = "#f1f5f9"; }
 _sbToggle.onmouseleave = () => { _sbToggle.style.borderColor = "#cbd5e1"; _sbToggle.style.background = "#f8fafc"; }
 
@@ -600,14 +628,16 @@ _sbBar.appendChild(_sbToggle)
 _sbBar.appendChild(_sbBreadcrumb)
 _sbBlock.appendChild(_sbBar)
 
-// Contenu rétractable — REPLIÉ par défaut
+// Contenu rétractable — auto-déplié si sélection active, sinon replié
+const _hasSelection = mapSelectionState.size > 0
 const _kpiBody = document.createElement("div")
-_kpiBody.style.cssText = "overflow:hidden;transition:max-height 0.3s ease;max-height:0px;"
+_kpiBody.style.cssText = `overflow:hidden;transition:max-height 0.3s ease, border-color 0.3s;max-height:${_hasSelection ? "600px" : "0px"};border-left:${_hasSelection ? "3px solid #2563eb" : "3px solid transparent"};`
 
 // Toggle
 _sbToggle.onclick = () => {
   const collapsed = _kpiBody.style.maxHeight === "0px"
   _kpiBody.style.maxHeight = collapsed ? "600px" : "0px"
+  _kpiBody.style.borderLeftColor = collapsed ? "#2563eb" : "transparent"
   const chevron = document.getElementById("_kpi-chevron")
   if (chevron) chevron.style.transform = collapsed ? "rotate(90deg)" : ""
 }
@@ -737,8 +767,8 @@ if (activeTab === "trajectoire") {
   getColor = ecart.getColor
   indicBins = { bins: { thresholds: ecart.thresholds, labels: ecart.labels }, palette: ecart.palette, isDiv: true, getColor, getBinIdx: ecart.getBinIdx }
   isGradient = false; isEcart = true; gradient = null
-} else if (activeTab === "niveau") {
-  // Niveau: indices → écart bleu-bordeaux centré sur 50
+} else if (activeTab === "niveau" || activeTab === "t1") {
+  // Niveau/T1: indices → écart bleu-bordeaux centré sur 50
   ecart = computeEcartFrance(mapSourceData, colKey1, 50, { indicType: "pct" })
   getColor = ecart.getColor
   indicBins = { bins: { thresholds: ecart.thresholds, labels: ecart.labels }, palette: ecart.palette, isDiv: true, getColor, getBinIdx: ecart.getBinIdx }
@@ -762,7 +792,7 @@ if (activeTab === "trajectoire") {
   getColor2 = ecart2.getColor
   indicBins2 = { bins: { thresholds: ecart2.thresholds, labels: ecart2.labels }, palette: ecart2.palette, isDiv: true, getColor: getColor2, getBinIdx: ecart2.getBinIdx }
   isGradient2 = false; isEcart2 = true; gradient2 = null
-} else if (activeTab === "niveau") {
+} else if (activeTab === "niveau" || activeTab === "t1") {
   ecart2 = computeEcartFrance(mapSourceData, colKey2, 50, { indicType: "pct" })
   getColor2 = ecart2.getColor
   indicBins2 = { bins: { thresholds: ecart2.thresholds, labels: ecart2.labels }, palette: ecart2.palette, isDiv: true, getColor: getColor2, getBinIdx: ecart2.getBinIdx }
@@ -808,44 +838,39 @@ const zoomLabel = _zoomCheckMap.get(zoomCode) || zoomCode
 
 ```js
 // Barre mode visualisation inline avec tabset
-const _mapEchLabel = isCommune ? "EPCI hors CC" : echLabel
 const _modeBar = document.createElement("div")
-_modeBar.style.cssText = "display:flex;align-items:center;gap:12px;margin:0 0 6px 0;font-family:Inter,system-ui,sans-serif;"
+_modeBar.style.cssText = "display:flex;align-items:center;gap:8px;margin:0 0 6px 0;font-family:Inter,system-ui,sans-serif;"
 
-const _modeLabel = document.createElement("span")
-_modeLabel.style.cssText = "font-size:12px;font-weight:600;color:#374151;white-space:nowrap;"
-_modeLabel.textContent = "Vue :"
-
-// Tab buttons inline (pas un clone radio — boutons propres)
+// Tab buttons inline — sync avec le radio sidebar
 const _tabBtnWrap = document.createElement("div")
-_tabBtnWrap.style.cssText = "display:flex;gap:0;border:1.5px solid #3b82f6;border-radius:5px;overflow:hidden;"
+_tabBtnWrap.style.cssText = "display:flex;gap:0;border:1.5px solid #1e40af;border-radius:5px;overflow:hidden;"
 const _tabDefs = [
-  { key: "libre", label: "Libre", tip: "Choix libre des indicateurs carte et scatter" },
-  { key: "niveau", label: "Indices T2", tip: "Indices composites période récente (2016-22/23)" },
+  { key: "libre", label: "Exploration libre", tip: "Choix libre des indicateurs carte et scatter" },
+  { key: "t1", label: "Indice T1", tip: "Indices composites période ancienne (2011-16)" },
+  { key: "niveau", label: "Indice T2", tip: "Indices composites période récente (2016-22/23)" },
   { key: "trajectoire", label: "Trajectoire T2−T1", tip: "Évolution des indices entre T1 (2011-16) et T2 (2016-22)" }
 ]
 _tabDefs.forEach((td, i) => {
   const btn = document.createElement("button")
   const isActive = activeTab === td.key
-  btn.style.cssText = `padding:5px 14px;font-size:12px;font-weight:${isActive ? "600" : "400"};border:none;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s;${isActive ? "background:#3b82f6;color:#fff;" : "background:#f0f6ff;color:#374151;"}${i > 0 ? "border-left:1px solid #93c5fd;" : ""}`
+  btn.style.cssText = `padding:5px 16px;font-size:11.5px;font-weight:${isActive ? "600" : "400"};border:none;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s;${isActive ? "background:#1e40af;color:#fff;" : "background:#eef2ff;color:#1e3a5f;"}${i > 0 ? "border-left:1px solid #6b8cce;" : ""}`
   btn.textContent = td.label
   btn.title = td.tip
   btn.onmouseenter = () => { if (!isActive) btn.style.background = "#dbeafe"; }
-  btn.onmouseleave = () => { if (!isActive) btn.style.background = "#f0f6ff"; }
+  btn.onmouseleave = () => { if (!isActive) btn.style.background = "#eef2ff"; }
   btn.onclick = () => {
-    const real = _tabInput.querySelector(`input[value="${td.key}"]`)
-    if (real) { real.checked = true; real.dispatchEvent(new Event("input", {bubbles: true})); }
+    _tabInput.value = td.key
+    _tabInput.dispatchEvent(new Event("input", { bubbles: true }))
   }
   _tabBtnWrap.appendChild(btn)
 })
 
-const _modeEch = document.createElement("span")
-_modeEch.style.cssText = "font-size:11px;color:#6b7280;margin-left:auto;white-space:nowrap;"
-_modeEch.textContent = `${_mapEchLabel}${isCommune ? " · Cartes EPCI hors CC · Scatter >30K" : ""}`
-
-_modeBar.appendChild(_modeLabel)
+const _vueLabel = document.createElement("span")
+_vueLabel.style.cssText = "font-size:12px;font-weight:600;color:#1e3a5f;cursor:help;white-space:nowrap;"
+_vueLabel.textContent = "Vue"
+_vueLabel.title = "Sélectionnez un mode d'exploration : libre (choix indicateurs), indices T1/T2, ou trajectoire (évolution entre périodes)"
+_modeBar.appendChild(_vueLabel)
 _modeBar.appendChild(_tabBtnWrap)
-_modeBar.appendChild(_modeEch)
 display(_modeBar)
 ```
 
@@ -897,7 +922,7 @@ function filterMapPaths(mapEl, geoRef, colK, binFn, colorFn) {
 }
 
 const _legendTitle1 = activeTab === "trajectoire" ? "△ Résid. (pts)"
-  : activeTab === "niveau" ? "±50 (pts indice)"
+  : (activeTab === "niveau" || activeTab === "t1") ? "±50 (pts indice)"
   : isEcart && ecart ? `±Fr. (${ecart.isAbsoluteEcart ? "pts" : "%"})`
   : unit || ""
 
@@ -984,7 +1009,7 @@ const unit2 = activeTab === "trajectoire" ? "pts" : getIndicUnit(colKey2)
 const ecartCounts2 = (!isEcart2 || !ecart2) ? [] : countBins(mapSourceData, colKey2, ecart2.thresholds || [])
 
 const _legendTitle2 = activeTab === "trajectoire" ? "△ Éco. (pts)"
-  : activeTab === "niveau" ? "±50 (pts indice)"
+  : (activeTab === "niveau" || activeTab === "t1") ? "±50 (pts indice)"
   : isEcart2 && ecart2 ? `±Fr. (${ecart2.isAbsoluteEcart ? "pts" : "%"})`
   : unit2 || ""
 
@@ -1098,7 +1123,7 @@ if (map2) {
     const annotations = []
     // Quadrant background rectangles (very subtle tints)
     const quadrantRects = []
-    if (activeTab === "niveau" && mX != null && mY != null) {
+    if ((activeTab === "niveau" || activeTab === "t1") && mX != null && mY != null) {
       const midXR = (mX + xMax) / 2, midXL = (xMin + mX) / 2
       const midYT = (mY + yMax) / 2, midYB = (yMin + mY) / 2
       quadrantRects.push(
@@ -1131,19 +1156,26 @@ if (map2) {
     const topPop = filtered.sort((a, b) => (b.P23_POP || 0) - (a.P23_POP || 0)).slice(0, 8).map(d => d.code)
     const lCodes = [...new Set([...sCodes, ...topPop])]
 
-    const xLbl = indicLabelPer
-    const yLbl = indicLabelPer2
+    // Labels axes = nom indicateur SANS période (période dans l'unité)
+    const xLbl = indicLabel
+    const yLbl = indicLabel2
 
-    // Units dynamiques : unit ddict + période si disponible
-    const _xPer = activeTab === "trajectoire" ? "11→22" : activeTab === "niveau" ? getPeriodeLabel(IDX.RESID_T2.match(/_(\d+)$/)?.[1] || "", "short") : getPeriodeLabel(periode1, "short")
-    const _yPer = activeTab === "trajectoire" ? "11→22" : activeTab === "niveau" ? getPeriodeLabel(IDX.ECO_T2.match(/_(\d+)$/)?.[1] || "", "short") : getPeriodeLabel(periode2, "short")
+    // Units dynamiques : unit ddict + période — format "unité, période"
+    const _xPer = activeTab === "trajectoire" ? "11→22"
+      : activeTab === "t1" ? getPeriodeLabel(IDX.RESID_T1.match(/_(\d+)$/)?.[1] || "", "short")
+      : activeTab === "niveau" ? getPeriodeLabel(IDX.RESID_T2.match(/_(\d+)$/)?.[1] || "", "short")
+      : getPeriodeLabel(periode1, "short")
+    const _yPer = activeTab === "trajectoire" ? "11→22"
+      : activeTab === "t1" ? getPeriodeLabel(IDX.ECO_T1.match(/_(\d+)$/)?.[1] || "", "short")
+      : activeTab === "niveau" ? getPeriodeLabel(IDX.ECO_T2.match(/_(\d+)$/)?.[1] || "", "short")
+      : getPeriodeLabel(periode2, "short")
     const _xBaseUnit = activeTab === "libre" ? getIndicUnit(colKey1) : (activeTab === "trajectoire" ? "pts" : "indice")
     const _yBaseUnit = activeTab === "libre" ? getIndicUnit(colKey2) : (activeTab === "trajectoire" ? "pts" : "indice")
-    const xUn = _xPer ? `${_xBaseUnit} ${_xPer}` : _xBaseUnit
-    const yUn = _yPer ? `${_yBaseUnit} ${_yPer}` : _yBaseUnit
+    const xUn = _xPer ? `${_xBaseUnit}, ${_xPer}` : _xBaseUnit
+    const yUn = _yPer ? `${_yBaseUnit}, ${_yPer}` : _yBaseUnit
     const _scEchLabel = isCommune ? "Commune >30K" : echLabel
-    const scTitle = activeTab === "niveau" ? `Niveau — Résidentiel — Productif (${_scEchLabel})`
-      : activeTab === "trajectoire" ? `Trajectoire — △ Résidentiel — △ Productif (${_scEchLabel})`
+    const scTitle = (activeTab === "niveau" || activeTab === "t1") ? `${TAB_DEFS[activeTab].label} — Résidentiel × Productif (${_scEchLabel})`
+      : activeTab === "trajectoire" ? `Trajectoire — △ Résidentiel × △ Productif (${_scEchLabel})`
       : `${indicLabel} — ${indicLabel2} (${_scEchLabel})`
     const scSubtitle = `${filtered.length} territoires`
 
@@ -1156,7 +1188,7 @@ if (map2) {
       xLabel: xLbl, yLabel: yLbl,
       xUnit: xUn, yUnit: yUn,
       meanX: mX, meanY: mY,
-      sourceText: activeTab === "trajectoire" ? "Calcul PTOD, INSEE RP, MIGCOM, URSSAF" : null,
+      sourceText: activeTab === "trajectoire" ? "INSEE RP, MIGCOM, URSSAF" : null,
       getRadius: d => sz.getRadius(d.P23_POP),
       getColor: densColor,
       isSelected: d => sCodes.includes(d.code),
@@ -1186,8 +1218,8 @@ if (map2) {
 
 ```js
 {
-  const noteText = activeTab === "niveau"
-    ? `Chaque point = 1 ${echLabel.toLowerCase()}. X = attractivité résidentielle, Y = productive. Lignes pointillées = valeur France.`
+  const noteText = (activeTab === "niveau" || activeTab === "t1")
+    ? `Chaque point = 1 ${echLabel.toLowerCase()}. X = indice résidentiel, Y = productif (${activeTab === "t1" ? "T1" : "T2"}). Lignes pointillées = valeur France.`
     : activeTab === "trajectoire"
     ? `Chaque point = 1 ${echLabel.toLowerCase()}. X = △ résidentiel, Y = △ productif (T1→T2). Centre (0,0) = stable. Cadran haut-droit = progression globale.`
     : `Chaque point = 1 ${echLabel.toLowerCase()}. Carte gauche = axe X, Carte droite = axe Y.`

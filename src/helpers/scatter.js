@@ -161,14 +161,14 @@ export function renderScatter(config) {
         x: xCol,
         y: yCol,
         text: d => {
-          const name = (d.libelle || d.code).substring(0, 10);
+          const name = (d.libelle || d.code).substring(0, 12);
           const xVal = d[xCol]?.toFixed(1);
           const yVal = d[yCol]?.toFixed(1);
           if (labelMode === "names" || labelMode === "noms") return name;
           if (labelMode === "values" || labelMode === "val.") return `${xVal}/${yVal}`;
           return `${name}\n${xVal}/${yVal}`;
         },
-        fontSize: 8,
+        fontSize: 9,
         fontWeight: 500,
         fill: "#374151",
         stroke: "white",
@@ -216,9 +216,9 @@ export function renderScatter(config) {
   const plot = Plot.plot({
     grid: true,
     r: { type: "identity" },
-    style: { fontFamily: "Inter, sans-serif", fontSize: "12px", color: "#333" },
-    x: { label: xLabelFull, domain: xDomain, labelOffset: 42, labelAnchor: "right", line: true, ticks: xTicks, labelArrow: "none" },
-    y: { label: yLabelFull, domain: yDomain, labelAnchor: "top", line: true, ticks: yTicks, labelArrow: "none" },
+    style: { fontFamily: "Inter, sans-serif", fontSize: "13px", color: "#333" },
+    x: { label: xLabelFull, domain: xDomain, labelOffset: 42, labelAnchor: "right", line: true, ticks: xTicks, labelArrow: "none", fontSize: 12 },
+    y: { label: yLabelFull, domain: yDomain, labelAnchor: "top", line: true, ticks: yTicks, labelArrow: "none", fontSize: 12 },
     marginBottom: 52,
     marginTop: 10,
     marginLeft: 60,
@@ -275,7 +275,7 @@ export function createScatterWithZoom(config) {
   // --- Container principal ---
   const container = document.createElement("div");
   container.className = "scatter-container";
-  container.style.cssText = "position:relative;background:white;border:none;border-radius:0;padding:8px 0 8px 0;margin:8px 0 8px 0;width:830px;";
+  container.style.cssText = "position:relative;background:white;border:none;border-radius:0;padding:8px 0 8px 8px;margin:8px 0 8px 0;width:830px;";
   const origStyle = container.style.cssText;
 
   // --- Header : titre + boutons ---

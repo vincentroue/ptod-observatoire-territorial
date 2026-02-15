@@ -5,7 +5,7 @@ if (typeof window !== 'undefined') {
 }
 ```
 
-# OTTD — Observatoire des Trajectoires Territoriales
+# OTERT — Observatoire des Trajectoires Territoriales
 
 Comment les flux migratoires, les dynamiques économiques et les marchés du logement recomposent-ils les territoires français depuis 2011 ?
 

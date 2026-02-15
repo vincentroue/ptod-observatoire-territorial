@@ -169,7 +169,7 @@ export function createSearchBox(options) {
       const label = codeToLabel.get(code) || code;
       const chip = document.createElement('span');
       chip.style.cssText = `
-        background: #2563eb; color: white; padding: 1px 5px; border-radius: 8px;
+        background: #1e40af; color: white; padding: 1px 5px; border-radius: 8px;
         font-size: 9px; display: inline-flex; align-items: center; gap: 2px;
         max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       `;

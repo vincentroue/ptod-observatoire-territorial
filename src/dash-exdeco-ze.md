@@ -1,5 +1,5 @@
 ---
-title: OTTD — Économie
+title: OTERT — Économie
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css
@@ -41,12 +41,12 @@ style: styles/dashboard-light.css
 <!-- &s BANNER -->
 ```js
 import { createBanner, createNav, OTTD_PAGES } from "./helpers/layout.js";
+const _voletCfg = OTTD_PAGES.find(p => p.id === 'exdeco');
 display(createBanner({
-  title: "OTTD — Économie",
-  subtitle: "Quels moteurs économiques portent les territoires ? Quelles trajectoires depuis 2011 ?",
-  navElement: createNav(OTTD_PAGES, 'exdeco'),
-  sourcesText: "? Sources",
-  sourcesTooltip: "URSSAF 2014-2024, FLORES 2022, INSEE RP 2011/16/22"
+  voletTitle: "Économie : emploi, secteurs et spécialisation",
+  voletTooltip: "Quels moteurs économiques portent les territoires ? Quelles trajectoires depuis 2011 ? Emploi total (FLORES), emploi privé sectoriel (URSSAF A5/A21), spécialisation Krugman. Sources : URSSAF 2014-2024, FLORES 2022, INSEE RP 2011/16/22.",
+  color: _voletCfg?.color || "#e67e22",
+  navElement: createNav(OTTD_PAGES, 'exdeco')
 }));
 ```
 <!-- &e BANNER -->
@@ -206,6 +206,14 @@ const setSort = (col) => {
   box-shadow: 0 2px 8px rgba(0,0,0,0.12);
 }
 .table-help-wrap:hover .help-tooltip { display: block; }
+/* Sidebar disabled */
+.panel-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+  filter: grayscale(0.3);
+}
+/* Tab radio styled */
+.tab-radio > div { display: flex !important; gap: 0 !important; }
 </style>
 <!-- &e SUB_BANNER -->
 
@@ -263,6 +271,16 @@ const setSort = (col) => {
 <!-- &s SIDEBAR -->
 <aside class="sidebar">
 
+```js
+const _tabEcoInput = Inputs.radio(
+  new Map([["Exploration libre", "libre"], ["Emploi", "emploi"], ["Spécialisation", "specialisation"]]),
+  { value: "libre", label: "" }
+)
+_tabEcoInput.classList.add("tab-radio")
+{ const d = _tabEcoInput.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:0;flex-wrap:wrap;"; d.querySelectorAll("label").forEach(l => { l.style.cssText = "padding:3px 8px;font-size:10px;"; }); } }
+const activeEcoTab = view(_tabEcoInput)
+```
+
 <section class="panel">
 <div class="panel-title">ÉCHELON</div>
 
@@ -272,7 +290,7 @@ const echelon = view(Inputs.radio(["Zone d'emploi"], { value: "Zone d'emploi", l
 
 </section>
 
-<section class="panel">
+<section class="panel" id="panel-eco-carte1">
 <div class="panel-title">INDICATEUR CARTE 1 · AXE X</div>
 
 ```js
@@ -295,7 +313,7 @@ const colorMode1 = view(_cm1Input);
 
 </section>
 
-<section class="panel">
+<section class="panel" id="panel-eco-carte2">
 <div class="panel-title">INDICATEUR CARTE 2 · AXE Y</div>
 
 ```js
@@ -360,16 +378,41 @@ const extraIndics = view(Inputs.select(
 <div class="layout-main" style="margin-top:0;">
 
 ```js
-// === SOUS-BANNIÈRE + KPI TABLE ===
-// Sous-bannière flush avec bannière principale (marge négative compense padding layout-main)
+// === SOUS-BANNIÈRE : Profil comparé (collapsible) ===
 const _sbBlock = document.createElement("div");
 _sbBlock.style.cssText = "margin:-6px -20px 0 -16px;padding:0;";
 
-// Barre grise flush
+// Header bar : toggle gauche + breadcrumb droite
 const _sbBar = document.createElement("div");
-_sbBar.style.cssText = "background:#e8eaed;padding:5px 16px;font-size:11px;color:#374151;font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;gap:16px;";
-_sbBar.innerHTML = `<span style="font-weight:600;">Métriques clés</span><span style="color:#6b7280;">France + ZE sélectionnées · Sources : URSSAF 2014-2024, FLORES 2022-2023, INSEE RP 2011/16/22</span>`;
+_sbBar.style.cssText = "background:#e8eaed;padding:5px 16px;font-size:11.5px;color:#374151;font-family:Inter,system-ui,sans-serif;display:flex;align-items:center;gap:12px;";
+
+const _sbToggle = document.createElement("button");
+_sbToggle.style.cssText = "background:#f8fafc;border:1px solid #cbd5e1;border-radius:20px;padding:4px 14px 4px 10px;font-size:11.5px;color:#475569;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;transition:all 0.15s;white-space:nowrap;flex-shrink:0;font-weight:500;";
+_sbToggle.innerHTML = `<span style="font-size:9px;transition:transform 0.2s;display:inline-block;${mapSelectionState.size > 0 ? "transform:rotate(90deg);" : ""}" id="_kpi-chevron-eco">▶</span> Profil comparé territoires sélectionnés`;
+_sbToggle.onmouseenter = () => { _sbToggle.style.borderColor = "#94a3b8"; _sbToggle.style.background = "#f1f5f9"; };
+_sbToggle.onmouseleave = () => { _sbToggle.style.borderColor = "#cbd5e1"; _sbToggle.style.background = "#f8fafc"; };
+
+const _sbBreadcrumb = document.createElement("span");
+_sbBreadcrumb.style.cssText = "color:#6b7280;font-size:11px;margin-left:auto;white-space:nowrap;";
+_sbBreadcrumb.textContent = "Zone d'emploi · Sources : URSSAF 2014-2024, FLORES 2022-2023, INSEE RP 2011/16/22";
+
+_sbBar.appendChild(_sbToggle);
+_sbBar.appendChild(_sbBreadcrumb);
 _sbBlock.appendChild(_sbBar);
+
+// Contenu rétractable — auto-déplié si sélection active
+const _hasSelection = mapSelectionState.size > 0;
+const _kpiBody = document.createElement("div");
+_kpiBody.style.cssText = `overflow:hidden;transition:max-height 0.3s ease, border-color 0.3s;max-height:${_hasSelection ? "600px" : "0px"};border-left:${_hasSelection ? "3px solid #e67e22" : "3px solid transparent"};`;
+
+// Toggle
+_sbToggle.onclick = () => {
+  const collapsed = _kpiBody.style.maxHeight === "0px";
+  _kpiBody.style.maxHeight = collapsed ? "600px" : "0px";
+  _kpiBody.style.borderLeftColor = collapsed ? "#e67e22" : "transparent";
+  const chevron = document.getElementById("_kpi-chevron-eco");
+  if (chevron) chevron.style.transform = collapsed ? "rotate(90deg)" : "";
+};
 
 // KPI Table compact — France + ZE sélectionnées (max 5)
 const kpiSelCodes = [...mapSelectionState].slice(0, 5);
@@ -385,34 +428,62 @@ const kpiCols = [
   })
 ];
 
-// Stats calculées sur le dataset complet (pas juste les 3 lignes KPI)
 const kpiStats = computeBarStats(dataNoFrance, defaultTableCols);
 const kpiTable = renderTable({
   data: kpiData, columns: kpiCols, stats: kpiStats,
   compact: true, maxHeight: 160, scrollX: true, stickyFirstCol: 1
 });
 const _kpiWrap = document.createElement("div");
-_kpiWrap.style.cssText = "padding:0 16px 10px 16px;background:#fff;border-bottom:1px solid #d1d5db;margin-bottom:12px;";
+_kpiWrap.style.cssText = "padding:4px 16px 8px;background:#fff;";
 kpiTable.style.cssText = (kpiTable.style.cssText || "") + "background:#fff;width:100%;";
 _kpiWrap.appendChild(kpiTable);
-_sbBlock.appendChild(_kpiWrap);
+_kpiBody.appendChild(_kpiWrap);
+
+_sbBlock.appendChild(_kpiBody);
+
+// Espacement sous le bloc
+const _spacer = document.createElement("div");
+_spacer.style.cssText = "height:4px;background:#f5f6f7;";
+_sbBlock.appendChild(_spacer);
+
 display(_sbBlock);
 ```
 
 ```js
 // === DONNÉES + BINDINGS ===
-// Aliases rétro-compat (colKey = carte 1 pour tableaux/bannière)
-const indic = indic1;
-const indicCarte = indic1;
-const colKey1 = buildColKey(indic1, periode1);
-const colKey2 = buildColKey(indic2, periode2);
+// Tab presets eco
+const ECO_TAB_DEFS = {
+  libre: null,
+  emploi: { indic1: "eco_emp_vtcam", per1: "1622", indic2: "eco_emppriv_vtcam", per2: "1924", label: "Dynamique de l'emploi" },
+  specialisation: { indic1: "eco_krugman_a5", per1: "22", indic2: "eco_txemp_1564", per2: "22", label: "Spécialisation et taux d'emploi" }
+};
+const _tabOvr = ECO_TAB_DEFS[activeEcoTab];
+
+// Disable sidebar panels carte 1/2 quand tab ≠ libre
+setTimeout(() => {
+  const p1 = document.getElementById("panel-eco-carte1");
+  const p2 = document.getElementById("panel-eco-carte2");
+  if (p1) p1.classList.toggle("panel-disabled", activeEcoTab !== "libre");
+  if (p2) p2.classList.toggle("panel-disabled", activeEcoTab !== "libre");
+}, 50);
+
+// Effective indicators : tab override or sidebar
+const _effIndic1 = _tabOvr ? _tabOvr.indic1 : indic1;
+const _effIndic2 = _tabOvr ? _tabOvr.indic2 : indic2;
+const _effPer1 = _tabOvr ? _tabOvr.per1 : periode1;
+const _effPer2 = _tabOvr ? _tabOvr.per2 : periode2;
+
+const indic = _effIndic1;
+const indicCarte = _effIndic1;
+const colKey1 = buildColKey(_effIndic1, _effPer1);
+const colKey2 = buildColKey(_effIndic2, _effPer2);
 const colKey = colKey1;
 const colKeyCarte = colKey1;
-const indicLabel = getIndicLabel(indic1, "medium");
-const indicLabel2 = getIndicLabel(indic2, "medium");
+const indicLabel = getIndicLabel(_effIndic1, "medium");
+const indicLabel2 = getIndicLabel(_effIndic2, "medium");
 // Labels avec période pour axes scatter
-const indicLabelPer = periode1 ? `${indicLabel} (${getPeriodeLabel(periode1, "short")})` : indicLabel;
-const indicLabelPer2 = periode2 ? `${indicLabel2} (${getPeriodeLabel(periode2, "short")})` : indicLabel2;
+const indicLabelPer = _effPer1 ? `${indicLabel} (${getPeriodeLabel(_effPer1, "short")})` : indicLabel;
+const indicLabelPer2 = _effPer2 ? `${indicLabel2} (${getPeriodeLabel(_effPer2, "short")})` : indicLabel2;
 const labelCarte = indicLabel;
 
 // Joindre données aux géométries (les 2 colKeys)
@@ -427,21 +498,21 @@ for (const f of zeGeo.features) {
 
 // Bins et couleurs — CARTE 1
 const _cm1 = colorMode1;
-const indicBins = computeIndicBins(dataNoFrance, colKey1, indic1);
+const indicBins = computeIndicBins(dataNoFrance, colKey1, _effIndic1);
 const { bins, palette: PAL, isDiv, getColor: getColorBins } = indicBins;
 const gradient = createGradientScale(dataNoFrance, colKey1);
 const isGradient = _cm1 === "Grad.";
 const isEcart = _cm1 === "±Fr.";
-const ecart = computeEcartFrance(dataNoFrance, colKey1, frData?.[colKey1], { indicType: INDICATEURS[indic1]?.type });
+const ecart = computeEcartFrance(dataNoFrance, colKey1, frData?.[colKey1], { indicType: INDICATEURS[_effIndic1]?.type });
 const getColor = isEcart ? ecart.getColor : isGradient ? gradient.getColor : getColorBins;
 
 // Bins et couleurs — CARTE 2
 const _cm2 = colorMode2;
-const indicBins2 = computeIndicBins(dataNoFrance, colKey2, indic2);
+const indicBins2 = computeIndicBins(dataNoFrance, colKey2, _effIndic2);
 const gradient2 = createGradientScale(dataNoFrance, colKey2);
 const isGradient2 = _cm2 === "Grad.";
 const isEcart2 = _cm2 === "±Fr.";
-const ecart2 = computeEcartFrance(dataNoFrance, colKey2, frData?.[colKey2], { indicType: INDICATEURS[indic2]?.type });
+const ecart2 = computeEcartFrance(dataNoFrance, colKey2, frData?.[colKey2], { indicType: INDICATEURS[_effIndic2]?.type });
 const getColor2 = isEcart2 ? ecart2.getColor : isGradient2 ? gradient2.getColor : indicBins2.getColor;
 
 ```
@@ -485,7 +556,7 @@ const _cd1 = await _fetchComm(_mc1);
 // Helper : crée un élément carte commune (paramétrable carte 1 ou 2 via opts)
 function buildCommMap(tCode, tData, w, h, opts = {}) {
   const _ck = opts.colKey || colKey1;
-  const _ind = opts.indic || indic1;
+  const _ind = opts.indic || _effIndic1;
   const _ib = opts.indicBins || indicBins;
   const _gr = opts.gradient || gradient;
   const _isE = opts.isEcart != null ? opts.isEcart : isEcart;
@@ -525,7 +596,45 @@ function buildCommMap(tCode, tData, w, h, opts = {}) {
 <div style="flex:0 0 auto;display:flex;flex-direction:column;gap:4px;padding-left:6px;">
 
 ```js
-display(html`<h3 style="margin:0 0 4px 0;">Où se concentrent les dynamiques d'emploi ?</h3>`);
+// Mode bar avec tabset au-dessus des cartes
+const _modeBarEco = document.createElement("div");
+_modeBarEco.style.cssText = "display:flex;align-items:center;gap:8px;margin:0 0 6px 0;font-family:Inter,system-ui,sans-serif;";
+
+const _vueLabelEco = document.createElement("span");
+_vueLabelEco.style.cssText = "font-size:12px;font-weight:600;color:#1e3a5f;cursor:help;white-space:nowrap;";
+_vueLabelEco.textContent = "Vue";
+_vueLabelEco.title = "Sélectionnez un mode d'exploration : libre (choix indicateurs) ou un preset thématique";
+_modeBarEco.appendChild(_vueLabelEco);
+
+const _tabBtnWrapEco = document.createElement("div");
+_tabBtnWrapEco.style.cssText = "display:flex;gap:0;border:1.5px solid #c2590a;border-radius:5px;overflow:hidden;";
+const _tabDefsEco = [
+  { key: "libre", label: "Exploration libre", tip: "Choix libre des indicateurs carte et scatter" },
+  { key: "emploi", label: "Emploi", tip: "Emploi total TCAM 16-22 vs emploi privé TCAM 19-24" },
+  { key: "specialisation", label: "Spécialisation", tip: "Krugman A5 vs taux d'emploi 15-64 ans" }
+];
+_tabDefsEco.forEach((td, i) => {
+  const btn = document.createElement("button");
+  const isActive = activeEcoTab === td.key;
+  btn.style.cssText = `padding:5px 16px;font-size:11.5px;font-weight:${isActive ? "600" : "400"};border:none;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all 0.15s;${isActive ? "background:#c2590a;color:#fff;" : "background:#fef3e2;color:#7c2d12;"}${i > 0 ? "border-left:1px solid #e67e22;" : ""}`;
+  btn.textContent = td.label;
+  btn.title = td.tip;
+  btn.onmouseenter = () => { if (!isActive) btn.style.background = "#fde68a"; };
+  btn.onmouseleave = () => { if (!isActive) btn.style.background = "#fef3e2"; };
+  btn.onclick = () => {
+    _tabEcoInput.value = td.key;
+    _tabEcoInput.dispatchEvent(new Event("input", { bubbles: true }));
+  };
+  _tabBtnWrapEco.appendChild(btn);
+});
+_modeBarEco.appendChild(_tabBtnWrapEco);
+
+const _ecoTitle = document.createElement("span");
+_ecoTitle.style.cssText = "font-size:13px;font-weight:600;color:#1e3a5f;margin-left:8px;";
+_ecoTitle.textContent = _tabOvr ? _tabOvr.label : "Où se concentrent les dynamiques d'emploi ?";
+_modeBarEco.appendChild(_ecoTitle);
+
+display(_modeBarEco);
 ```
 
 <!-- Cartes nationales côte à côte -->
@@ -540,7 +649,7 @@ const map = renderChoropleth({
   getColor: (v, f) => getColor(v),
   getCode: f => f.properties[meta.geoKey],
   getLabel: ({ code }) => zeLabelMap.get(code) || code,
-  formatValue: (k, v) => formatValue(indic1, v),
+  formatValue: (k, v) => formatValue(_effIndic1, v),
   indicLabel, selectedCodes: [...mapSelectionState],
   showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
   title: indicLabel, echelon: "Zone d'emploi", width: 395, height: 365, maxLabelsAuto: 600
@@ -636,8 +745,8 @@ const zeVal = zeZoomRow?.[colKey1];
 const valuesDiv = document.createElement("div");
 valuesDiv.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;line-height:1.5;";
 let valHtml = "";
-if (frVal != null) valHtml += `France : <b style="font-style:italic;">${formatValue(indic1, frVal)}</b>`;
-if (zeVal != null) valHtml += `${frVal != null ? " · " : ""}${zoomLabel} : <b style="font-style:italic;color:#1e40af;">${formatValue(indic1, zeVal)}</b>`;
+if (frVal != null) valHtml += `France : <b style="font-style:italic;">${formatValue(_effIndic1, frVal)}</b>`;
+if (zeVal != null) valHtml += `${frVal != null ? " · " : ""}${zoomLabel} : <b style="font-style:italic;color:#1e40af;">${formatValue(_effIndic1, zeVal)}</b>`;
 if (valHtml) { valuesDiv.innerHTML = valHtml; wrapper.appendChild(valuesDiv); }
 display(wrapper);
 ```
@@ -653,7 +762,7 @@ const map2 = renderChoropleth({
   getColor: (v, f) => getColor2(v),
   getCode: f => f.properties[meta.geoKey],
   getLabel: ({ code }) => zeLabelMap.get(code) || code,
-  formatValue: (k, v) => formatValue(indic2, v),
+  formatValue: (k, v) => formatValue(_effIndic2, v),
   indicLabel: indicLabel2, selectedCodes: [...mapSelectionState],
   showLabels: showValuesOnMap, labelMode, labelBy, topN: 0,
   title: indicLabel2, echelon: "Zone d'emploi", width: 395, height: 365, maxLabelsAuto: 600
@@ -746,8 +855,8 @@ const zeVal2 = zeZoomRow?.[colKey2];
 const valuesDiv2 = document.createElement("div");
 valuesDiv2.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;line-height:1.5;";
 let valHtml2 = "";
-if (frVal2 != null) valHtml2 += `France : <b style="font-style:italic;">${formatValue(indic2, frVal2)}</b>`;
-if (zeVal2 != null) valHtml2 += `${frVal2 != null ? " · " : ""}${zoomLabel} : <b style="font-style:italic;color:#1e40af;">${formatValue(indic2, zeVal2)}</b>`;
+if (frVal2 != null) valHtml2 += `France : <b style="font-style:italic;">${formatValue(_effIndic2, frVal2)}</b>`;
+if (zeVal2 != null) valHtml2 += `${frVal2 != null ? " · " : ""}${zoomLabel} : <b style="font-style:italic;color:#1e40af;">${formatValue(_effIndic2, zeVal2)}</b>`;
 if (valHtml2) { valuesDiv2.innerHTML = valHtml2; wrapper2.appendChild(valuesDiv2); }
 display(wrapper2);
 ```
@@ -764,8 +873,9 @@ display(wrapper2);
 {
   const xCol = colKey1;
   const yCol = colKey2;
-  const xLbl = indicLabelPer;
-  const yLbl = indicLabelPer2;
+  // Labels axes = nom indicateur sans période (période dans l'unité)
+  const xLbl = indicLabel;
+  const yLbl = indicLabel2;
   const mX = frData?.[xCol];
   const mY = frData?.[yCol];
 
@@ -824,7 +934,8 @@ display(wrapper2);
       xDomain: [xMin, xMax],
       yDomain: [yMin, yMax],
       xLabel: xLbl, yLabel: yLbl,
-      xUnit: getIndicUnit(colKey1), yUnit: getIndicUnit(colKey2),
+      xUnit: `${getIndicUnit(colKey1)}${periode1 ? ", " + getPeriodeLabel(periode1, "short") : ""}`,
+      yUnit: `${getIndicUnit(colKey2)}${periode2 ? ", " + getPeriodeLabel(periode2, "short") : ""}`,
       meanX: mX, meanY: mY,
       getRadius: d => sz.getRadius(d.P23_POP),
       getColor: densColor,
