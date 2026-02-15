@@ -5,7 +5,7 @@ if (typeof window !== 'undefined') {
 }
 ```
 
-# OTERT — Observatoire des Trajectoires Territoriales
+# ObTer — Observatoire Territorial Multiéchelon
 
 Comment les flux migratoires, les dynamiques économiques et les marchés du logement recomposent-ils les territoires français depuis 2011 ?
 
@@ -114,4 +114,4 @@ Mobilités résidentielles MIGCOM — Analyse OD
 
 ---
 
-*Projet PTOD — Observatoire des Trajectoires Territoriales*
+*Projet PTOD — ObTer, Observatoire Territorial Multiéchelon des Profils et Trajectoires*

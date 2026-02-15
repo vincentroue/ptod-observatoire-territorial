@@ -520,7 +520,7 @@ h1, h2, h3, h4, h5, h6,
 /* Alias */
 .layout-main {
   margin-left: 260px;
-  margin-top: 6px;
+  margin-top: 0;
   padding: 0 20px 0 16px;
   max-width: calc(100vw - 260px);
 }

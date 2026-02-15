@@ -1,5 +1,5 @@
 ---
-title: OTERT — Communes
+title: ObTer — Communes
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css
@@ -370,7 +370,7 @@ const periode2 = view(Inputs.select(per2Map, { value: [...per2Map.values()][0], 
 <div class="sub-banner-instructions">
 <span>Comparez 2 indicateurs sur cartes choroplèthes. <b>Clic</b> = zoom, <b>Ctrl+clic</b> = multi-sélection.</span>
 <span>Le tableau liste les communes ; <b>clic header</b> = tri, la sélection carte filtre les lignes.</span>
-<span class="version">OTERT v2.0</span>
+<span class="version">ObTer v2.0</span>
 </div>
 
 </div>

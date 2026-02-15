@@ -1,5 +1,5 @@
 ---
-title: OTERT — Attractivité
+title: ObTer — Attractivité
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css

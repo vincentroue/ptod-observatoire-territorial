@@ -1,5 +1,5 @@
 ---
-title: OTERT — Logement
+title: ObTer — Logement
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css
@@ -443,7 +443,7 @@ const extraIndics = view(Inputs.select(
 <!-- &e SIDEBAR -->
 
 <!-- &s LAYOUT_MAIN -->
-<div class="layout-main">
+<div class="layout-main" style="margin-top:0;">
 
 ```js
 // === DONNÉES ===
@@ -1121,13 +1121,11 @@ const _frChart = Plot.plot({
   marks: [
     Plot.barY(seriesFrance.filter(d => d.nbtrans), {
       x: "annee", y: d => d.nbtrans * volScaleC,
-      fill: "#c4c9d0", fillOpacity: 0.7,
-      tip: true, title: d => `Transactions: ${(d.nbtrans/1000).toFixed(0)}k`
+      fill: "#c4c9d0", fillOpacity: 0.7
     }),
     Plot.barY(seriesFrance.filter(d => d.logaut), {
       x: d => d.annee + 0.3, y: d => d.logaut * volScaleC,
-      fill: "#6b7280", fillOpacity: 0.7,
-      tip: true, title: d => `Construction: ${(d.logaut/1000).toFixed(0)}k logements`
+      fill: "#6b7280", fillOpacity: 0.7
     }),
     Plot.line(seriesFrance.filter(d => d.pxm2_mai), {
       x: "annee", y: "pxm2_mai", stroke: "#0369a1", strokeWidth: 1.8, curve: "natural"
@@ -1136,22 +1134,20 @@ const _frChart = Plot.plot({
       x: "annee", y: "pxm2_apt", stroke: "#0ea5e9", strokeWidth: 1.5, strokeDasharray: "2,2", curve: "natural"
     }),
     Plot.dot(seriesFrance, {
-      x: "annee", y: "pxm2_mai", fill: "#0369a1", r: 3,
-      tip: true, title: d => `Maison ${d.annee}: ${d.pxm2_mai?.toFixed(0)}€/m²`
+      x: "annee", y: "pxm2_mai", fill: "#0369a1", r: 2.5
     }),
     Plot.dot(seriesFrance.filter(d => d.pxm2_apt), {
-      x: "annee", y: "pxm2_apt", fill: "#0ea5e9", r: 3,
-      tip: true, title: d => `Appart ${d.annee}: ${d.pxm2_apt?.toFixed(0)}€/m²`
+      x: "annee", y: "pxm2_apt", fill: "#0ea5e9", r: 2.5
     }),
-    // Data labels 2022 + 2024 maison (au-dessus)
+    // Data labels 2022 + 2024 maison (au-dessus, avec €)
     Plot.text(seriesFrance.filter(d => d.pxm2_mai && (d.annee === 2022 || d.annee === 2024)), {
-      x: "annee", y: "pxm2_mai", text: d => d.pxm2_mai.toFixed(0),
-      dy: -10, fontSize: 9, fontWeight: 600, fill: "#0369a1"
+      x: "annee", y: "pxm2_mai", text: d => d.pxm2_mai.toFixed(0) + "€",
+      dy: -9, fontSize: 8.5, fontWeight: 600, fill: "#0369a1"
     }),
-    // Data labels 2022 + 2024 appart (en dessous)
+    // Data labels 2022 + 2024 appart (en dessous, avec €)
     Plot.text(seriesFrance.filter(d => d.pxm2_apt && (d.annee === 2022 || d.annee === 2024)), {
-      x: "annee", y: "pxm2_apt", text: d => d.pxm2_apt.toFixed(0),
-      dy: 12, fontSize: 9, fontWeight: 600, fill: "#0ea5e9"
+      x: "annee", y: "pxm2_apt", text: d => d.pxm2_apt.toFixed(0) + "€",
+      dy: 11, fontSize: 8.5, fontWeight: 600, fill: "#0ea5e9"
     })
   ]
 });

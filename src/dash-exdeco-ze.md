@@ -1,5 +1,5 @@
 ---
-title: OTERT — Économie
+title: ObTer — Économie
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css

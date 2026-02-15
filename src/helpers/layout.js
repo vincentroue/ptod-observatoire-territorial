@@ -49,7 +49,7 @@ export function createBanner(options) {
   line1.className = 'banner-line1';
   const ottdSpan = document.createElement('span');
   ottdSpan.className = 'ottd-brand';
-  ottdSpan.textContent = 'OTERT';
+  ottdSpan.textContent = 'ObTer';
   line1.appendChild(ottdSpan);
   const dashSpan = document.createElement('span');
   dashSpan.className = 'ottd-dash';
@@ -87,7 +87,7 @@ export function createBanner(options) {
   // Ligne 2 : Observatoire des trajectoires territoriales
   const line2 = document.createElement('div');
   line2.className = 'banner-line2';
-  line2.textContent = 'Observatoire Territorial des Évolutions, Recompositions et Trajectoires';
+  line2.textContent = 'Observatoire Territorial Multiéchelon des Profils et Trajectoires';
   titles.appendChild(line2);
 
   inner.appendChild(titles);
