@@ -311,7 +311,6 @@ const { addToSelection, removeFromSelection, setZoomOnly, toggleMapSelection, cl
   overflow-x: hidden !important;
   overflow-y: auto !important;
   padding-top: 0.3rem !important;
-  margin-top: -0.5rem !important;
 }
 .sidebar select {
   font-size: 11px !important;

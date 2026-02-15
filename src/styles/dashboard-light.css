@@ -33,7 +33,7 @@ h3 { font-size: 12px; }
 /* === FOND GLOBAL === */
 body {
   background-color: #f5f6f7 !important;
-  padding-top: 50px !important;  /* Compense banner fixed */
+  padding-top: 48px !important;  /* Compense banner fixed — serré pour 0 gap */
 }
 
 /* === OVERRIDE LIENS TITRES === */
@@ -297,7 +297,7 @@ h1, h2, h3, h4, h5, h6,
  * ======================================================= */
 .sub-banner {
   position: sticky;
-  top: 54px;
+  top: 48px;
   z-index: 85;
   background: #e8eaed;
   margin-left: 260px;
@@ -366,10 +366,10 @@ h1, h2, h3, h4, h5, h6,
  * ======================================================= */
 .sidebar {
   position: fixed;
-  top: 54px;
+  top: 48px;
   left: 0;
   width: 260px;
-  height: calc(100vh - 54px);
+  height: calc(100vh - 48px);
   overflow-y: auto;
   z-index: 95;
   background: #e8eaed;
@@ -379,10 +379,10 @@ h1, h2, h3, h4, h5, h6,
 /* Alias pour compatibilité */
 .left-panel {
   position: fixed;
-  top: 54px;
+  top: 48px;
   left: 0;
   width: 260px;
-  height: calc(100vh - 54px);
+  height: calc(100vh - 48px);
   overflow-y: auto;
   z-index: 95;
   background: #e8eaed;
