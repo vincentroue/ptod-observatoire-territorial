@@ -495,7 +495,7 @@ _sbToggle.onmouseleave = () => { _sbToggle.style.borderColor = "#cbd5e1"; _sbTog
 
 const _sbBreadcrumb = document.createElement("span");
 _sbBreadcrumb.style.cssText = "color:#6b7280;font-size:11px;margin-left:auto;white-space:nowrap;";
-_sbBreadcrumb.textContent = `${echLabel} · Sources : DVF 2016-2024, SITADEL, LOVAC, ANIL`;
+_sbBreadcrumb.textContent = `${echelon} · Sources : DVF 2016-2024, SITADEL, LOVAC, ANIL`;
 
 _sbBar.appendChild(_sbToggle);
 _sbBar.appendChild(_sbBreadcrumb);
@@ -1085,7 +1085,7 @@ const volScaleC = 3000 / Math.max(maxTransC, maxLogautC);
 
 const _frChart = Plot.plot({
   style: { fontFamily: "Inter, system-ui, sans-serif" },
-  width: 420,
+  width: 520,
   height: 180,
   marginLeft: 42,
   marginRight: 40,
@@ -1095,7 +1095,7 @@ const _frChart = Plot.plot({
     tickFormat: d => String(Math.round(d)),
     ticks: anneesFrC.filter(y => y % 2 === 0)
   },
-  y: { label: "€/m²", grid: true, domain: [0, 2500] },
+  y: { label: "€/m²", grid: true, domain: [1000, 2500] },
   marks: [
     Plot.barY(seriesFrance.filter(d => d.nbtrans), {
       x: "annee", y: d => d.nbtrans * volScaleC,
@@ -1146,7 +1146,7 @@ display(_chartBlock);
 
 ```js
 // === SORT STATE COMMUNES (bloc séparé pour réactivité) ===
-const commSortState = Mutable({col: "logd_px2_global_24", asc: false});
+const commSortState = Mutable({col: "logd_px2q2_mai_24", asc: false});
 const setCommSort = (col) => {
   const cur = commSortState.value;
   commSortState.value = { col, asc: cur.col === col ? !cur.asc : false };
@@ -1156,8 +1156,8 @@ const setCommSort = (col) => {
 ```js
 // === COMMUNES >50K — Requête DuckDB parquet ===
 const commCols50k = [
-  "logd_px2_global_24", "logd_px2_global_vevol_1924", "logd_px2_global_vevol_2224",
-  "logd_nbtrans_mai_24", "logd_trans_vtcam_1924"
+  "logd_px2q2_mai_24", "logd_trans_mai_24",
+  "logd_px2q2_appt_24", "logd_px2_appt_vevol_2224", "logd_px2_appt_vevol_1924", "logd_trans_appt_24"
 ];
 const commColsSql = commCols50k.map(c => `CAST("${c}" AS DOUBLE) AS "${c}"`).join(", ");
 
@@ -1166,8 +1166,8 @@ const commResult50k = await conn.query(`
     CAST("P23_POP" AS DOUBLE) AS P23_POP, ${commColsSql}
   FROM communes_v
   WHERE "P23_POP" >= 50000
-    AND "logd_px2_global_24" IS NOT NULL
-  ORDER BY "logd_px2_global_24" DESC
+    AND "logd_px2q2_mai_24" IS NOT NULL
+  ORDER BY "logd_px2q2_mai_24" DESC
 `);
 const commData50k = commResult50k.toArray().map(r => {
   const d = r.toJSON();
@@ -1222,7 +1222,7 @@ const PASTEL_ROSE_STRONG = "#f0c6e0";
 const colorCell = (col, val) => {
   if (val == null || !commColStats[col]) return { bg: "", bold: false };
   // Pas de fond couleur sur prix brut et transactions brutes
-  if (col === "logd_px2_global_24" || col === "logd_nbtrans_mai_24") return { bg: "", bold: false };
+  if (col === "logd_px2q2_mai_24" || col === "logd_px2q2_appt_24" || col === "logd_trans_mai_24" || col === "logd_trans_appt_24") return { bg: "", bold: false };
   const { std, frRef } = commColStats[col];
   if (std === 0) return { bg: "", bold: false };
   const z = (val - frRef) / std;
@@ -1236,7 +1236,7 @@ const colorCell = (col, val) => {
 // Barre proportionnelle grise pour prix global (40px max width)
 const barHtml = (val) => {
   if (val == null) return "";
-  const maxVal = commColStats["logd_px2_global_24"]?.max || 1;
+  const maxVal = commColStats["logd_px2q2_mai_24"]?.max || commColStats["logd_px2q2_appt_24"]?.max || 1;
   const pct = Math.min(100, (val / maxVal) * 100);
   return `<div style="position:absolute;left:0;top:0;bottom:0;width:${pct}%;background:#64748b;opacity:0.28;border-radius:1px;"></div>`;
 };
@@ -1248,18 +1248,19 @@ const fmtPct = v => v != null ? (v > 0 ? "+" : "") + v.toFixed(1) + "%" : "—";
 const fmtVol = v => v != null ? Math.round(v).toLocaleString("fr") : "—";
 
 const colDefs = [
-  { key: "libelle", label: "Commune", sub: "", w: 115, align: "left", fmt: shortLib, type: "text" },
-  { key: "logd_px2_global_24", label: "Prix glob.", sub: "€/m² 2024", w: 65, align: "right", fmt: fmtPrix, type: "bar" },
-  { key: "logd_px2_global_vevol_1924", label: "Δ Prix", sub: "% 19-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" },
-  { key: "logd_px2_global_vevol_2224", label: "Δ Prix", sub: "% 22-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" },
-  { key: "logd_nbtrans_mai_24", label: "Trans.", sub: "nb 2024", w: 52, align: "right", fmt: fmtVol, type: "plain" },
-  { key: "logd_trans_vtcam_1924", label: "Δ Trans.", sub: "TCAM 19-24", w: 50, align: "right", fmt: fmtPct, type: "zscore" }
+  { key: "libelle", label: "Commune", sub: "", w: 110, align: "left", fmt: shortLib, type: "text" },
+  { key: "logd_px2q2_mai_24", label: "Maison", sub: "€/m² 2024", w: 60, align: "right", fmt: fmtPrix, type: "bar" },
+  { key: "logd_trans_mai_24", label: "Trans. mai.", sub: "nb 2024", w: 52, align: "right", fmt: fmtVol, type: "plain" },
+  { key: "logd_px2q2_appt_24", label: "Appart", sub: "€/m² 2024", w: 60, align: "right", fmt: fmtPrix, type: "bar" },
+  { key: "logd_px2_appt_vevol_2224", label: "Δ Appt", sub: "% 22-24", w: 48, align: "right", fmt: fmtPct, type: "zscore" },
+  { key: "logd_px2_appt_vevol_1924", label: "Δ Appt", sub: "% 19-24", w: 48, align: "right", fmt: fmtPct, type: "zscore" },
+  { key: "logd_trans_appt_24", label: "Trans. apt.", sub: "nb 2024", w: 52, align: "right", fmt: fmtVol, type: "plain" }
 ];
 
 // Header
 const commHeader = document.createElement("div");
 commHeader.style.cssText = "display:flex;justify-content:space-between;align-items:center;margin-bottom:2px;";
-commHeader.innerHTML = `<span style="font-size:12px;font-weight:600;color:#1e293b;font-family:Inter,system-ui,sans-serif;">Communes >50K hab. <span class="panel-tooltip-wrap" style="margin-left:2px;"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text" style="width:220px;left:0;transform:none;">Prix DVF global pondéré (maisons+apparts). Barre grise = niveau prix. Fond vert/rose = écart vs France (variations). Gras = extrêmes (±2σ).</span></span></span><span style="font-size:10px;color:#9ca3af;font-family:Inter,system-ui,sans-serif;">${commData50k.length} villes</span>`;
+commHeader.innerHTML = `<span style="font-size:12px;font-weight:600;color:#1e293b;font-family:Inter,system-ui,sans-serif;">Quelles dynamiques par ville (>50K) depuis 2019 ? <span class="panel-tooltip-wrap" style="margin-left:2px;"><span class="panel-tooltip-icon">?</span><span class="panel-tooltip-text" style="width:220px;left:0;transform:none;">Prix DVF médians maison/appart + volumes transactions. Barre grise = niveau prix. Fond vert/rose = écart vs France. Gras = extrêmes (±2σ).</span></span></span><span style="font-size:10px;color:#9ca3af;font-family:Inter,system-ui,sans-serif;">${commData50k.length} villes</span>`;
 
 // Container table
 const commTableWrap = document.createElement("div");
@@ -1389,10 +1390,11 @@ const baseCols = [
   colKey,
   // Prix global pondéré
   "logd_px2_global_24", "logd_px2_global_vevol_1924",
-  // Prix maison + appart
-  "logd_px2q2_mai_24", "logd_px2_mai_vevol_1924",
-  "logd_px2q2_appt_24", "logd_px2_appt_vevol_1924",
-  // Transactions
+  // Prix maison + trans maison
+  "logd_px2q2_mai_24", "logd_px2_mai_vevol_1924", "logd_trans_mai_24",
+  // Prix appart + trans appart
+  "logd_px2q2_appt_24", "logd_px2_appt_vevol_1924", "logd_px2_appt_vevol_2224", "logd_trans_appt_24",
+  // Transactions total
   "logd_trans_24", "logd_trans_vevol_1924",
   // Construction
   "logs_logaut_vol_24", "logs_logaut_vtcam_1924",
@@ -1535,8 +1537,9 @@ const commDetailWhere = (hasCommSelection && echelon === "EPCI")
 const commDetailBaseCols = [
   colKey,
   "logd_px2q2_mai_24", "logd_px2_mai_vevol_1924", "logd_px2_mai_vevol_2224",
-  "logd_px2q2_appt_24", "logd_px2_appt_vevol_1924",
-  "logd_nbtrans_mai_24", "logd_trans_vtcam_1924",
+  "logd_trans_mai_24",
+  "logd_px2q2_appt_24", "logd_px2_appt_vevol_1924", "logd_px2_appt_vevol_2224",
+  "logd_trans_appt_24",
   "log_vac_pct_22", "logv_vac2ans_pct_24"
 ];
 const commDetailExtraCols = (extraIndics || []).filter(i => !i.startsWith("__sep_")).map(i => buildColKey(i, getDefaultPeriode(i)));

@@ -310,6 +310,8 @@ const { addToSelection, removeFromSelection, setZoomOnly, toggleMapSelection, cl
 .sidebar {
   overflow-x: hidden !important;
   overflow-y: auto !important;
+  padding-top: 0.3rem !important;
+  margin-top: -0.5rem !important;
 }
 .sidebar select {
   font-size: 11px !important;
@@ -361,9 +363,7 @@ const _tabInput = Inputs.radio(
   new Map([["Exploration libre", "libre"], ["Indice T1", "t1"], ["Indice T2", "niveau"], ["Trajectoire T2−T1", "trajectoire"]]),
   { value: "libre", label: "" }
 )
-_tabInput.classList.add("tab-radio")
-// Compact pour sidebar
-{ const d = _tabInput.querySelector(":scope > div"); if (d) { d.style.cssText = "display:flex;gap:0;flex-wrap:wrap;"; d.querySelectorAll("label").forEach(l => { l.style.cssText = "padding:3px 8px;font-size:10px;"; }); } }
+_tabInput.style.display = "none"
 const activeTab = view(_tabInput)
 ```
 
