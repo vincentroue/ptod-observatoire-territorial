@@ -636,28 +636,37 @@ const _filterMap = (mapEl, geoRef, ck, getBi, getCol) => (activeIndices) => {
     }
   });
 };
-const legend1 = isEcart
+const frVal1 = frData?.[colKey1];
+const _isBins1 = !isEcart && !isGradient;
+// Mode bins : barre horizontale comme légende overlay (remplace verticale)
+// Mode écart/gradient : légende classique verticale overlay
+const _barLegend1 = _isBins1 && bins1.thresholds?.length > 0
+  ? createBinsLegendBar({
+      colors: PAL1, labels: bins1.labels || [], counts: counts1,
+      thresholds: bins1.thresholds, unit: unit1 || "",
+      franceValue: frVal1, franceLabel: "Fr.",
+      interactive: true,
+      onFilter: _filterMap(map1, currentGeo, colKey1, indic1Bins.getBinIdx, getColor1)
+    })
+  : null;
+const legend1 = _isBins1
+  ? _barLegend1   // Barre horizontale comme overlay
+  : isEcart
   ? createEcartFranceLegend({
       palette: ecart1.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecart1.pctLabels,
       counts: ecartCounts1, title: `±Fr. (en ${ecart1.isAbsoluteEcart ? "pts" : "%"})`,
       interactive: true, onFilter: _filterMap(map1, currentGeo, colKey1, ecart1.getBinIdx, getColor1)
     })
-  : isGradient
-  ? createGradientLegend({
+  : createGradientLegend({
       colors: gradient1.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient1.min, max: gradient1.max, showZero: gradient1.divergent,
       decimals: 2, title: unit1 || "",
       capped: true, rawMin: gradient1.rawMin, rawMax: gradient1.rawMax
-    })
-  : createBinsLegend({
-      colors: PAL1, labels: bins1.labels || [], counts: counts1,
-      vertical: true, unit: unit1, reverse: !isDiv1,
-      interactive: true, onFilter: _filterMap(map1, currentGeo, colKey1, indic1Bins.getBinIdx, getColor1)
     });
 // Tooltip : toujours passer la ref France + getEcartInfo pour symbole au survol
 if (map1._tipConfig) {
-  map1._tipConfig.frRef = frData?.[colKey1];
+  map1._tipConfig.frRef = frVal1;
   map1._tipConfig.frGetEcartInfo = ecart1.getEcartInfo;
 }
 // Click handler : click normal = zoom only, Ctrl+click = add to selection
@@ -669,13 +678,9 @@ map1.addEventListener("click", (e) => {
   const idx = paths.indexOf(path);
   if (idx >= 0 && idx < currentGeo.features.length) {
     const feat = currentGeo.features[idx];
-    if (feat.properties._merged) return; // Ignorer FOND_RURAL
+    if (feat.properties._merged) return;
     const code = feat.properties[meta.geoKey];
-    if (e.ctrlKey || e.metaKey) {
-      addToSelection(code);
-    } else {
-      setZoomOnly(code);
-    }
+    if (e.ctrlKey || e.metaKey) { addToSelection(code); } else { setZoomOnly(code); }
   }
 });
 const wrapper1 = createMapWrapper(map1, null, legend1, addZoomBehavior(map1, {
@@ -684,26 +689,12 @@ const wrapper1 = createMapWrapper(map1, null, legend1, addZoomBehavior(map1, {
 }), {
   exportSVGFn: exportSVG, echelon, colKey: colKey1, title: label1
 });
-// Valeur France 00FR
-const frVal1 = frData?.[colKey1];
-if (frVal1 != null) {
+// Label France seulement si pas de barre (écart/gradient)
+if (!_isBins1 && frVal1 != null) {
   const frLbl1 = document.createElement("div");
   frLbl1.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;";
   frLbl1.innerHTML = `🇫🇷 France : <b style="font-style:italic;">${formatValue(indic1, frVal1)}</b>`;
   wrapper1.appendChild(frLbl1);
-}
-// Légende horizontale barre cliquable (mode bins uniquement)
-if (!isEcart && !isGradient && bins1.thresholds?.length > 0) {
-  const bar1 = createBinsLegendBar({
-    colors: PAL1, labels: bins1.labels || [], counts: counts1,
-    thresholds: bins1.thresholds, unit: unit1 || "",
-    franceValue: frVal1, franceLabel: "Fr.",
-    interactive: true,
-    onFilter: _filterMap(map1, currentGeo, colKey1, indic1Bins.getBinIdx, getColor1)
-  });
-  bar1.style.marginTop = "4px";
-  bar1.style.marginLeft = "4px";
-  wrapper1.appendChild(bar1);
 }
 display(wrapper1);
 ```
@@ -732,31 +723,36 @@ const map2 = renderChoropleth({
 const counts2 = countBins(dataNoFrance, colKey2, bins2.thresholds || []);
 const ecartCounts2 = isEcart ? countBins(dataNoFrance, colKey2, ecart2.thresholds || []) : [];
 const unit2 = getIndicUnit(colKey2);
-const legend2 = isEcart
+const frVal2 = frData?.[colKey2];
+const _isBins2 = !isEcart && !isGradient;
+const _barLegend2 = _isBins2 && bins2.thresholds?.length > 0
+  ? createBinsLegendBar({
+      colors: PAL2, labels: bins2.labels || [], counts: counts2,
+      thresholds: bins2.thresholds, unit: unit2 || "",
+      franceValue: frVal2, franceLabel: "Fr.",
+      interactive: true,
+      onFilter: _filterMap(map2, currentGeo, colKey2, indic2Bins.getBinIdx, getColor2)
+    })
+  : null;
+const legend2 = _isBins2
+  ? _barLegend2
+  : isEcart
   ? createEcartFranceLegend({
       palette: ecart2.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecart2.pctLabels,
       counts: ecartCounts2, title: `±Fr. (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`,
       interactive: true, onFilter: _filterMap(map2, currentGeo, colKey2, ecart2.getBinIdx, getColor2)
     })
-  : isGradient
-  ? createGradientLegend({
+  : createGradientLegend({
       colors: gradient2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient2.min, max: gradient2.max, showZero: gradient2.divergent,
       decimals: 2, title: unit2 || "",
       capped: true, rawMin: gradient2.rawMin, rawMax: gradient2.rawMax
-    })
-  : createBinsLegend({
-      colors: PAL2, labels: bins2.labels || [], counts: counts2,
-      vertical: true, unit: unit2, reverse: !isDiv2,
-      interactive: true, onFilter: _filterMap(map2, currentGeo, colKey2, indic2Bins.getBinIdx, getColor2)
     });
-// Tooltip : toujours passer la ref France + getEcartInfo pour symbole au survol
 if (map2._tipConfig) {
-  map2._tipConfig.frRef = frData?.[colKey2];
+  map2._tipConfig.frRef = frVal2;
   map2._tipConfig.frGetEcartInfo = ecart2.getEcartInfo;
 }
-// Click handler : click normal = zoom only, Ctrl+click = add to selection
 map2.style.cursor = "pointer";
 map2.addEventListener("click", (e) => {
   const path = e.target.closest("path");
@@ -765,13 +761,9 @@ map2.addEventListener("click", (e) => {
   const idx = paths.indexOf(path);
   if (idx >= 0 && idx < currentGeo.features.length) {
     const feat = currentGeo.features[idx];
-    if (feat.properties._merged) return; // Ignorer FOND_RURAL
+    if (feat.properties._merged) return;
     const code = feat.properties[meta.geoKey];
-    if (e.ctrlKey || e.metaKey) {
-      addToSelection(code);
-    } else {
-      setZoomOnly(code);
-    }
+    if (e.ctrlKey || e.metaKey) { addToSelection(code); } else { setZoomOnly(code); }
   }
 });
 const wrapper2 = createMapWrapper(map2, null, legend2, addZoomBehavior(map2, {
@@ -780,26 +772,11 @@ const wrapper2 = createMapWrapper(map2, null, legend2, addZoomBehavior(map2, {
 }), {
   exportSVGFn: exportSVG, echelon, colKey: colKey2, title: label2
 });
-// Valeur France 00FR
-const frVal2 = frData?.[colKey2];
-if (frVal2 != null) {
+if (!_isBins2 && frVal2 != null) {
   const frLbl2 = document.createElement("div");
   frLbl2.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;";
   frLbl2.innerHTML = `🇫🇷 France : <b style="font-style:italic;">${formatValue(indic2, frVal2)}</b>`;
   wrapper2.appendChild(frLbl2);
-}
-// Légende horizontale barre cliquable (mode bins uniquement)
-if (!isEcart && !isGradient && bins2.thresholds?.length > 0) {
-  const bar2 = createBinsLegendBar({
-    colors: PAL2, labels: bins2.labels || [], counts: counts2,
-    thresholds: bins2.thresholds, unit: unit2 || "",
-    franceValue: frVal2, franceLabel: "Fr.",
-    interactive: true,
-    onFilter: _filterMap(map2, currentGeo, colKey2, indic2Bins.getBinIdx, getColor2)
-  });
-  bar2.style.marginTop = "4px";
-  bar2.style.marginLeft = "4px";
-  wrapper2.appendChild(bar2);
 }
 display(wrapper2);
 ```
@@ -885,24 +862,26 @@ const mapC1 = renderChoropleth({
 });
 const countsC1 = countBins(zoomData, colKey1, binsC1.thresholds || []);
 const ecartCountsC1 = isEcart ? countBins(zoomData, colKey1, ecartC1.thresholds || []) : [];
-const legendC1 = isEcart
+const _isBinsC1 = !isEcart && !isGradient;
+const legendC1 = _isBinsC1 && binsC1.thresholds?.length > 0
+  ? createBinsLegendBar({
+      colors: zoomBins1.palette, labels: binsC1.labels || [], counts: countsC1,
+      thresholds: binsC1.thresholds, unit: unit1 || "",
+      franceValue: frData?.[colKey1], franceLabel: "Fr.",
+      interactive: true, onFilter: _filterMap(mapC1, zoomGeo, colKey1, zoomBins1.getBinIdx, getColorC1)
+    })
+  : isEcart
   ? createEcartFranceLegend({
       palette: ecartC1.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecartC1.pctLabels,
       counts: ecartCountsC1, title: `±Fr. (en ${ecart1.isAbsoluteEcart ? "pts" : "%"})`,
       interactive: true, onFilter: _filterMap(mapC1, zoomGeo, colKey1, ecartC1.getBinIdx, getColorC1)
     })
-  : isGradient
-  ? createGradientLegend({
+  : createGradientLegend({
       colors: gradientC1.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradientC1.min, max: gradientC1.max, showZero: gradientC1.divergent,
       decimals: 2, title: unit1 || "",
       capped: true, rawMin: gradientC1.rawMin, rawMax: gradientC1.rawMax
-    })
-  : createBinsLegend({
-      colors: zoomBins1.palette, labels: binsC1.labels || [], counts: countsC1,
-      vertical: true, unit: unit1, reverse: !zoomBins1.isDiv,
-      interactive: true, onFilter: _filterMap(mapC1, zoomGeo, colKey1, zoomBins1.getBinIdx, getColorC1)
     });
 // Tooltip : ref France + getEcartInfo pour symbole au survol (zoom communes)
 if (mapC1?._tipConfig) {
@@ -935,24 +914,26 @@ const mapC2 = renderChoropleth({
 });
 const countsC2 = countBins(zoomData, colKey2, binsC2.thresholds || []);
 const ecartCountsC2 = isEcart ? countBins(zoomData, colKey2, ecartC2.thresholds || []) : [];
-const legendC2 = isEcart
+const _isBinsC2 = !isEcart && !isGradient;
+const legendC2 = _isBinsC2 && binsC2.thresholds?.length > 0
+  ? createBinsLegendBar({
+      colors: zoomBins2.palette, labels: binsC2.labels || [], counts: countsC2,
+      thresholds: binsC2.thresholds, unit: unit2 || "",
+      franceValue: frData?.[colKey2], franceLabel: "Fr.",
+      interactive: true, onFilter: _filterMap(mapC2, zoomGeo, colKey2, zoomBins2.getBinIdx, getColorC2)
+    })
+  : isEcart
   ? createEcartFranceLegend({
       palette: ecartC2.palette, symbols: ECART_FRANCE_SYMBOLS,
       pctLabels: ecartC2.pctLabels,
       counts: ecartCountsC2, title: `±Fr. (en ${ecart2.isAbsoluteEcart ? "pts" : "%"})`,
       interactive: true, onFilter: _filterMap(mapC2, zoomGeo, colKey2, ecartC2.getBinIdx, getColorC2)
     })
-  : isGradient
-  ? createGradientLegend({
+  : createGradientLegend({
       colors: gradientC2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradientC2.min, max: gradientC2.max, showZero: gradientC2.divergent,
       decimals: 2, title: unit2 || "",
       capped: true, rawMin: gradientC2.rawMin, rawMax: gradientC2.rawMax
-    })
-  : createBinsLegend({
-      colors: zoomBins2.palette, labels: binsC2.labels || [], counts: countsC2,
-      vertical: true, unit: unit2, reverse: !zoomBins2.isDiv,
-      interactive: true, onFilter: _filterMap(mapC2, zoomGeo, colKey2, zoomBins2.getBinIdx, getColorC2)
     });
 // Tooltip : ref France + getEcartInfo pour symbole au survol (zoom communes)
 if (mapC2?._tipConfig) {

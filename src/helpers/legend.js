@@ -420,10 +420,10 @@ export function createBinsLegendBar(config) {
   if (n === 0) return document.createElement("div");
 
   const boxW = 28;
-  const boxH = 7;
+  const boxH = 6;
   const gapN = 2;     // Gap normal entre bins
-  const gapX = 4;     // Gap élargi autour des extrêmes (1er et dernier)
-  const unitW = unit ? 38 : 0;
+  const gapX = 5;     // Gap élargi autour des extrêmes (1er et dernier)
+  const unitW = unit ? 42 : 0;
 
   // Pré-calcul positions boxes avec gaps variables
   const bp = [];  // {l, r, c} pour chaque box
@@ -445,12 +445,13 @@ export function createBinsLegendBar(config) {
   };
 
   const wrapper = document.createElement("div");
+  wrapper.className = "legend-bar-h";
   wrapper.style.cssText = "position:relative;font-family:Inter,system-ui,sans-serif;display:inline-block;";
 
   // ─── ROW 1: France ▼ ───
   if (franceValue != null && thresholds.length > 0) {
     const row = document.createElement("div");
-    row.style.cssText = `position:relative;height:16px;margin-left:${unitW}px;width:${barW}px;`;
+    row.style.cssText = `position:relative;height:20px;margin-left:${unitW}px;width:${barW}px;`;
 
     // Position France dans le bon bin interpolé
     let fBin = thresholds.findIndex(t => franceValue < t);
@@ -467,7 +468,7 @@ export function createBinsLegendBar(config) {
 
     const mk = document.createElement("div");
     mk.style.cssText = `position:absolute;left:${frPx}px;transform:translateX(-50%);bottom:0;text-align:center;line-height:1;`;
-    mk.innerHTML = `<span style="font-size:7.5px;color:#1696d2;font-weight:700;white-space:nowrap;">${franceLabel} ${fmt(franceValue)}</span><br><span style="font-size:8px;color:#1696d2;line-height:0.8;">▼</span>`;
+    mk.innerHTML = `<span style="font-size:9px;color:#1696d2;font-weight:700;white-space:nowrap;">${franceLabel} ${fmt(franceValue)}</span><br><span style="font-size:10px;color:#1696d2;line-height:0.8;">▼</span>`;
     row.appendChild(mk);
     wrapper.appendChild(row);
   }
@@ -475,12 +476,12 @@ export function createBinsLegendBar(config) {
   // ─── ROW 2: Seuils au-dessus de la barre ───
   if (thresholds.length > 0) {
     const row = document.createElement("div");
-    row.style.cssText = `position:relative;height:10px;margin-left:${unitW}px;width:${barW}px;`;
+    row.style.cssText = `position:relative;height:13px;margin-left:${unitW}px;width:${barW}px;`;
     thresholds.forEach((t, i) => {
       if (i >= n - 1) return;
       const px = (bp[i].r + bp[i + 1].l) / 2;
       const el = document.createElement("span");
-      el.style.cssText = `position:absolute;left:${px}px;transform:translateX(-50%);font-size:7px;color:#6b7280;white-space:nowrap;`;
+      el.style.cssText = `position:absolute;left:${px}px;transform:translateX(-50%);font-size:9px;color:#6b7280;white-space:nowrap;`;
       el.textContent = fmt(t);
       row.appendChild(el);
     });
@@ -493,7 +494,7 @@ export function createBinsLegendBar(config) {
 
   if (unit) {
     const uEl = document.createElement("span");
-    uEl.style.cssText = `font-size:8px;font-weight:600;color:#555;width:${unitW}px;text-align:right;padding-right:3px;white-space:nowrap;`;
+    uEl.style.cssText = `font-size:10px;font-weight:600;color:#555;width:${unitW}px;text-align:right;padding-right:4px;white-space:nowrap;`;
     uEl.textContent = unit;
     barRow.appendChild(uEl);
   }
@@ -515,10 +516,10 @@ export function createBinsLegendBar(config) {
   const cntEls = [];
   if (counts.length > 0) {
     const row = document.createElement("div");
-    row.style.cssText = `position:relative;height:10px;margin-left:${unitW}px;width:${barW}px;`;
+    row.style.cssText = `position:relative;height:13px;margin-left:${unitW}px;width:${barW}px;`;
     counts.forEach((c, i) => {
       const el = document.createElement("span");
-      el.style.cssText = `position:absolute;left:${bp[i].c}px;transform:translateX(-50%);font-size:7px;color:#9ca3af;white-space:nowrap;transition:opacity 0.12s;`;
+      el.style.cssText = `position:absolute;left:${bp[i].c}px;transform:translateX(-50%);font-size:9px;color:#9ca3af;white-space:nowrap;transition:opacity 0.12s;`;
       el.textContent = c > 0 ? `(${c})` : "";
       cntEls.push(el);
       row.appendChild(el);
