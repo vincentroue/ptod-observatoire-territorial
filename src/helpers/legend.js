@@ -157,6 +157,7 @@ export function createEcartFranceLegend(config) {
     onFilter = null,
   } = config;
 
+  const hasCounts = counts.length > 0;
   const items = palette.map((color, i) => ({
     color,
     symbol: symbols[i] || "",
@@ -165,7 +166,10 @@ export function createEcartFranceLegend(config) {
     realIdx: i
   }));
 
-  const orderedItems = reverse ? [...items].reverse() : items;
+  // Filtrer bins vides (count=0) quand les comptages sont fournis
+  const filteredItems = hasCounts ? items.filter(item => item.count > 0) : items;
+
+  const orderedItems = reverse ? [...filteredItems].reverse() : filteredItems;
 
   const wrapper = html`<div class="legend-vertical">
     ${title ? html`<div class="legend-title">${title}</div>` : ''}
@@ -265,7 +269,8 @@ export function createBinsLegend(config) {
     onFilter = null,
   } = config;
 
-  // Préparer les items dans l'ordre
+  // Préparer les items dans l'ordre — masquer bins vides si counts fournis
+  const hasCounts = counts.length > 0;
   const items = colors.map((color, i) => ({
     color,
     label: labels[i] || '',
@@ -273,8 +278,11 @@ export function createBinsLegend(config) {
     realIdx: i,
   }));
 
+  // Filtrer bins vides (count=0) quand les comptages sont fournis
+  const filteredItems = hasCounts ? items.filter(item => item.count > 0) : items;
+
   // Inverser si demandé (pour avoir valeurs hautes en haut)
-  const orderedItems = reverse ? [...items].reverse() : items;
+  const orderedItems = reverse ? [...filteredItems].reverse() : filteredItems;
 
   if (vertical) {
     const wrapper = html`<div class="legend-vertical">
@@ -370,6 +378,191 @@ export function createBinsLegend(config) {
     </div>`;
   }
 }
+
+// ============================================================
+// &s BINS_BAR — Légende horizontale barre compacte cliquable
+// ============================================================
+
+/**
+ * Crée une légende bins horizontale type "barre de couleur"
+ * Layout vertical :
+ *   Row 1: France ▼ (positionné proportionnellement)
+ *   Row 2: Seuils (entre les boîtes, au-dessus)
+ *   Row 3: [Unité] [□□□□□□□] (boxes aplaties avec gaps)
+ *   Row 4: (n) comptages en dessous
+ *
+ * @param {Object} config
+ * @param {string[]} config.colors - Palette N couleurs
+ * @param {string[]} [config.labels=[]] - Labels seuils (N items)
+ * @param {number[]} [config.counts=[]] - Comptages par bin
+ * @param {number[]} [config.thresholds=[]] - Seuils (N-1 valeurs)
+ * @param {string} [config.unit=""] - Unité à gauche (ex: "%/an", "€/m²")
+ * @param {number|null} [config.franceValue=null] - Valeur France → marqueur ▼
+ * @param {string} [config.franceLabel="France"] - Label du marqueur
+ * @param {boolean} [config.interactive=false] - Click = isoler, Ctrl+click = toggle
+ * @param {Function|null} [config.onFilter=null] - Callback(Set<binIdx>) pour filtrage carte
+ * @returns {HTMLElement}
+ */
+export function createBinsLegendBar(config) {
+  const {
+    colors,
+    labels = [],
+    counts = [],
+    thresholds = [],
+    unit = "",
+    franceValue = null,
+    franceLabel = "France",
+    interactive = false,
+    onFilter = null
+  } = config;
+
+  const n = colors.length;
+  if (n === 0) return document.createElement("div");
+
+  const boxW = 28;
+  const boxH = 7;
+  const gapN = 2;     // Gap normal entre bins
+  const gapX = 4;     // Gap élargi autour des extrêmes (1er et dernier)
+  const unitW = unit ? 38 : 0;
+
+  // Pré-calcul positions boxes avec gaps variables
+  const bp = [];  // {l, r, c} pour chaque box
+  let cx = 0;
+  for (let i = 0; i < n; i++) {
+    if (i > 0) cx += (i === 1 || i === n - 1) ? gapX : gapN;
+    bp.push({ l: cx, r: cx + boxW, c: cx + boxW / 2 });
+    cx += boxW;
+  }
+  const barW = cx;
+
+  // Formatage seuils
+  const fmt = (v) => {
+    if (v == null) return "";
+    const a = Math.abs(v);
+    if (a >= 10) return Math.round(v).toLocaleString("fr-FR");
+    if (a >= 1) return v.toFixed(1);
+    return v.toFixed(2);
+  };
+
+  const wrapper = document.createElement("div");
+  wrapper.style.cssText = "position:relative;font-family:Inter,system-ui,sans-serif;display:inline-block;";
+
+  // ─── ROW 1: France ▼ ───
+  if (franceValue != null && thresholds.length > 0) {
+    const row = document.createElement("div");
+    row.style.cssText = `position:relative;height:16px;margin-left:${unitW}px;width:${barW}px;`;
+
+    // Position France dans le bon bin interpolé
+    let fBin = thresholds.findIndex(t => franceValue < t);
+    if (fBin === -1) fBin = n - 1;
+    let frPx;
+    if (fBin === 0) { frPx = bp[0].c; }
+    else if (fBin >= n - 1) { frPx = bp[n - 1].c; }
+    else {
+      const tL = thresholds[fBin - 1], tH = thresholds[fBin];
+      const r = (tH !== tL) ? (franceValue - tL) / (tH - tL) : 0.5;
+      frPx = bp[fBin].l + r * boxW;
+    }
+    frPx = Math.max(8, Math.min(barW - 8, frPx));
+
+    const mk = document.createElement("div");
+    mk.style.cssText = `position:absolute;left:${frPx}px;transform:translateX(-50%);bottom:0;text-align:center;line-height:1;`;
+    mk.innerHTML = `<span style="font-size:7.5px;color:#1696d2;font-weight:700;white-space:nowrap;">${franceLabel} ${fmt(franceValue)}</span><br><span style="font-size:8px;color:#1696d2;line-height:0.8;">▼</span>`;
+    row.appendChild(mk);
+    wrapper.appendChild(row);
+  }
+
+  // ─── ROW 2: Seuils au-dessus de la barre ───
+  if (thresholds.length > 0) {
+    const row = document.createElement("div");
+    row.style.cssText = `position:relative;height:10px;margin-left:${unitW}px;width:${barW}px;`;
+    thresholds.forEach((t, i) => {
+      if (i >= n - 1) return;
+      const px = (bp[i].r + bp[i + 1].l) / 2;
+      const el = document.createElement("span");
+      el.style.cssText = `position:absolute;left:${px}px;transform:translateX(-50%);font-size:7px;color:#6b7280;white-space:nowrap;`;
+      el.textContent = fmt(t);
+      row.appendChild(el);
+    });
+    wrapper.appendChild(row);
+  }
+
+  // ─── ROW 3: Unité + Boxes aplaties ───
+  const barRow = document.createElement("div");
+  barRow.style.cssText = "display:flex;align-items:center;";
+
+  if (unit) {
+    const uEl = document.createElement("span");
+    uEl.style.cssText = `font-size:8px;font-weight:600;color:#555;width:${unitW}px;text-align:right;padding-right:3px;white-space:nowrap;`;
+    uEl.textContent = unit;
+    barRow.appendChild(uEl);
+  }
+
+  const boxC = document.createElement("div");
+  boxC.style.cssText = `position:relative;width:${barW}px;height:${boxH}px;`;
+
+  const boxEls = [];
+  colors.forEach((c, i) => {
+    const box = document.createElement("div");
+    box.style.cssText = `position:absolute;left:${bp[i].l}px;width:${boxW}px;height:${boxH}px;background:${c};border:1px solid rgba(0,0,0,0.1);box-sizing:border-box;transition:opacity 0.12s;${interactive ? 'cursor:pointer;' : ''}`;
+    boxEls.push(box);
+    boxC.appendChild(box);
+  });
+  barRow.appendChild(boxC);
+  wrapper.appendChild(barRow);
+
+  // ─── ROW 4: Comptages (n) en dessous ───
+  const cntEls = [];
+  if (counts.length > 0) {
+    const row = document.createElement("div");
+    row.style.cssText = `position:relative;height:10px;margin-left:${unitW}px;width:${barW}px;`;
+    counts.forEach((c, i) => {
+      const el = document.createElement("span");
+      el.style.cssText = `position:absolute;left:${bp[i].c}px;transform:translateX(-50%);font-size:7px;color:#9ca3af;white-space:nowrap;transition:opacity 0.12s;`;
+      el.textContent = c > 0 ? `(${c})` : "";
+      cntEls.push(el);
+      row.appendChild(el);
+    });
+    wrapper.appendChild(row);
+  }
+
+  // ─── INTERACTIVE: Click = isoler, Ctrl+click = toggle ───
+  if (interactive && onFilter) {
+    let selectedSet = null;
+    const allIdx = new Set(colors.map((_, i) => i));
+
+    const refresh = () => {
+      const active = selectedSet || allIdx;
+      boxEls.forEach((box, i) => {
+        const on = active.has(i);
+        box.style.background = on ? colors[i] : "#d1d5db";
+        box.style.opacity = on ? "1" : "0.3";
+      });
+      cntEls.forEach((el, i) => {
+        el.style.opacity = (!selectedSet || selectedSet.has(i)) ? "1" : "0.25";
+      });
+    };
+
+    boxEls.forEach((box, i) => {
+      box.addEventListener("click", (e) => {
+        if (e.ctrlKey || e.metaKey) {
+          if (!selectedSet) { selectedSet = new Set(allIdx); selectedSet.delete(i); }
+          else if (selectedSet.has(i)) { selectedSet.delete(i); if (selectedSet.size === 0) selectedSet = null; }
+          else { selectedSet.add(i); if (selectedSet.size === allIdx.size) selectedSet = null; }
+        } else {
+          if (selectedSet?.size === 1 && selectedSet.has(i)) selectedSet = null;
+          else selectedSet = new Set([i]);
+        }
+        refresh();
+        onFilter(selectedSet || allIdx);
+      });
+    });
+  }
+
+  return wrapper;
+}
+
+// &e BINS_BAR
 
 // ============================================================
 // &s UTILS — Helpers internes

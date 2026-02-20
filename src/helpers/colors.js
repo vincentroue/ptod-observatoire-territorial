@@ -13,8 +13,8 @@
  * 8 couleurs pour 8 bins
  */
 export const PAL_PURPLE_GREEN = [
-  "#761548", "#af1f6b", "#e46aa7", "#eb99c2",  // Négatifs : violet foncé → rose pâle (Urban Institute)
-  "#bcdeb4", "#98cf90", "#408941", "#2c5c2d"   // Positifs : vert pâle → vert foncé (Urban Institute)
+  "#761548", "#af1f6b", "#e46aa7", "#f5d5e2",  // Négatifs : violet foncé → rose ULTRA pâle (proche 0)
+  "#d6f0cd", "#98cf90", "#408941", "#1a4a1a"   // Positifs : vert ULTRA pâle (proche 0) → vert foncé profond
 ];
 
 /**
@@ -52,6 +52,39 @@ export const PAL_SEQ_BLUE = [
 export const PAL_SEQ_ORANGE = [
   "#ffe4cc", "#fdbf11", "#ca5800", "#8c3d00", "#5c2800"
 ];
+
+/**
+ * PAL_SEQ7_BYRV — Palette séquentielle 7 classes Bleu-Jaune-Rouge-Violet
+ * Bins asymétriques : P5/P20/P40/P60/P80/P95
+ * 5% extrême bas (bleu) + 15-20-20-20-15% milieu + 5% extrême haut (violet)
+ * Nom harmonisé avec jcn-setup.R : pal_seq7_byrv
+ */
+export const PAL_SEQ7_BYRV = [
+  "#6baed6",  // Bleu moyen — < P5  (extrême bas, 5%)
+  "#ffffb2",  // Jaune pâle — P5-P20
+  "#fecc5c",  // Jaune doré — P20-P40
+  "#fd8d3c",  // Orange — P40-P60
+  "#fc4e2a",  // Rouge clair — P60-P80
+  "#bd0026",  // Rouge foncé — P80-P95
+  "#7b2ff2"   // Violet — > P95  (extrême haut, 5%)
+];
+
+/**
+ * PAL_SEQ6_BYRV — Version 6 classes (fusion rouge clair+foncé)
+ * Bins : P5/P25/P50/P75/P95
+ * Nom harmonisé avec jcn-setup.R : pal_seq6_byrv
+ */
+export const PAL_SEQ6_BYRV = [
+  "#6baed6",  // Bleu moyen — < P5
+  "#ffffb2",  // Jaune pâle — P5-P25
+  "#fecc5c",  // Jaune doré — P25-P50
+  "#fd8d3c",  // Orange — P50-P75
+  "#e31a1c",  // Rouge — P75-P95
+  "#7b2ff2"   // Violet — > P95
+];
+
+// Alias rétro-compatible
+export const PAL_SEQ_PRIX = PAL_SEQ7_BYRV;
 
 /**
  * Palette séquentielle bleue ColorBrewer pour mode gradient (plus contrastée)
@@ -221,6 +254,48 @@ export function makeSeqQuantileBins(data, col, nBins = 6, options = {}) {
 }
 
 /**
+ * Génère des bins "niveau" avec seuils asymétriques
+ * 7 bins (défaut) : P5/P20/P40/P60/P80/P95 → 5-15-20-20-20-15-5%
+ * 6 bins (option) : P5/P25/P50/P75/P95 → 5-20-25-25-20-5%
+ * @param {Object[]} data - Tableau d'objets
+ * @param {string} col - Nom de la colonne
+ * @param {Object} options - { unit, decimals, nBins: 6|7 }
+ * @returns {Object} { thresholds: number[], labels: string[], unit: string }
+ */
+export function makeNiveauQuantileBins(data, col, options = {}) {
+  const { unit = "", decimals = 0, nBins = 7 } = options;
+  const values = data.map(d => d[col]).filter(v => v != null && !isNaN(v)).sort((a, b) => a - b);
+  if (values.length === 0) return { thresholds: [], labels: [], unit };
+
+  // Quantiles selon nombre de bins
+  const quantiles = nBins === 7
+    ? [0.05, 0.20, 0.40, 0.60, 0.80, 0.95]   // 7 bins
+    : [0.05, 0.25, 0.50, 0.75, 0.95];          // 6 bins
+
+  const thresholds = quantiles.map(q => {
+    const idx = Math.min(Math.floor(values.length * q), values.length - 1);
+    return values[idx];
+  });
+
+  // Arrondir les seuils pour lisibilité (entiers si > 10, sinon 1 déc)
+  const allBig = thresholds.every(t => Math.abs(t) >= 10);
+  const dec = allBig ? 0 : Math.max(decimals, 1);
+  const fmt = (v) => dec === 0 ? Math.round(v).toLocaleString("fr-FR") : v.toFixed(dec);
+
+  const labels = [];
+  labels.push(`< ${fmt(thresholds[0])}${unit ? " " + unit : ""}`);
+  for (let i = 0; i < thresholds.length - 1; i++) {
+    labels.push(`${fmt(thresholds[i])} à ${fmt(thresholds[i + 1])}`);
+  }
+  labels.push(`> ${fmt(thresholds[thresholds.length - 1])}${unit ? " " + unit : ""}`);
+
+  return { thresholds, labels, unit };
+}
+
+// Alias rétro-compatible
+export const makePrixQuantileBins = makeNiveauQuantileBins;
+
+/**
  * Couleur densité 3 niveaux
  * @param {number} dens - Code densité (1, 2, 3)
  * @returns {string} Couleur hex
@@ -362,7 +437,7 @@ export function computeIndicBins(data, colKey, indicKey = null) {
   // Auto-extraire indicKey si non fourni
   const indic = indicKey || colKey.replace(/_\d+$/, "");
 
-  // Détection type : "ind" = indice (6 bins divergent), autres = 8 bins
+  // Détection type divergent vs séquentiel
   const isTypeInd = indic.includes("_ind_");
   const isTypeDiv = indic.includes("sma") || indic.includes("vtcam") || indic.includes("vevol") || indic.includes("vdifp");
   const hasNegs = hasSignificantNegatives(data, colKey);
@@ -379,15 +454,20 @@ export function computeIndicBins(data, colKey, indicKey = null) {
     palette = PAL_PURPLE_GREEN;
     nBins = 8;
   } else {
-    // Séquentiel : 6 couleurs bleues
-    palette = PAL_SEQ_BLUE;
-    nBins = 6;
+    // Séquentiel unifié BYRV : bleu → jaune → orange → rouge → violet (P5/P20/P40/P60/P80/P95)
+    palette = PAL_SEQ7_BYRV;
+    nBins = 7;
   }
+
+  // Décimales adaptées au type : vevol=0, vtcam=1, autres=2
+  const decimals = indic.includes("vevol") ? 0
+    : indic.includes("vtcam") ? 1
+    : 2;
 
   // Calcul des bins
   const bins = isDiv
-    ? (nBins === 6 ? makeDivQuantileBins6(data, colKey) : makeDivQuantileBins(data, colKey))
-    : makeSeqQuantileBins(data, colKey, 6);
+    ? (nBins === 6 ? makeDivQuantileBins6(data, colKey, { decimals }) : makeDivQuantileBins(data, colKey, { decimals }))
+    : makeNiveauQuantileBins(data, colKey, { decimals, nBins });
 
   // Fonction getColor
   const getColor = (v) => getColorByBins(v, bins.thresholds || [], palette);

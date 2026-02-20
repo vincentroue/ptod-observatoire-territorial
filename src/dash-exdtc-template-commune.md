@@ -86,7 +86,7 @@ import {
 } from "./helpers/colors.js";
 
 // === legend.js — Légendes cartes ===
-import { createBinsLegend, createGradientLegend, createEcartFranceLegend } from "./helpers/legend.js";
+import { createBinsLegend, createGradientLegend, createEcartFranceLegend, createBinsLegendBar } from "./helpers/legend.js";
 
 // === maps.js — Cartes choroplèthes ===
 import {
@@ -190,21 +190,25 @@ async function getGeo(ech) {
 
 <!-- &s INIT -->
 ```js
-const defaultData = await getData("Zone d'emploi");
-const defaultGeo = await getGeo("Zone d'emploi");
-const communesTopo = await COMMUNES_TOPO.json();
+// Chargement parallèle : données + géo + DuckDB en même temps
+const [defaultData, defaultGeo, communesTopo, depGeo, duckRes] = await Promise.all([
+  getData("Zone d'emploi"),
+  getGeo("Zone d'emploi"),
+  COMMUNES_TOPO.json(),
+  getGeo("Département"),
+  (async () => {
+    const { db, conn } = await initDuckDB();
+    await registerParquet(db, "communes", await COMMUNES_PARQUET.url());
+    return { db, conn };
+  })()
+]);
 const communesGeo = rewind(topojson.feature(communesTopo, communesTopo.objects.data), true);
-
 // communesGeo = 3Ksup (3713 communes >= 3000 + 1 FOND_RURAL fusionné)
 
-// Geo départements pour overlay sur autres échelons
-const depGeo = await getGeo("Département");
+const { db, conn } = duckRes;
 
-const { db, conn } = await initDuckDB();
-await registerParquet(db, "communes", await COMMUNES_PARQUET.url());
-
-// LabelMaps pour tous les échelons (chargement au démarrage)
-for (const ech of ECHELONS_SIDEBAR) {
+// LabelMaps pour tous les échelons (chargement parallèle)
+await Promise.all(ECHELONS_SIDEBAR.map(async (ech) => {
   const data = await getData(ech);
   const meta = getEchelonMeta(ech);
   if (data.length && meta) {
@@ -212,7 +216,7 @@ for (const ech of ECHELONS_SIDEBAR) {
     data.forEach(d => d.code && d.libelle && lm.set(String(d.code), d.libelle));
     setLabelMap(ech, lm);
   }
-}
+}));
 
 const AVAILABLE_COLUMNS = new Set(Object.keys(defaultData[0] || {}));
 
@@ -450,6 +454,24 @@ const extraIndics = view(Inputs.select(
 </aside>
 <!-- &e SIDEBAR -->
 
+```js
+// &s SIDEBAR_TOGGLE
+{
+  const toggle = document.createElement("div");
+  toggle.className = "sidebar-toggle";
+  toggle.title = "Options et choix indicateurs & échelons";
+  toggle.innerHTML = `<span class="toggle-chevron">«</span><span class="toggle-label">Options indicateurs</span>`;
+  document.body.appendChild(toggle);
+  document.body.classList.add("sidebar-collapsed");
+  toggle.querySelector(".toggle-chevron").textContent = "»";
+  toggle.addEventListener("click", () => {
+    const collapsed = document.body.classList.toggle("sidebar-collapsed");
+    toggle.querySelector(".toggle-chevron").textContent = collapsed ? "»" : "«";
+  });
+}
+// &e SIDEBAR_TOGGLE
+```
+
 <!-- &s LAYOUT_MAIN -->
 <div class="layout-main">
 
@@ -670,6 +692,19 @@ if (frVal1 != null) {
   frLbl1.innerHTML = `🇫🇷 France : <b style="font-style:italic;">${formatValue(indic1, frVal1)}</b>`;
   wrapper1.appendChild(frLbl1);
 }
+// Légende horizontale barre cliquable (mode bins uniquement)
+if (!isEcart && !isGradient && bins1.thresholds?.length > 0) {
+  const bar1 = createBinsLegendBar({
+    colors: PAL1, labels: bins1.labels || [], counts: counts1,
+    thresholds: bins1.thresholds, unit: unit1 || "",
+    franceValue: frVal1, franceLabel: "Fr.",
+    interactive: true,
+    onFilter: _filterMap(map1, currentGeo, colKey1, indic1Bins.getBinIdx, getColor1)
+  });
+  bar1.style.marginTop = "4px";
+  bar1.style.marginLeft = "4px";
+  wrapper1.appendChild(bar1);
+}
 display(wrapper1);
 ```
 
@@ -752,6 +787,19 @@ if (frVal2 != null) {
   frLbl2.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;";
   frLbl2.innerHTML = `🇫🇷 France : <b style="font-style:italic;">${formatValue(indic2, frVal2)}</b>`;
   wrapper2.appendChild(frLbl2);
+}
+// Légende horizontale barre cliquable (mode bins uniquement)
+if (!isEcart && !isGradient && bins2.thresholds?.length > 0) {
+  const bar2 = createBinsLegendBar({
+    colors: PAL2, labels: bins2.labels || [], counts: counts2,
+    thresholds: bins2.thresholds, unit: unit2 || "",
+    franceValue: frVal2, franceLabel: "Fr.",
+    interactive: true,
+    onFilter: _filterMap(map2, currentGeo, colKey2, indic2Bins.getBinIdx, getColor2)
+  });
+  bar2.style.marginTop = "4px";
+  bar2.style.marginLeft = "4px";
+  wrapper2.appendChild(bar2);
 }
 display(wrapper2);
 ```
