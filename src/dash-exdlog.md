@@ -192,17 +192,17 @@ const _geoCols = await getParquetColumns({conn}, "communes_geo");
 const _logCols = await getParquetColumns({conn}, "communes_log");
 const COMM_COLUMNS = new Set([..._geoCols, ..._logCols]);
 
-// VIEW communes_v : g.* (toutes colonnes geo, 34860 communes) + colonnes EXCLUSIVES log
-// Fix : prendre log_* depuis geo (34860 rows) et non log (3696 rows)
+// TABLE communes_v : matérialisée au init (join calculé 1 fois, pas recalculé à chaque query)
+// g.* (toutes colonnes geo, 34860 communes) + colonnes EXCLUSIVES log
 const _logOnlyCols = [..._logCols].filter(c => !_geoCols.has(c));
 try {
   const logSelect = _logOnlyCols.length > 0
     ? ", " + _logOnlyCols.map(c => 'l."' + c + '"').join(", ")
     : "";
-  await conn.query(`CREATE OR REPLACE VIEW communes_v AS SELECT g.*${logSelect} FROM 'communes_geo.parquet' g LEFT JOIN 'communes_log.parquet' l ON g.code = l.code`);
+  await conn.query(`CREATE OR REPLACE TABLE communes_v AS SELECT g.*${logSelect} FROM 'communes_geo.parquet' g LEFT JOIN 'communes_log.parquet' l ON g.code = l.code`);
 } catch (err) {
-  console.error("[EXDLOG] VIEW création échouée:", err.message);
-  await conn.query(`CREATE OR REPLACE VIEW communes_v AS SELECT * FROM 'communes_geo.parquet'`);
+  console.error("[EXDLOG] TABLE création échouée:", err.message);
+  await conn.query(`CREATE OR REPLACE TABLE communes_v AS SELECT * FROM 'communes_geo.parquet'`);
 }
 
 // Indicateurs logement : filtrés par thèmes log* + colonnes disponibles dans les données
