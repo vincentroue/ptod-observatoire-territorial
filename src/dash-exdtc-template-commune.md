@@ -504,11 +504,12 @@ const { currentGeo, rawData, frData, dataNoFrance } = await (async () => {
       minPop: 3000, limit: 5000
     });
     const frRow = await queryFrance({ conn }, "communes", [colKey1, colKey2]);
+    const commMap = new Map(commData.map(d => [d.code, d]));
     const geo = {
       type: "FeatureCollection",
       features: communesGeo.features.map(f => {
         if (f.properties._merged) return { ...f }; // FOND_RURAL : pas de données
-        const row = commData.find(d => d.code === f.properties.CODGEO);
+        const row = commMap.get(f.properties.CODGEO);
         return {
           ...f,
           properties: {
@@ -527,8 +528,9 @@ const { currentGeo, rawData, frData, dataNoFrance } = await (async () => {
     const raw = await getData(echelon);
     const fr = getFranceData(raw);
     const noFr = getDataNoFrance(raw);
+    const noFrMap = new Map(noFr.map(d => [String(d.code), d]));
     for (const f of geo.features) {
-      const row = noFr.find(d => d.code === f.properties[meta.geoKey]);
+      const row = noFrMap.get(String(f.properties[meta.geoKey]));
       if (row) {
         f.properties[colKey1] = row[colKey1];
         f.properties[colKey2] = row[colKey2];
@@ -855,7 +857,8 @@ const getColorC1 = isEcart ? ecartC1.getColor : isGradient ? gradientC1.getColor
 const getColorC2 = isEcart ? ecartC2.getColor : isGradient ? gradientC2.getColor : zoomBins2.getColor;
 
 // Valeur du territoire parent (échelon) pour marqueur légende zoom communes
-const _parentRow = dataNoFrance.find(d => d.code === zoomCode);
+const _dataNoFrMap = new Map(dataNoFrance.map(d => [String(d.code), d]));
+const _parentRow = _dataNoFrMap.get(String(zoomCode));
 const _parentVal1 = _parentRow?.[colKey1];
 const _parentVal2 = _parentRow?.[colKey2];
 // Label court pour le marqueur (ex: "EPCI", "ZE", "DEP")

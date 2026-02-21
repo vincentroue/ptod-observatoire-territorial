@@ -451,7 +451,8 @@ _sbToggle.onclick = () => {
 
 // KPI Table compact — France + ZE sélectionnées (max 5)
 const kpiSelCodes = [...mapSelectionState].slice(0, 5);
-const kpiSelData = kpiSelCodes.map(c => dataNoFrance.find(d => d.code === c)).filter(Boolean);
+const _kpiMap = new Map(dataNoFrance.map(d => [String(d.code), d]));
+const kpiSelData = kpiSelCodes.map(c => _kpiMap.get(String(c))).filter(Boolean);
 const kpiData = [frData, ...kpiSelData].filter(Boolean);
 
 const kpiCols = [
@@ -522,8 +523,9 @@ const indicLabelPer2 = _effPer2 ? `${indicLabel2} (${getPeriodeLabel(_effPer2, "
 const labelCarte = indicLabel;
 
 // Joindre données aux géométries (les 2 colKeys)
+const dataMap = new Map(dataNoFrance.map(d => [String(d.code), d]));
 for (const f of zeGeo.features) {
-  const row = dataNoFrance.find(d => d.code === f.properties[meta.geoKey]);
+  const row = dataMap.get(String(f.properties[meta.geoKey]));
   if (row) {
     f.properties[colKey1] = row[colKey1];
     f.properties[colKey2] = row[colKey2];
@@ -775,7 +777,7 @@ const wrapper = createMapWrapper(map, null, legend, addZoomBehavior(map, {
 }), { exportSVGFn: exportSVG, echelon: "Zone d'emploi", colKey: colKey1, title: indicLabel });
 
 const frVal = frData?.[colKey1];
-const zeZoomRow = dataNoFrance.find(d => d.code === zoomCode);
+const zeZoomRow = dataMap.get(String(zoomCode));
 const zeVal = zeZoomRow?.[colKey1];
 const valuesDiv = document.createElement("div");
 valuesDiv.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;line-height:1.5;";

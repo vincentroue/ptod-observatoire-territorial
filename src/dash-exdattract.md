@@ -644,7 +644,8 @@ _sbToggle.onclick = () => {
 }
 
 const kpiSelCodes = [...mapSelectionState].slice(0, 5)
-const kpiSelData = kpiSelCodes.map(c => dataNoFrance.find(d => d.code === c)).filter(Boolean)
+const _kpiMap = new Map(dataNoFrance.map(d => [String(d.code), d]))
+const kpiSelData = kpiSelCodes.map(c => _kpiMap.get(String(c))).filter(Boolean)
 const kpiData = [frData, ...kpiSelData].filter(Boolean)
 
 // Tous les idx disponibles + colonnes du tab
@@ -742,12 +743,15 @@ const _mapDataForDelta = isCommune ? _mapDataRaw.map(d => ({
 })) : dataWithDelta
 const mapSourceData = activeTab === "trajectoire" ? _mapDataForDelta : _mapDataRaw
 
-// Join data to geo
+// Maps for O(1) lookups (shared across carte 1 & 2 blocks)
+const mapSourceMap = new Map(mapSourceData.map(d => [String(d.code), d]));
+const _rawMap = new Map(_mapDataRaw.map(d => [String(d.code), d]));
+const _deltaMap = new Map(_mapDataForDelta.map(d => [String(d.code), d]));
 if (currentGeo) {
   const geoKey = currentMeta.geoKey
   for (const f of currentGeo.features) {
-    const code = f.properties[geoKey] || f.properties.code_insee || f.properties.code
-    const row = mapSourceData.find(d => String(d.code) === String(code))
+    const code = String(f.properties[geoKey] || f.properties.code_insee || f.properties.code)
+    const row = mapSourceMap.get(code)
     if (row) {
       f.properties[colKey1] = row[colKey1]
       f.properties[colKey2] = row[colKey2]
@@ -969,7 +973,7 @@ if (map) {
     onZoom: t => { window._zoomStatesAttract.map1 = t; }
   }), { exportSVGFn: exportSVG, echelon: isCommune ? "EPCI" : echelon, colKey: colKey1, title: indicLabel })
   const frVal = _mapFrData?.[colKey1]
-  const zoomRow = _mapDataRaw.find(d => d.code === zoomCode) || _mapDataForDelta.find(d => d.code === zoomCode)
+  const zoomRow = _rawMap.get(String(zoomCode)) || _deltaMap.get(String(zoomCode))
   const zeVal = zoomRow?.[colKey1]
   const valuesDiv = document.createElement("div")
   valuesDiv.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;line-height:1.5;"
@@ -1056,7 +1060,7 @@ if (map2) {
     onZoom: t => { window._zoomStatesAttract.map2 = t; }
   }), { exportSVGFn: exportSVG, echelon: isCommune ? "EPCI" : echelon, colKey: colKey2, title: indicLabel2 })
   const frVal2 = _mapFrData?.[colKey2]
-  const zeVal2 = (_mapDataRaw.find(d => d.code === zoomCode) || _mapDataForDelta.find(d => d.code === zoomCode))?.[colKey2]
+  const zeVal2 = (_rawMap.get(String(zoomCode)) || _deltaMap.get(String(zoomCode)))?.[colKey2]
   const valuesDiv2 = document.createElement("div")
   valuesDiv2.style.cssText = "font-size:11px;color:#555;padding:1px 0 0 4px;line-height:1.5;"
   let valHtml2 = ""

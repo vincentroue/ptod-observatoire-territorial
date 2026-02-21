@@ -486,8 +486,9 @@ const indicLabel = getIndicLabel(indic1, "long");
 const indicLabel2 = getIndicLabel(indic2, "long");
 
 // Joindre données aux géométries (les 2 colKeys)
+const dataMap = new Map(dataNoFrance.map(d => [String(d.code), d]));
 for (const f of currentGeo.features) {
-  const row = dataNoFrance.find(d => d.code === f.properties[meta.geoKey]);
+  const row = dataMap.get(String(f.properties[meta.geoKey]));
   if (row) {
     f.properties[colKey1] = row[colKey1];
     f.properties[colKey2] = row[colKey2];
@@ -562,7 +563,7 @@ _sbToggle.onclick = () => {
 
 // KPI Table compact — France + territoires sélectionnés (max 5)
 const kpiSelCodes = [...mapSelectionState].slice(0, 5);
-const kpiSelData = kpiSelCodes.map(c => dataNoFrance.find(d => d.code === c)).filter(Boolean);
+const kpiSelData = kpiSelCodes.map(c => dataMap.get(String(c))).filter(Boolean);
 const kpiData = [frData, ...kpiSelData].filter(Boolean).map(d => ({
   ...d, regshort: d.regdep ? d.regdep.split("/")[0] : ""
 }));
