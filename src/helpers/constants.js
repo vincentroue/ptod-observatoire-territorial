@@ -104,4 +104,25 @@ export const PAGE_SIZE_DEFAULT = 200;
 export const DENS_COLORS = { "1": "#e67e22", "2": "#f4c542", "3": "#27ae60" };
 export const DENS_LABELS = { "1": "Urbain dense", "2": "Urbain interméd.", "3": "Rural" };
 
+// Sections sidebar pour volet Fiche Territoire
+export const SIDEBAR_SECTIONS_DTERR = [
+  { id: 'region', title: 'Région', hint: 'Sélectionnez une région' },
+  { id: 'epci', title: 'EPCI', hint: 'Puis un EPCI' },
+  { id: 'commune', title: 'Commune', hint: null },
+  { id: 'options', title: 'Options', hint: null }
+];
+
+// Indicateurs pour le tableau fiche territoire, groupés par thème
+export const FICHE_INDICS = {
+  dm: ['dm_pop_vtcam', 'dm_sn_vtcam', 'dm_sma_vtcam'],
+  dmv: ['dmv_iv_ind', 'dmv_60p_pct', 'dmv_75p_pct'],
+  dmf: ['dmf_pe_pct', 'dmf_ps_pct', 'dmf_tr_pct'],
+  eco: ['eco_emp_vtcam', 'eco_txemp_1564', 'eco_emppriv_vtcam'],
+  soc: ['soc_txchom_1564', 'dsp_csp_cadres_pct', 'dsp_dipl_supbac2_pct'],
+  men: ['men_coupsenf_pct', 'men_mono_pct'],
+  log: ['log_prop_pct', 'log_vac_pct', 'log_ressec_pct'],
+  logd: ['logd_px2q2_mai', 'logd_px2_global_vevol_1924'],
+  rev: ['rev_med', 'rev_txpauv']
+};
+
 // &e

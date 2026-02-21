@@ -69,6 +69,10 @@ import {
   addScatterClickHandlers
 } from "./helpers/scatter.js";
 
+// Bar typo helpers (barres horizontales par grille typologique)
+import { renderBarTypo } from "./helpers/graph-bar-typo.js";
+import { renderArrowTypo } from "./helpers/graph-arrow-typo.js";
+
 // Tooltip helpers (centralized HTML tooltips)
 import { buildScatterTooltip } from "./helpers/tooltip.js";
 
@@ -165,12 +169,17 @@ function debounceInput(input, delay = 300) {
 // P2.5: Charge ZE + EPCI au démarrage pour détection complète des indicateurs
 // EPCI contient le plus de colonnes (logd_, dmf_) non présentes dans ZE
 
-console.time("[EXD] Data load ZE+EPCI");
-// ZE = échelon par défaut, EPCI = référence colonnes complète
-const dataZE = await FileAttachment("data/agg_ze.json").json();
-const dataEPCI = await FileAttachment("data/agg_epci.json").json();
-console.timeEnd("[EXD] Data load ZE+EPCI");
+console.time("[EXD] Data load ZE+EPCI+Grilles");
+// Chargement parallèle : ZE + EPCI + Grilles en même temps
+const [dataZE, dataEPCI, grillesData] = await Promise.all([
+  FileAttachment("data/agg_ze.json").json(),
+  FileAttachment("data/agg_epci.json").json(),
+  FileAttachment("data/agg_grilles.json").json()
+]);
+console.timeEnd("[EXD] Data load ZE+EPCI+Grilles");
 console.log(`[EXD] ZE: ${dataZE.length} territoires, EPCI: ${dataEPCI.length} territoires`);
+const grilleFrance = grillesData.find(d => d.grille === "france");
+console.log(`[EXD] Grilles: ${grillesData.length} lignes, France: ${grilleFrance ? "OK" : "ABSENT"}`);
 
 // Handles (références sans chargement immédiat pour les autres)
 const DATA_HANDLES = {
@@ -223,9 +232,9 @@ function extractIndicCols(sample) {
   }
 }
 
-// Union colonnes ZE + EPCI (scanner TOUTES les lignes car colonnes variables selon territoires)
-for (const row of dataZE) extractIndicCols(row);
-for (const row of dataEPCI) extractIndicCols(row);
+// Union colonnes ZE + EPCI (1 ligne suffit : JSON a les mêmes keys pour toutes les lignes)
+if (dataZE.length) extractIndicCols(dataZE[0]);
+if (dataEPCI.length) extractIndicCols(dataEPCI[0]);
 console.log(`[INDICS] ${AVAILABLE_INDICS.size} indicateurs, ${AVAILABLE_COLUMNS.size} colonnes disponibles (ZE+EPCI)`);
 
 // === HELPER PÉRIODES DYNAMIQUES (dépend de AVAILABLE_COLUMNS) ===
@@ -414,7 +423,7 @@ const CONFIG_ECHELON = {
 ```js
 const indicX_L = view(Inputs.select(
   getFilteredDropdownOptions(),
-  {value: "dm_pop_vtcam", label: ""}
+  {value: "dm_sma_vtcam", label: ""}
 ));
 ```
 
@@ -688,6 +697,31 @@ const tableIndicateurs = view(Inputs.select(
 </div>
 
 </div><!-- fin left-panel -->
+
+```js
+// &s SIDEBAR_TOGGLE — Bouton replier/déplier sidebar
+{
+  // Créer le toggle button
+  const toggle = document.createElement("div");
+  toggle.className = "sidebar-toggle";
+  toggle.title = "Afficher le menu de sélection indicateurs & échelons";
+  toggle.innerHTML = `<span class="toggle-chevron">«</span><span class="toggle-label">Menu & options</span>`;
+
+  // Insérer dans le body (position fixed, indépendant du flux)
+  document.body.appendChild(toggle);
+
+  // Default: replié
+  document.body.classList.add("sidebar-collapsed");
+  toggle.querySelector(".toggle-chevron").textContent = "»";
+
+  // Toggle click
+  toggle.addEventListener("click", () => {
+    const collapsed = document.body.classList.toggle("sidebar-collapsed");
+    toggle.querySelector(".toggle-chevron").textContent = collapsed ? "»" : "«";
+  });
+}
+// &e SIDEBAR_TOGGLE
+```
 
 <!-- CONTENU PRINCIPAL -->
 <div class="content-main">
@@ -1828,6 +1862,72 @@ setTimeout(() => {
   console.log("[Click-Select] Event delegation installée ✓");
 }, 100);  // Délai 100ms pour s'assurer que le DOM est rendu
 ```
+
+<!-- BARRES TYPOLOGIQUES — ventilation par grille -->
+<div class="cards-row">
+<div class="card">
+
+## ${indicXLabel_L} ${periodeLabel_XL} — par grille
+
+```js
+const grilleChoice = view(Inputs.select(
+  ["Périurbain (4)", "France Stratégie (5)", "Périurbain détail (8)", "Densité (3)", "Densité (7)"],
+  { value: "Périurbain (4)", label: "Grille" }
+));
+```
+
+```js
+const grilleKey = ({"Périurbain (4)":"typo4p","France Stratégie (5)":"typo5fs",
+  "Périurbain détail (8)":"typo8p","Densité (3)":"dens3","Densité (7)":"dens7"})[grilleChoice];
+const grilleRows = grillesData.filter(d => d.grille === grilleKey);
+
+display(renderBarTypo({
+  data: grilleRows,
+  indicCol: col1622,
+  franceValue: grilleFrance?.[col1622],
+  options: { width: 400 }
+}));
+```
+
+</div>
+<div class="card">
+
+## ${indicXLabel_R} ${periodeLabel_XR} — par grille
+
+```js
+display(renderBarTypo({
+  data: grilleRows,
+  indicCol: col1116,
+  franceValue: grilleFrance?.[col1116],
+  options: { width: 400 }
+}));
+```
+
+</div>
+</div>
+
+<!-- FLÈCHES DIRECTIONNELLES T1→T2 par grille -->
+<div class="cards-row">
+<div class="card" style="flex:1">
+
+## Direction T1→T2 — ${indicXLabel_L} par grille
+
+```js
+// Polarity depuis ddict (1=hausse bien, -1=hausse mal, 0=neutre)
+const polarityL = INDICATEURS[indicX_L]?.polarity ?? 0;
+display(renderArrowTypo({
+  data: grilleRows,
+  colT1: col1116,
+  colT2: col1622,
+  polarity: polarityL,
+  franceT1: grilleFrance?.[col1116],
+  franceT2: grilleFrance?.[col1622],
+  options: { width: 520, unit: indicXUnit_L }
+}));
+```
+
+</div>
+</div>
 
 <!-- TABLEAU -->
 <div class="card card-full">

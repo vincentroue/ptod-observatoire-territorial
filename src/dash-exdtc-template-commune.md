@@ -86,7 +86,7 @@ import {
 } from "./helpers/colors.js";
 
 // === legend.js — Légendes cartes ===
-import { createBinsLegend, createGradientLegend, createEcartFranceLegend, createBinsLegendBar } from "./helpers/legend.js";
+import { createGradientLegend, createEcartFranceLegend, createBinsLegendBar } from "./helpers/legend.js";
 
 // === maps.js — Cartes choroplèthes ===
 import {
@@ -459,8 +459,8 @@ const extraIndics = view(Inputs.select(
 {
   const toggle = document.createElement("div");
   toggle.className = "sidebar-toggle";
-  toggle.title = "Options et choix indicateurs & échelons";
-  toggle.innerHTML = `<span class="toggle-chevron">«</span><span class="toggle-label">Options indicateurs</span>`;
+  toggle.title = "Afficher le menu de sélection indicateurs & échelons";
+  toggle.innerHTML = `<span class="toggle-chevron">«</span><span class="toggle-label">Menu & options</span>`;
   document.body.appendChild(toggle);
   document.body.classList.add("sidebar-collapsed");
   toggle.querySelector(".toggle-chevron").textContent = "»";
@@ -475,7 +475,18 @@ const extraIndics = view(Inputs.select(
 <!-- &s LAYOUT_MAIN -->
 <div class="layout-main">
 
+<!-- Skeleton placeholders (remplacés par le contenu réel au chargement) -->
+<div id="skeleton-maps" style="display:flex;gap:8px;padding:8px;">
+<div class="skeleton skeleton-map" style="flex:1;"></div>
+<div class="skeleton skeleton-map" style="flex:1;"></div>
+</div>
+<div id="skeleton-table" class="skeleton skeleton-table" style="margin:8px;"></div>
+
 ```js
+// Retirer les skeletons dès que les données arrivent
+document.getElementById('skeleton-maps')?.remove();
+document.getElementById('skeleton-table')?.remove();
+
 // === DONNÉES ===
 const isCommune = echelon === "Commune";
 const meta = isCommune ? { geoKey: "CODGEO", labelKey: "libelle", filterKey: "DEP" } : getEchelonMeta(echelon);
@@ -614,7 +625,7 @@ const map1 = renderChoropleth({
   indicLabel: label1, selectedCodes: [...mapSelectionState],
   showLabels: showValuesOnMap, labelMode, labelBy, topN: isCommune ? 300 : 0,
   title: label1,
-  echelon, width: 385, height: 355, maxLabelsAuto: isCommune ? 100 : 600,
+  echelon, width: 405, height: 370, maxLabelsAuto: isCommune ? 100 : 600,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 const counts1 = countBins(dataNoFrance, colKey1, bins1.thresholds || []);
@@ -717,7 +728,7 @@ const map2 = renderChoropleth({
   indicLabel: label2, selectedCodes: [...mapSelectionState],
   showLabels: showValuesOnMap, labelMode, labelBy, topN: isCommune ? 300 : 0,
   title: label2,
-  echelon, width: 385, height: 355, maxLabelsAuto: isCommune ? 100 : 600,
+  echelon, width: 405, height: 370, maxLabelsAuto: isCommune ? 100 : 600,
   overlayGeo: showOverlay && echelon !== "Département" ? depGeo : null
 });
 const counts2 = countBins(dataNoFrance, colKey2, bins2.thresholds || []);
@@ -842,6 +853,13 @@ const ecartC2 = isEcart ? computeEcartFrance(zoomData, colKey2, ecart2.ref, { si
 
 const getColorC1 = isEcart ? ecartC1.getColor : isGradient ? gradientC1.getColor : zoomBins1.getColor;
 const getColorC2 = isEcart ? ecartC2.getColor : isGradient ? gradientC2.getColor : zoomBins2.getColor;
+
+// Valeur du territoire parent (échelon) pour marqueur légende zoom communes
+const _parentRow = dataNoFrance.find(d => d.code === zoomCode);
+const _parentVal1 = _parentRow?.[colKey1];
+const _parentVal2 = _parentRow?.[colKey2];
+// Label court pour le marqueur (ex: "EPCI", "ZE", "DEP")
+const _parentLabel = echelon?.substring(0, 4) || "";
 ```
 
 <div class="cards-row">
@@ -858,7 +876,7 @@ const mapC1 = renderChoropleth({
   indicLabel: label1, showLabels: showValuesOnMap,
   labelMode, labelBy, topN: 300,
   title: `${label1} — ${zoomLabel}`,  // Titre avec territoire
-  maxLabelsAuto: 100, echelon: "Commune", width: 385, height: 355
+  maxLabelsAuto: 100, echelon: "Commune", width: 405, height: 370
 });
 const countsC1 = countBins(zoomData, colKey1, binsC1.thresholds || []);
 const ecartCountsC1 = isEcart ? countBins(zoomData, colKey1, ecartC1.thresholds || []) : [];
@@ -868,6 +886,7 @@ const legendC1 = _isBinsC1 && binsC1.thresholds?.length > 0
       colors: zoomBins1.palette, labels: binsC1.labels || [], counts: countsC1,
       thresholds: binsC1.thresholds, unit: unit1 || "",
       franceValue: frData?.[colKey1], franceLabel: "Fr.",
+      echelonValue: _parentVal1, echelonLabel: _parentLabel,
       interactive: true, onFilter: _filterMap(mapC1, zoomGeo, colKey1, zoomBins1.getBinIdx, getColorC1)
     })
   : isEcart
@@ -910,7 +929,7 @@ const mapC2 = renderChoropleth({
   indicLabel: label2, showLabels: showValuesOnMap,
   labelMode, labelBy, topN: 300,
   title: `${label2} — ${zoomLabel}`,  // Titre avec territoire
-  maxLabelsAuto: 100, echelon: "Commune", width: 385, height: 355
+  maxLabelsAuto: 100, echelon: "Commune", width: 405, height: 370
 });
 const countsC2 = countBins(zoomData, colKey2, binsC2.thresholds || []);
 const ecartCountsC2 = isEcart ? countBins(zoomData, colKey2, ecartC2.thresholds || []) : [];
@@ -920,6 +939,7 @@ const legendC2 = _isBinsC2 && binsC2.thresholds?.length > 0
       colors: zoomBins2.palette, labels: binsC2.labels || [], counts: countsC2,
       thresholds: binsC2.thresholds, unit: unit2 || "",
       franceValue: frData?.[colKey2], franceLabel: "Fr.",
+      echelonValue: _parentVal2, echelonLabel: _parentLabel,
       interactive: true, onFilter: _filterMap(mapC2, zoomGeo, colKey2, zoomBins2.getBinIdx, getColorC2)
     })
   : isEcart

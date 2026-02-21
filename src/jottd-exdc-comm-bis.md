@@ -320,6 +320,24 @@ ${selInfo}
 </aside>
 <!-- &e  -->
 
+```js
+// &s SIDEBAR_TOGGLE
+{
+  const toggle = document.createElement("div");
+  toggle.className = "sidebar-toggle";
+  toggle.title = "Afficher le menu de sélection indicateurs & échelons";
+  toggle.innerHTML = `<span class="toggle-chevron">«</span><span class="toggle-label">Menu & options</span>`;
+  document.body.appendChild(toggle);
+  document.body.classList.add("sidebar-collapsed");
+  toggle.querySelector(".toggle-chevron").textContent = "»";
+  toggle.addEventListener("click", () => {
+    const collapsed = document.body.classList.toggle("sidebar-collapsed");
+    toggle.querySelector(".toggle-chevron").textContent = collapsed ? "»" : "«";
+  });
+}
+// &e SIDEBAR_TOGGLE
+```
+
 <!-- =======================================================
      &s LAYOUT_MAIN — Contenu principal
      ======================================================= -->

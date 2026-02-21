@@ -60,13 +60,13 @@ export const PAL_SEQ_ORANGE = [
  * Nom harmonisé avec jcn-setup.R : pal_seq7_byrv
  */
 export const PAL_SEQ7_BYRV = [
-  "#6baed6",  // Bleu moyen — < P5  (extrême bas, 5%)
+  "#89bed4",  // Bleu désaturé — < P5  (extrême bas, 5%)
   "#ffffb2",  // Jaune pâle — P5-P20
   "#fecc5c",  // Jaune doré — P20-P40
   "#fd8d3c",  // Orange — P40-P60
   "#fc4e2a",  // Rouge clair — P60-P80
   "#bd0026",  // Rouge foncé — P80-P95
-  "#7b2ff2"   // Violet — > P95  (extrême haut, 5%)
+  "#4a0010"   // Bordeaux très foncé — > P95  (extrême haut, 5%)
 ];
 
 /**
@@ -75,16 +75,31 @@ export const PAL_SEQ7_BYRV = [
  * Nom harmonisé avec jcn-setup.R : pal_seq6_byrv
  */
 export const PAL_SEQ6_BYRV = [
-  "#6baed6",  // Bleu moyen — < P5
+  "#89bed4",  // Bleu désaturé — < P5
   "#ffffb2",  // Jaune pâle — P5-P25
   "#fecc5c",  // Jaune doré — P25-P50
   "#fd8d3c",  // Orange — P50-P75
   "#e31a1c",  // Rouge — P75-P95
-  "#7b2ff2"   // Violet — > P95
+  "#4a0010"   // Bordeaux très foncé — > P95
 ];
 
 // Alias rétro-compatible
 export const PAL_SEQ_PRIX = PAL_SEQ7_BYRV;
+
+/**
+ * PAL_SEQ7_BEIGE — Option B : beige→noir, 7 classes
+ * Bins asymétriques : P5/P20/P40/P60/P80/P95
+ * Teintes chaudes, valeurs basses claires → valeurs hautes quasi-noires
+ */
+export const PAL_SEQ7_BEIGE = [
+  "#d4c9af",  // Beige — < P5  (extrême bas)
+  "#ffffb2",  // Jaune pâle — P5-P20
+  "#fecc5c",  // Jaune doré — P20-P40
+  "#fd8d3c",  // Orange — P40-P60
+  "#fc4e2a",  // Rouge clair — P60-P80
+  "#bd0026",  // Rouge foncé — P80-P95
+  "#4a0010"   // Bordeaux quasi-noir — > P95  (extrême haut)
+];
 
 /**
  * Palette séquentielle bleue ColorBrewer pour mode gradient (plus contrastée)

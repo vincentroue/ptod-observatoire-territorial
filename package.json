@@ -5,9 +5,12 @@
   "scripts": {
     "dev": "observable preview",
     "build": "observable build",
-    "deploy": "observable deploy"
+    "deploy": "observable deploy",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
-    "@observablehq/framework": "^1.13.3"
+    "@observablehq/framework": "^1.13.3",
+    "vitest": "^4.0.18"
   }
 }

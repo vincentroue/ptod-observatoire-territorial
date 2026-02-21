@@ -412,6 +412,8 @@ export function createBinsLegendBar(config) {
     unit = "",
     franceValue = null,
     franceLabel = "France",
+    echelonValue = null,
+    echelonLabel = "",
     interactive = false,
     onFilter = null
   } = config;
@@ -419,11 +421,11 @@ export function createBinsLegendBar(config) {
   const n = colors.length;
   if (n === 0) return document.createElement("div");
 
-  const boxW = 28;
+  const boxW = 22;
   const boxH = 6;
-  const gapN = 2;     // Gap normal entre bins
-  const gapX = 5;     // Gap élargi autour des extrêmes (1er et dernier)
-  const unitW = unit ? 42 : 0;
+  const gapN = 1;     // Gap normal entre bins
+  const gapX = 3;     // Gap élargi autour des extrêmes (1er et dernier)
+  const unitW = unit ? 36 : 0;
 
   // Pré-calcul positions boxes avec gaps variables
   const bp = [];  // {l, r, c} pour chaque box
@@ -435,66 +437,83 @@ export function createBinsLegendBar(config) {
   }
   const barW = cx;
 
-  // Formatage seuils
+  // Formatage seuils : 0 dec si ≥10, 1 dec sinon (TCAM inclus)
   const fmt = (v) => {
     if (v == null) return "";
     const a = Math.abs(v);
     if (a >= 10) return Math.round(v).toLocaleString("fr-FR");
-    if (a >= 1) return v.toFixed(1);
-    return v.toFixed(2);
+    return v.toFixed(1);
   };
 
   const wrapper = document.createElement("div");
   wrapper.className = "legend-bar-h";
   wrapper.style.cssText = "position:relative;font-family:Inter,system-ui,sans-serif;display:inline-block;";
 
-  // ─── ROW 1: France ▼ ───
-  if (franceValue != null && thresholds.length > 0) {
-    const row = document.createElement("div");
-    row.style.cssText = `position:relative;height:20px;margin-left:${unitW}px;width:${barW}px;`;
-
-    // Position France dans le bon bin interpolé
-    let fBin = thresholds.findIndex(t => franceValue < t);
-    if (fBin === -1) fBin = n - 1;
-    let frPx;
-    if (fBin === 0) { frPx = bp[0].c; }
-    else if (fBin >= n - 1) { frPx = bp[n - 1].c; }
+  // ─── ROW 1: Marqueurs ▼ (France + échelon optionnel) ───
+  // Helper : calcul position px d'une valeur dans les bins
+  const _valToPx = (val) => {
+    if (val == null || thresholds.length === 0) return null;
+    let b = thresholds.findIndex(t => val < t);
+    if (b === -1) b = n - 1;
+    let px;
+    if (b === 0) { px = bp[0].c; }
+    else if (b >= n - 1) { px = bp[n - 1].c; }
     else {
-      const tL = thresholds[fBin - 1], tH = thresholds[fBin];
-      const r = (tH !== tL) ? (franceValue - tL) / (tH - tL) : 0.5;
-      frPx = bp[fBin].l + r * boxW;
+      const tL = thresholds[b - 1], tH = thresholds[b];
+      const r = (tH !== tL) ? (val - tL) / (tH - tL) : 0.5;
+      px = bp[b].l + r * boxW;
     }
-    frPx = Math.max(8, Math.min(barW - 8, frPx));
+    return Math.max(8, Math.min(barW - 8, px));
+  };
 
-    const mk = document.createElement("div");
-    mk.style.cssText = `position:absolute;left:${frPx}px;transform:translateX(-50%);bottom:0;text-align:center;line-height:1;`;
-    mk.innerHTML = `<span style="font-size:9px;color:#1696d2;font-weight:700;white-space:nowrap;">${franceLabel} ${fmt(franceValue)}</span><br><span style="font-size:10px;color:#1696d2;line-height:0.8;">▼</span>`;
-    row.appendChild(mk);
+  const hasMarkers = (franceValue != null || echelonValue != null) && thresholds.length > 0;
+  if (hasMarkers) {
+    const row = document.createElement("div");
+    row.style.cssText = `position:relative;height:16px;margin-left:${unitW}px;width:${barW}px;`;
+
+    // Marqueur France
+    if (franceValue != null) {
+      const frPx = _valToPx(franceValue);
+      const mk = document.createElement("div");
+      mk.style.cssText = `position:absolute;left:${frPx}px;transform:translateX(-50%);bottom:0;text-align:center;line-height:1;background:rgba(255,255,255,0.85);border-radius:3px;padding:1px 3px 0;`;
+      mk.innerHTML = `<span style="font-size:8.5px;color:#1696d2;font-weight:700;white-space:nowrap;">${franceLabel} ${fmt(franceValue)}</span><br><span style="font-size:8px;color:#1696d2;line-height:0.8;">▼</span>`;
+      row.appendChild(mk);
+    }
+
+    // Marqueur échelon parent (si fourni)
+    if (echelonValue != null && echelonLabel) {
+      const ePx = _valToPx(echelonValue);
+      const mk2 = document.createElement("div");
+      mk2.style.cssText = `position:absolute;left:${ePx}px;transform:translateX(-50%);bottom:0;text-align:center;line-height:1;background:rgba(255,255,255,0.85);border-radius:3px;padding:1px 3px 0;`;
+      mk2.innerHTML = `<span style="font-size:8.5px;color:#ca5800;font-weight:700;white-space:nowrap;">${echelonLabel} ${fmt(echelonValue)}</span><br><span style="font-size:8px;color:#ca5800;line-height:0.8;">▼</span>`;
+      row.appendChild(mk2);
+    }
+
     wrapper.appendChild(row);
   }
 
   // ─── ROW 2: Seuils au-dessus de la barre ───
   if (thresholds.length > 0) {
     const row = document.createElement("div");
-    row.style.cssText = `position:relative;height:13px;margin-left:${unitW}px;width:${barW}px;`;
+    row.style.cssText = `position:relative;height:11px;margin-left:${unitW}px;width:${barW}px;`;
     thresholds.forEach((t, i) => {
       if (i >= n - 1) return;
       const px = (bp[i].r + bp[i + 1].l) / 2;
       const el = document.createElement("span");
-      el.style.cssText = `position:absolute;left:${px}px;transform:translateX(-50%);font-size:9px;color:#6b7280;white-space:nowrap;`;
+      el.style.cssText = `position:absolute;left:${px}px;transform:translateX(-50%);font-size:8px;color:#6b7280;white-space:nowrap;`;
       el.textContent = fmt(t);
       row.appendChild(el);
     });
     wrapper.appendChild(row);
   }
 
-  // ─── ROW 3: Unité + Boxes aplaties ───
+  // ─── ROW 3: Unité + Boxes aplaties avec liseret ───
   const barRow = document.createElement("div");
   barRow.style.cssText = "display:flex;align-items:center;";
 
   if (unit) {
     const uEl = document.createElement("span");
-    uEl.style.cssText = `font-size:10px;font-weight:600;color:#555;width:${unitW}px;text-align:right;padding-right:4px;white-space:nowrap;`;
+    uEl.style.cssText = `font-size:8.5px;font-weight:600;color:#555;width:${unitW}px;text-align:right;padding-right:3px;white-space:nowrap;`;
     uEl.textContent = unit;
     barRow.appendChild(uEl);
   }
@@ -505,21 +524,37 @@ export function createBinsLegendBar(config) {
   const boxEls = [];
   colors.forEach((c, i) => {
     const box = document.createElement("div");
-    box.style.cssText = `position:absolute;left:${bp[i].l}px;width:${boxW}px;height:${boxH}px;background:${c};border:1px solid rgba(0,0,0,0.1);box-sizing:border-box;transition:opacity 0.12s;${interactive ? 'cursor:pointer;' : ''}`;
+    box.style.cssText = `position:absolute;left:${bp[i].l}px;width:${boxW}px;height:${boxH}px;background:${c};border:0.5px solid rgba(0,0,0,0.2);box-sizing:border-box;transition:opacity 0.12s;${interactive ? 'cursor:pointer;' : ''}`;
     boxEls.push(box);
     boxC.appendChild(box);
   });
   barRow.appendChild(boxC);
+
+  // Hint interaction à droite de la barre (même ligne) — tooltip hover CSS
+  if (interactive) {
+    const tip = document.createElement("span");
+    tip.className = "tip-icon";
+    tip.style.cssText = "margin-left:5px;font-size:9px;color:#9ca3af;cursor:help;position:relative;";
+    tip.textContent = "ⓘ";
+    tip.innerHTML = `ⓘ<span class="tip-content" style="width:140px;left:-60px;bottom:16px;">
+      <b>Filtrer la carte</b><br>
+      Click = isoler un bin<br>
+      Ctrl+click = ajouter/retirer<br>
+      <span style="font-style:italic;color:#9ca3af;">Extrêmes = P5 et P95</span>
+    </span>`;
+    barRow.appendChild(tip);
+  }
+
   wrapper.appendChild(barRow);
 
   // ─── ROW 4: Comptages (n) en dessous ───
   const cntEls = [];
   if (counts.length > 0) {
     const row = document.createElement("div");
-    row.style.cssText = `position:relative;height:13px;margin-left:${unitW}px;width:${barW}px;`;
+    row.style.cssText = `position:relative;height:11px;margin-left:${unitW}px;width:${barW}px;`;
     counts.forEach((c, i) => {
       const el = document.createElement("span");
-      el.style.cssText = `position:absolute;left:${bp[i].c}px;transform:translateX(-50%);font-size:9px;color:#9ca3af;white-space:nowrap;transition:opacity 0.12s;`;
+      el.style.cssText = `position:absolute;left:${bp[i].c}px;transform:translateX(-50%);font-size:8px;color:#9ca3af;white-space:nowrap;transition:opacity 0.12s;`;
       el.textContent = c > 0 ? `(${c})` : "";
       cntEls.push(el);
       row.appendChild(el);

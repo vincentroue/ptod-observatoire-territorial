@@ -3,7 +3,7 @@
 // AUTO-GÉNÉRÉ depuis config/ddict_indicateurs_ottd.json + CSV volets (v_*)
 // NE PAS MODIFIER - Relancer: Rscript scripts/util-gen-indicators-js.R
 // Volets: source CSV ddict-validation-light_ottd.csv (colonnes v_*)
-// Généré: 2026-02-13 10:55:59.083745
+// Généré: 2026-02-20 17:56:32.040138
 // =======================================================================
 
 import * as d3 from "npm:d3";
@@ -258,7 +258,7 @@ const DDICT = {
       "eda": true,
       "priority": 1,
       "polarity": 1,
-      "symbol": "",
+      "symbol": "◆",
       "definition": "Indice composite d’attractivité résidentielle : solde migratoire, rotation, profils cadres et 65+. Normalisé en z-score.",
       "agg_dash": true,
       "agg_ecodash": false,
@@ -273,8 +273,8 @@ const DDICT = {
       "theme": "idx",
       "ordre": 2,
       "periodes": [
-        "1117",
-        "1724"
+        "11_16",
+        "16_22"
       ],
       "source": "Calcul PTOD",
       "formula": "50 + mean(z_composantes) × 15, borné [0-100]",
@@ -304,8 +304,8 @@ const DDICT = {
       "theme": "idx",
       "ordre": 3,
       "periodes": [
-        "1117",
-        "1724"
+        "11_16",
+        "16_22"
       ],
       "source": "Calcul PTOD",
       "formula": "50 + mean(z_composantes) × 15, borné [0-100]",
@@ -339,7 +339,8 @@ const DDICT = {
       "formula": "50 + mean(z_cappé±3) × 15, borné [0-100]",
       "note": "Croise l’évolution des prix, l’arrivée de cadres et le départ de populations modestes. Valeur 0 = moyenne nationale. Valeur élevée = dynamique de gentrification marquée. Valeur supérieure à {percentile}% des territoires.",
       "periodes": [
-        "11_22"
+        "11_16",
+        "16_22"
       ],
       "srcVar": [
         "dsp_csp_cadres_pct_22",
@@ -358,7 +359,7 @@ const DDICT = {
       "eda": true,
       "priority": 2,
       "polarity": 0,
-      "symbol": "",
+      "symbol": "◆",
       "definition": "Indice composite de gentrification : évolution prix immobiliers, profils socio-économiques et flux migratoires.",
       "agg_dash": true,
       "agg_ecodash": false,
@@ -389,7 +390,7 @@ const DDICT = {
       "eda": true,
       "priority": 2,
       "polarity": -1,
-      "symbol": "",
+      "symbol": "◆",
       "definition": "Indice composite de tension du logement : prix, vacance, construction et loyers.",
       "agg_dash": true,
       "agg_ecodash": false,
@@ -400,7 +401,7 @@ const DDICT = {
       "rawObsvACT": "tcam_pop",
       "short": "△ Pop",
       "medium": "△ Évolution de la population",
-      "long": "Taux de croissance annuel moyen de la population totale",
+      "long": "Évolution de la population (%/an)",
       "type": "vtcam",
       "unit": "%/an",
       "theme": "dm",
@@ -433,8 +434,8 @@ const DDICT = {
     "dm_sn_vtcam": {
       "rawObsvACT": "tcam_sn",
       "short": "△ Solde naturel",
-      "medium": "△ Contribution du solde naturel",
-      "long": "Contribution du solde naturel à l'évolution démographique",
+      "medium": "△ Variation pop. liée au solde naturel (naiss. − décès)",
+      "long": "Variation population liée au solde naturel (naissances − décès)",
       "type": "vtcam",
       "unit": "%/an",
       "theme": "dm",
@@ -496,8 +497,8 @@ const DDICT = {
     "dm_sma_vtcam": {
       "rawObsvACT": "tcam_sma",
       "short": "△ Solde migr.",
-      "medium": "△ Contribution du solde migratoire",
-      "long": "Contribution du solde migratoire apparent (résidu)",
+      "medium": "△ Variation pop. liée aux migrations (arrivées − départs)",
+      "long": "Variation population liée aux migrations (arrivées − départs)",
       "type": "vtcam",
       "unit": "%/an",
       "theme": "dm",
@@ -1540,7 +1541,7 @@ const DDICT = {
       "eda": false,
       "priority": 3,
       "polarity": 1,
-      "symbol": "",
+      "symbol": "◆",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1570,7 +1571,7 @@ const DDICT = {
       "eda": true,
       "priority": 3,
       "polarity": 1,
-      "symbol": "",
+      "symbol": "◆",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1599,7 +1600,7 @@ const DDICT = {
       "eda": false,
       "priority": 3,
       "polarity": 1,
-      "symbol": "",
+      "symbol": "◆",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1616,7 +1617,8 @@ const DDICT = {
       "source": "Calcul PTOD",
       "formula": "mean(pct_rank(composantes)) × 100",
       "periodes": [
-        "11_22"
+        "11_16",
+        "16_22"
       ],
       "srcVar": [
         "dsp_csp_cadres_pct_22",
@@ -1635,7 +1637,7 @@ const DDICT = {
       "eda": false,
       "priority": 3,
       "polarity": 0,
-      "symbol": "",
+      "symbol": "◆",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -1664,7 +1666,7 @@ const DDICT = {
       "eda": false,
       "priority": 3,
       "polarity": -1,
-      "symbol": "",
+      "symbol": "◆",
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
@@ -3839,13 +3841,13 @@ const DDICT = {
         "19_24",
         "22_24"
       ],
-      "volets": [
-        "exd",
-        "exdc"
-      ],
+      "volets": [],
       "priority": 3,
       "polarity": 0,
-      "symbol": "△"
+      "symbol": "△",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logd_px2_mai_vevol": {
       "short": "△ Prix maisons",
@@ -3862,15 +3864,15 @@ const DDICT = {
         "19_24",
         "22_24"
       ],
-      "volets": [
-        "exd",
-        "exdc"
-      ],
+      "volets": [],
       "priority": 2,
       "polarity": 0,
       "symbol": "△",
       "definition": "Évolution du prix médian au m² des maisons entre deux périodes (source DVF).",
-      "note": "Dynamique des prix des maisons. Positif = marché en hausse. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value})."
+      "note": "Dynamique des prix des maisons. Positif = marché en hausse. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logd_px2_appt_vevol": {
       "short": "△ Prix apparts",
@@ -3887,15 +3889,15 @@ const DDICT = {
         "19_24",
         "22_24"
       ],
-      "volets": [
-        "exd",
-        "exdc"
-      ],
+      "volets": [],
       "priority": 2,
       "polarity": 0,
       "symbol": "△",
       "definition": "Évolution du prix médian au m² des appartements entre deux périodes (source DVF).",
-      "note": "Dynamique des prix des appartements. Positif = marché en hausse. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value})."
+      "note": "Dynamique des prix des appartements. Positif = marché en hausse. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logd_px2_mai_ecfr": {
       "short": "▲ Prix maisons FR",
@@ -3911,14 +3913,13 @@ const DDICT = {
       "periodes": [
         "24"
       ],
-      "volets": [
-        "exd",
-        "exdc",
-        "exdlog"
-      ],
+      "volets": [],
       "priority": 3,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logd_px2_appt_ecfr": {
       "short": "▲ Prix apparts FR",
@@ -3934,14 +3935,13 @@ const DDICT = {
       "periodes": [
         "24"
       ],
-      "volets": [
-        "exd",
-        "exdc",
-        "exdlog"
-      ],
+      "volets": [],
       "priority": 3,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "&comment_rev": "══════════ REVENUS / PAUVRETÉ - Filosofi (rev) ══════════",
     "rev_med": {
@@ -4896,7 +4896,7 @@ const DDICT = {
       "agg_logdash": false
     },
     "men_tot_stock_vtcam": {
-      "short": "▲ Ménages",
+      "short": "△ Ménages",
       "medium": "Évolution du nombre de ménages",
       "long": "Taux croissance annuel moyen nombre menages",
       "type": "tcam",
@@ -4911,7 +4911,7 @@ const DDICT = {
       ],
       "priority": 3,
       "polarity": 0,
-      "symbol": "",
+      "symbol": "△",
       "volets": [],
       "agg_dash": false,
       "agg_ecodash": false,
@@ -5127,7 +5127,7 @@ const DDICT = {
       "agg_logdash": false
     },
     "logsr_resbatcom_vevol": {
-      "short": "Évol. logements commencés",
+      "short": "△ Logts commencés",
       "medium": "△ Évolution logements résid. commencés (TCAM moy. mobile)",
       "long": "TCAM des logements résidentiels commencés basé sur moyennes mobiles 3 ans",
       "type": "vevol",
@@ -5174,7 +5174,7 @@ const DDICT = {
       "agg_logdash": false
     },
     "logsr_resm2com_vevol": {
-      "short": "Évol. surface résid.",
+      "short": "△ Surf. résid.",
       "medium": "△ Évolution surface résidentielle commencée (TCAM moy. mobile)",
       "long": "TCAM de la surface résidentielle commencée basé sur moyennes mobiles 3 ans",
       "type": "vevol",
@@ -5223,7 +5223,7 @@ const DDICT = {
       "agg_logdash": false
     },
     "logsn_nresm2com_vevol": {
-      "short": "Évol. surface locaux",
+      "short": "△ Surf. locaux",
       "medium": "△ Évolution surface non résid. commencée (TCAM moy. mobile)",
       "long": "TCAM de la surface des locaux non résidentiels commencés basé sur moyennes mobiles 3 ans",
       "type": "vevol",
@@ -5265,7 +5265,11 @@ const DDICT = {
       "srcVarOpt": "loyer_app_m2",
       "priority": 5,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logl_app12_m2": {
       "label": "Loyer T1-T2 €/m²",
@@ -5285,7 +5289,11 @@ const DDICT = {
       "srcVarOpt": "loyer_app12_m2",
       "priority": 5,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logl_app3_m2": {
       "label": "Loyer T3+ €/m²",
@@ -5305,7 +5313,11 @@ const DDICT = {
       "srcVarOpt": "loyer_app3_m2",
       "priority": 5,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logl_mai_m2": {
       "label": "Loyer maison €/m²",
@@ -5325,7 +5337,11 @@ const DDICT = {
       "srcVarOpt": "loyer_mai_m2",
       "priority": 5,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logl_app_evol": {
       "label": "Évol loyer appart",
@@ -5343,7 +5359,11 @@ const DDICT = {
       "long": "Evolution loyer moyen appartement 2022-2025 (ANIL)",
       "priority": 5,
       "polarity": 0,
-      "symbol": "△"
+      "symbol": "△",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logl_app12_evol": {
       "label": "Évol loyer T1-T2",
@@ -5361,7 +5381,11 @@ const DDICT = {
       "long": "Evolution loyer appart 1-2 pièces 2022-2025 (ANIL)",
       "priority": 5,
       "polarity": 0,
-      "symbol": "△"
+      "symbol": "△",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logl_app3_evol": {
       "label": "Évol loyer T3+",
@@ -5379,7 +5403,11 @@ const DDICT = {
       "long": "Evolution loyer appart 3+ pièces 2022-2025 (ANIL)",
       "priority": 5,
       "polarity": 0,
-      "symbol": "△"
+      "symbol": "△",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logl_mai_evol": {
       "label": "Évol loyer maison",
@@ -5397,7 +5425,11 @@ const DDICT = {
       "long": "Evolution loyer moyen maison 2022-2025 (ANIL)",
       "priority": 5,
       "polarity": 0,
-      "symbol": "△"
+      "symbol": "△",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logl_app_ecart_fr": {
       "label": "Écart loyer/France",
@@ -5482,7 +5514,11 @@ const DDICT = {
       "srcVarOpt": "nb_logaut",
       "priority": 5,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logs_logcom_vol": {
       "label": "Logements commencés",
@@ -5502,7 +5538,11 @@ const DDICT = {
       "srcVarOpt": "nb_logcom",
       "priority": 5,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logs_sdpaut_vol": {
       "label": "Surface autorisée",
@@ -5521,7 +5561,11 @@ const DDICT = {
       "long": "Surface de plancher autorisée (SITADEL)",
       "priority": 5,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logs_sdpcom_vol": {
       "label": "Surface commencée",
@@ -5540,7 +5584,11 @@ const DDICT = {
       "long": "Surface de plancher commencée (SITADEL)",
       "priority": 5,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logs_logaut_tx1000": {
       "label": "Taux construction autorisée",
@@ -5558,7 +5606,11 @@ const DDICT = {
       "long": "Logements autorisés pour 1000 habitants (SITADEL)",
       "priority": 5,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logs_logcom_tx1000": {
       "label": "Taux construction commencée",
@@ -5576,7 +5628,11 @@ const DDICT = {
       "long": "Logements commencés pour 1000 habitants (SITADEL)",
       "priority": 5,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logv_parc_vol": {
       "label": "Parc logements",
@@ -5594,7 +5650,11 @@ const DDICT = {
       "long": "Nombre de logements du parc privé (LOVAC)",
       "priority": 4,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logv_vacant_vol": {
       "label": "Logements vacants",
@@ -5612,7 +5672,11 @@ const DDICT = {
       "long": "Nombre de logements vacants du parc privé (LOVAC)",
       "priority": 4,
       "polarity": -1,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logv_vac2ans_vol": {
       "label": "Vacance >2 ans",
@@ -5630,7 +5694,11 @@ const DDICT = {
       "long": "Logements vacants depuis plus de 2 ans (LOVAC)",
       "priority": 4,
       "polarity": -1,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logv_vac2ans_vevol": {
       "label": "Évol vacance >2 ans",
@@ -5648,7 +5716,11 @@ const DDICT = {
       "long": "Evolution volume vacance >2 ans 2020-2024 (LOVAC)",
       "priority": 4,
       "polarity": -1,
-      "symbol": "△"
+      "symbol": "△",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logs_logaut_vtcam": {
       "rawObsvACT": "logaut_vtcam",
@@ -5666,7 +5738,11 @@ const DDICT = {
       "source": "SITADEL",
       "priority": 5,
       "polarity": 0,
-      "symbol": "△"
+      "symbol": "△",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logs_logcom_vtcam": {
       "rawObsvACT": "logcom_vtcam",
@@ -5684,7 +5760,11 @@ const DDICT = {
       "source": "SITADEL",
       "priority": 5,
       "polarity": 0,
-      "symbol": "△"
+      "symbol": "△",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logd_px2_global": {
       "type": "vol",
@@ -5694,12 +5774,16 @@ const DDICT = {
       ],
       "short": "Prix m² global",
       "medium": "Prix médian au m² tous biens",
-      "long": "Prix moyen au m² pondéré maisons+apparts par volume transactions (DVF)",
+      "long": "Prix m² moyen pondéré (appart & maisons)",
       "source": "DVF",
       "theme": "logd",
       "priority": 3,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logd_px2_global_vevol": {
       "type": "vevol",
@@ -5711,12 +5795,16 @@ const DDICT = {
       ],
       "short": "△ Prix global",
       "medium": "△ Évolution du prix global au m²",
-      "long": "Evolution prix moyen pondéré maisons+apparts (DVF)",
+      "long": "Évolution prix m² moyen pondéré (appart & maisons, DVF)",
       "source": "DVF",
       "theme": "logd",
       "priority": 3,
       "polarity": 0,
-      "symbol": "△"
+      "symbol": "△",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "logd_px2_global_ecfr": {
       "type": "ecfr",
@@ -5731,7 +5819,170 @@ const DDICT = {
       "theme": "logd",
       "priority": 3,
       "polarity": 0,
-      "symbol": ""
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "dmf_tmob_pct": {
+      "short": "Tx mobilité",
+      "medium": "Taux de mobilité résidentielle",
+      "long": "Part de la population ayant changé de commune de résidence",
+      "type": "pct",
+      "unit": "%",
+      "theme": "dmf",
+      "ordre": 15,
+      "source": "INSEE RP (MIGCOM)",
+      "periodes": [
+        "16",
+        "22"
+      ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Pourcentage de la population ayant changé de commune de résidence entre deux recensements.",
+      "note": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "idxattr_glb_ind": {
+      "short": "◆ Attract. globale",
+      "medium": "Indice attractivité globale",
+      "long": "Indice composite attractivité globale (résidentiel + économique)",
+      "type": "ind",
+      "unit": "indice",
+      "theme": "idx",
+      "ordre": 6,
+      "source": "Calcul PTOD",
+      "formula": "Combinaison pondérée idx_resid + idx_eco",
+      "periodes": [
+        "11_16",
+        "16_23"
+      ],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Indice composite combinant attractivité résidentielle et économique.",
+      "note": "Score 50 = moyenne nationale.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "idxeco_soc_pct": {
+      "short": "◆ Attract. éco.(s)%",
+      "medium": "Attractivité économique sociale (percentile)",
+      "long": "Indice attractivité éco (social) - méthode percentile",
+      "type": "ind",
+      "unit": "indice",
+      "theme": "idx",
+      "ordre": 2.5,
+      "source": "Calcul PTOD",
+      "formula": "mean(pct_rank(composantes)) × 100",
+      "periodes": [
+        "11_16",
+        "16_22"
+      ],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Version percentile de l'indice d'attractivité économique (variante sociale).",
+      "note": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "idxeco_tot_pct": {
+      "short": "◆ Attract. éco.(t)%",
+      "medium": "Attractivité économique totale (percentile)",
+      "long": "Indice attractivité éco (total) - méthode percentile",
+      "type": "ind",
+      "unit": "indice",
+      "theme": "idx",
+      "ordre": 3.5,
+      "source": "Calcul PTOD",
+      "formula": "mean(pct_rank(composantes)) × 100",
+      "periodes": [
+        "11_16",
+        "16_22"
+      ],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Version percentile de l'indice d'attractivité économique (variante totale).",
+      "note": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "idxresid_prix_ind": {
+      "short": "◆ Attract. résid.+prix",
+      "medium": "Attractivité résidentielle avec prix",
+      "long": "Indice attractivité résidentielle intégrant les prix immobiliers",
+      "type": "ind",
+      "unit": "indice",
+      "theme": "idx",
+      "ordre": 1.5,
+      "source": "Calcul PTOD",
+      "formula": "50 + mean(z_composantes) × 15, borné [0-100]",
+      "periodes": [
+        "11_16",
+        "16_23"
+      ],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Variante de l'indice résidentiel incluant les prix immobiliers DVF.",
+      "note": "Couverture DVF incomplète sur certains territoires.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "idxresid_prix_pct": {
+      "short": "◆ Attract. résid.+prix%",
+      "medium": "Attractivité résidentielle avec prix (percentile)",
+      "long": "Indice attractivité résidentielle avec prix - méthode percentile",
+      "type": "ind",
+      "unit": "indice",
+      "theme": "idx",
+      "ordre": 1.6,
+      "source": "Calcul PTOD",
+      "formula": "mean(pct_rank(composantes)) × 100",
+      "periodes": [
+        "11_16",
+        "16_23"
+      ],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Version percentile de l'indice résidentiel avec prix.",
+      "note": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "idx_attractivite": {
+      "short": "◆ Attractivité (legacy)",
+      "medium": "Indice attractivité (ancienne version)",
+      "long": "Ancien indice composite - remplacé par idxresid/idxeco",
+      "type": "ind",
+      "unit": "indice",
+      "theme": "idx",
+      "ordre": 99,
+      "source": "Calcul PTOD (déprécié)",
+      "periodes": [],
+      "priority": 5,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Ancien indice composite déprécié. Remplacé par idxresid_dyn_ind et idxeco_dyn_ind.",
+      "note": "Colonne sans suffixe période. Conservé pour compatibilité."
     }
   },
   "mapping_observable_to_new": {

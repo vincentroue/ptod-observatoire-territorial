@@ -91,7 +91,7 @@ initDuckDBBackground();
 ```js
 const ZE_DATA = FileAttachment("data/agg_ze.json");
 const ZE_TOPO = FileAttachment("data/nodom_zones-emploi_2025.topojson");
-const URSSAF_SERIE = FileAttachment("data/urssaf_serie_indice100.json");
+const URSSAF_SERIE_PQ = FileAttachment("data/urssaf_serie_indice100.parquet");
 // Pivots sectoriels Parquet
 const FLORES_PIVOT_A21 = FileAttachment("data/exdeco_pivot_flores_a21.parquet");
 const FLORES_PIVOT_A5 = FileAttachment("data/exdeco_pivot_flores_a5.parquet");
@@ -113,31 +113,55 @@ const COMMUNES_PARQUET = FileAttachment("data/agg_commARM.parquet");
 
 <!-- &s INIT -->
 ```js
-const zeData = await ZE_DATA.json();
-const zeTopo = await ZE_TOPO.json();
+// Chargement parallèle : données essentielles (communes topo chargé lazy au drill-down)
+const [zeData, zeTopo,
+  floresA21, floresA5, floresA38, floresFr,
+  urssafA21, urssafA5, urssafA38, urssafFr,
+  eae205FranceSerie, eae205FranceSlope, eae205ZeSerie,
+  duckRes] = await Promise.all([
+  ZE_DATA.json(),
+  ZE_TOPO.json(),
+  // Pivots sectoriels (Parquet → Arrow → Array)
+  FLORES_PIVOT_A21.parquet(),
+  FLORES_PIVOT_A5.parquet(),
+  FLORES_PIVOT_A38.parquet(),
+  FLORES_FRANCE.parquet(),
+  URSSAF_PIVOT_A21.parquet(),
+  URSSAF_PIVOT_A5.parquet(),
+  URSSAF_PIVOT_A38.parquet(),
+  URSSAF_FRANCE.parquet(),
+  // INSEE Estimations emploi (série longue)
+  EAE205_FRANCE_SERIE.json(),
+  EAE205_FRANCE_SLOPE.json(),
+  EAE205_ZE_SERIE.json(),
+  // DuckDB (+ enregistrement parquets)
+  (async () => {
+    const { db, conn } = await initDuckDB();
+    await Promise.all([
+      registerParquet(db, "communes", await COMMUNES_PARQUET.url()),
+      registerParquet(db, "urssaf_serie", await URSSAF_SERIE_PQ.url())
+    ]);
+    return { db, conn };
+  })()
+]);
 const zeGeo = rewind(topojson.feature(zeTopo, zeTopo.objects.data), true);
-const urssafSerie = await URSSAF_SERIE.json();
+const { db: duckDb, conn } = duckRes;
 
-// Pivots sectoriels (Parquet → Arrow → Array)
-const floresA21 = await FLORES_PIVOT_A21.parquet();
-const floresA5 = await FLORES_PIVOT_A5.parquet();
-const floresA38 = await FLORES_PIVOT_A38.parquet();
-const floresFr = await FLORES_FRANCE.parquet();
-const urssafA21 = await URSSAF_PIVOT_A21.parquet();
-const urssafA5 = await URSSAF_PIVOT_A5.parquet();
-const urssafA38 = await URSSAF_PIVOT_A38.parquet();
-const urssafFr = await URSSAF_FRANCE.parquet();
+// Communes topo : lazy load (8.5 MB déféré jusqu'au drill-down commune)
+let _communesGeoCache = null;
+async function loadCommunesGeo() {
+  if (_communesGeoCache) return _communesGeoCache;
+  const topo = await COMMUNES_TOPO.json();
+  _communesGeoCache = rewind(topojson.feature(topo, topo.objects.data), true);
+  return _communesGeoCache;
+}
 
-// INSEE Estimations emploi (série longue)
-const eae205FranceSerie = await EAE205_FRANCE_SERIE.json();
-const eae205FranceSlope = await EAE205_FRANCE_SLOPE.json();
-const eae205ZeSerie = await EAE205_ZE_SERIE.json();
-
-// Communes geo + DuckDB
-const communesTopo = await COMMUNES_TOPO.json();
-const communesGeo = rewind(topojson.feature(communesTopo, communesTopo.objects.data), true);
-const { db: duckDb, conn } = await initDuckDB();
-await registerParquet(duckDb, "communes", await COMMUNES_PARQUET.url());
+// URSSAF série : query DuckDB pour ZE uniquement (~3 355 rows au lieu de 407K / 34 MB)
+const urssafSerie = await queryCommunes({ conn }, {
+  tableName: "urssaf_serie",
+  columns: ["*"],
+  filter: { echelon: "ze" }
+});
 
 // LabelMap ZE
 const zeLabelMap = new Map();
@@ -377,7 +401,18 @@ const extraIndics = view(Inputs.select(
 <!-- &s LAYOUT_MAIN -->
 <div class="layout-main" style="margin-top:0;">
 
+<!-- Skeleton placeholders -->
+<div id="skeleton-maps" style="display:flex;gap:8px;padding:8px;">
+<div class="skeleton skeleton-map" style="flex:1;"></div>
+<div class="skeleton skeleton-map" style="flex:1;"></div>
+</div>
+<div id="skeleton-table" class="skeleton skeleton-table" style="margin:8px;"></div>
+
 ```js
+// Retirer les skeletons dès que les données arrivent
+document.getElementById('skeleton-maps')?.remove();
+document.getElementById('skeleton-table')?.remove();
+
 // === SOUS-BANNIÈRE : Profil comparé (collapsible) ===
 const _sbBlock = document.createElement("div");
 _sbBlock.style.cssText = "margin:-6px -20px 0 -16px;padding:0;";
@@ -551,7 +586,7 @@ const _fetchComm = (tCode) => {
     limit: 2000
   });
 };
-const _cd1 = await _fetchComm(_mc1);
+const [_cd1, communesGeo] = await Promise.all([_fetchComm(_mc1), loadCommunesGeo()]);
 
 // Helper : crée un élément carte commune (paramétrable carte 1 ou 2 via opts)
 function buildCommMap(tCode, tData, w, h, opts = {}) {

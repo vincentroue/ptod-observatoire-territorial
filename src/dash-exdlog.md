@@ -150,21 +150,33 @@ async function getGeo(ech) {
 
 <!-- &s INIT -->
 ```js
-const defaultData = await getData("EPCI");
-const defaultGeo = await getGeo("EPCI");
-const depGeo = await getGeo("Département");
+// Chargement parallèle : données essentielles (communes topo chargé lazy au drill-down)
+const [defaultData, defaultGeo, depGeo, duckRes] = await Promise.all([
+  getData("EPCI"),
+  getGeo("EPCI"),
+  getGeo("Département"),
+  (async () => {
+    const { db, conn } = await initDuckDB();
+    await Promise.all([
+      registerParquet(db, "communes_geo", await COMMUNES_GEO_PARQUET.url()),
+      registerParquet(db, "communes_log", await COMMUNES_LOG_PARQUET.url())
+    ]);
+    return { db, conn };
+  })()
+]);
+const { db, conn } = duckRes;
 
-// Communes geo
-const communesTopo = await COMMUNES_TOPO.json();
-const communesGeo = rewind(topojson.feature(communesTopo, communesTopo.objects.data), true);
+// Communes topo : lazy load (8.5 MB déféré jusqu'au drill-down commune)
+let _communesGeoCache = null;
+async function loadCommunesGeo() {
+  if (_communesGeoCache) return _communesGeoCache;
+  const topo = await COMMUNES_TOPO.json();
+  _communesGeoCache = rewind(topojson.feature(topo, topo.objects.data), true);
+  return _communesGeoCache;
+}
 
-// DuckDB init — 2 parquets (geo=toutes communes+filtres, log=colonnes logement)
-const { db, conn } = await initDuckDB();
-await registerParquet(db, "communes_geo", await COMMUNES_GEO_PARQUET.url());
-await registerParquet(db, "communes_log", await COMMUNES_LOG_PARQUET.url());
-
-// LabelMaps pour tous les échelons
-for (const ech of Object.keys(DATA_HANDLES)) {
+// LabelMaps pour tous les échelons (parallèle)
+await Promise.all(Object.keys(DATA_HANDLES).map(async (ech) => {
   const data = await getData(ech);
   const meta = getEchelonMeta(ech);
   if (data.length && meta) {
@@ -172,7 +184,7 @@ for (const ech of Object.keys(DATA_HANDLES)) {
     data.forEach(d => d.code && d.libelle && lm.set(String(d.code), d.libelle));
     setLabelMap(ech, lm);
   }
-}
+}));
 
 // Colonnes disponibles (EPCI JSON = cartes nationales, DuckDB = communes)
 const AVAILABLE_COLUMNS = new Set(Object.keys(defaultData[0] || {}));
@@ -445,7 +457,18 @@ const extraIndics = view(Inputs.select(
 <!-- &s LAYOUT_MAIN -->
 <div class="layout-main" style="margin-top:0;">
 
+<!-- Skeleton placeholders -->
+<div id="skeleton-maps" style="display:flex;gap:8px;padding:8px;">
+<div class="skeleton skeleton-map" style="flex:1;"></div>
+<div class="skeleton skeleton-map" style="flex:1;"></div>
+</div>
+<div id="skeleton-table" class="skeleton skeleton-table" style="margin:8px;"></div>
+
 ```js
+// Retirer les skeletons
+document.getElementById('skeleton-maps')?.remove();
+document.getElementById('skeleton-table')?.remove();
+
 // === DONNÉES ===
 const meta = getEchelonMeta(echelon);
 const currentGeo = await getGeo(echelon);
@@ -623,7 +646,7 @@ const _fetchComm = async (tCode) => {
     return result.toArray().map(r => { const d = r.toJSON(); d.code = String(d.code); if (d.P23_POP != null) d.P23_POP = Number(d.P23_POP); return d; });
   } catch (err) { console.error("[EXDLOG] _fetchComm error:", err.message); return []; }
 };
-const [_cd1, _cd2] = await Promise.all([_fetchComm(_mc1), _fetchComm(_mc2)]);
+const [_cd1, _cd2, communesGeo] = await Promise.all([_fetchComm(_mc1), _fetchComm(_mc2), loadCommunesGeo()]);
 
 // Helper : crée un élément carte commune (paramétrable carte 1 ou 2 via opts)
 function buildCommMap(tCode, tData, w, h, opts = {}) {

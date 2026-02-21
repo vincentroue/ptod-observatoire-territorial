@@ -8,3 +8,19 @@
   [headers.values]
     Cross-Origin-Opener-Policy = "same-origin"
     Cross-Origin-Embedder-Policy = "require-corp"
+
+# Cache immutable pour assets hashés par Observable Framework
+[[headers]]
+  for = "/_file/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_import/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/_npm/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

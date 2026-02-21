@@ -47,10 +47,12 @@ export function createBanner(options) {
   // Ligne 1 : OTTD — Titre volet + (i)
   const line1 = document.createElement('div');
   line1.className = 'banner-line1';
-  const ottdSpan = document.createElement('span');
-  ottdSpan.className = 'ottd-brand';
-  ottdSpan.textContent = 'ObTer';
-  line1.appendChild(ottdSpan);
+  const ottdLink = document.createElement('a');
+  ottdLink.className = 'ottd-brand';
+  ottdLink.href = './';
+  ottdLink.title = 'Accueil';
+  ottdLink.innerHTML = '<svg class="ottd-logo" width="18" height="20" viewBox="0 0 38 42" fill="none"><path d="M19 1 L35 11 L35 31 L19 41 L3 31 L3 11 Z" stroke="currentColor" stroke-width="3" fill="rgba(255,255,255,0.15)"/><circle cx="19" cy="21" r="4" fill="currentColor" opacity="0.7"/></svg>ObTer';
+  line1.appendChild(ottdLink);
   const dashSpan = document.createElement('span');
   dashSpan.className = 'ottd-dash';
   dashSpan.textContent = ' — ';
@@ -129,9 +131,13 @@ export function createNav(pages, activePage) {
 
     if (page.disabled) {
       link.classList.add('disabled');
-      link.style.opacity = '0.4';
+      link.style.opacity = '0.35';
       link.style.pointerEvents = 'none';
       link.href = '#';
+    } else if (page.deprecated) {
+      link.classList.add('deprecated');
+      link.style.opacity = '0.45';
+      link.href = page.href;
     } else {
       link.href = page.href;
     }
@@ -236,11 +242,11 @@ export function createSubBanner(groups) {
  * Usage: createNav(OTTD_PAGES, 'exdc')
  */
 export const OTTD_PAGES = [
-  { id: 'exd', label: '◇ Exploratoire', href: './jottd-exd-explor-dyn',
-    title: 'Exploration libre — tous indicateurs, 7 niveaux géographiques',
-    color: '#8e44ad' },
-  { id: 'exdtc', label: '◎ Communes', href: './dash-exdtc-template-commune',
-    title: 'Communes : portrait, comparaison et zoom territorial',
+  { id: '__index__', label: '◉ Accueil', href: './',
+    title: 'Page d\u2019accueil — Observatoire Territorial',
+    color: '#1e3a5f' },
+  { id: 'exdtc', label: '◎ Exploration libre', href: './dash-exdtc-template-commune',
+    title: 'Exploration libre : portrait, comparaison et zoom territorial',
     color: '#27ae60' },
   { id: 'exdeco', label: '▤ Économie', href: './dash-exdeco-ze',
     title: 'Économie : emploi, secteurs et spécialisation',
@@ -251,6 +257,12 @@ export const OTTD_PAGES = [
   { id: 'exdattract', label: '◆ Attractivité', href: './dash-exdattract',
     title: 'Attractivité : indices résidentiels et productifs',
     color: '#2563eb' },
+  { id: 'dterr', label: '📋 Focus territoire', href: './dash-dterr-fiche',
+    title: 'Focus territoire : portrait commune avec comparaisons multi-échelon',
+    color: '#0f766e' },
+  { id: 'exd', label: '◇ Exploratoire', href: './jottd-exd-explor-dyn', deprecated: true,
+    title: 'Explorateur legacy — tous indicateurs, 7 niveaux géographiques',
+    color: '#8e44ad' },
   { id: 'exdf', label: '⇄ Flux', href: './dash-exdf-flux-migr', disabled: true,
     title: 'Flux migratoires : MIGCOM détaillé (à venir)',
     color: '#c0392b' }

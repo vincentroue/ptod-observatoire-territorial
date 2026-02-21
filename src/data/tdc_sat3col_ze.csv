@@ -1,307 +1,307 @@
-"ZE2020";"ZE2020lib";"NB_COM";"ZE2020libNCC";"dens3";"REG_dom";"DEP_dom";"DEPshort_dom";"regdep"
-"51";"Alençon";184;"ALENCON";3;"28";"61";"61-Orn";"NOR/61-Orn"
-"52";"Arles";20;"ARLES";2;"93";"13";"13-BdR";"PACA/13-BdR"
-"53";"Avignon";36;"AVIGNON";2;"76";"30";"30-Gar";"OCC/30-Gar"
-"54";"Beauvais";327;"BEAUVAIS";3;"32";"60";"60-Ois";"HDF/60-Ois"
-"55";"Bollène-Pierrelatte";29;"BOLLENE PIERRELATTE";2;"84";"26";"26-Drô";"ARA/26-Drô"
-"56";"Cosne-Cours-sur-Loire";119;"COSNE COURS SUR LOIRE";3;"27";"58";"58-Niè";"BFC/58-Niè"
-"57";"Dreux";115;"DREUX";3;"24";"28";"28-EeL";"CVL/28-EeL"
-"58";"La Vallée de la Bresle-Vimeu";93;"LA VALLEE DE LA BRESLE VIMEU";3;"28";"76";"76-SMa";"NOR/76-SMa"
-"59";"Mâcon";159;"MACON";3;"27";"71";"71-SeL";"BFC/71-SeL"
-"60";"Nevers";180;"NEVERS";3;"27";"58";"58-Niè";"BFC/58-Niè"
-"61";"Nogent-le-Rotrou";82;"NOGENT LE ROTROU";3;"24";"28";"28-EeL";"CVL/28-EeL"
-"62";"Redon";43;"REDON";3;"53";"56";"56-Mor";"BRE/56-Mor"
-"63";"Ussel";186;"USSEL";3;"75";"19";"19-Cor";"NAQ/19-Cor"
-"64";"Valréas";114;"VALREAS";3;"84";"26";"26-Drô";"ARA/26-Drô"
-"101";"Côte sous le vent";3;"COTE SOUS LE VENT";3;"1";"971";"971-Gua";"GUA/971-Gua"
-"102";"Est Grande Terre";6;"EST GRANDE TERRE";3;"1";"971";"971-Gua";"GUA/971-Gua"
-"103";"Marie-Galante";3;"MARIE GALANTE";3;"1";"971";"971-Gua";"GUA/971-Gua"
-"104";"Région Pointoise";10;"REGION POINTOISE";2;"1";"971";"971-Gua";"GUA/971-Gua"
-"105";"Sud Basse-Terre";10;"SUD BASSE TERRE";2;"1";"971";"971-Gua";"GUA/971-Gua"
-"201";"Le Centre-Atlantique";4;"LE CENTRE ATLANTIQUE";2;"2";"972";"972-Mar";"MAR/972-Mar"
-"202";"Le Centre agglomération";4;"LE CENTRE AGGLOMERATION";1;"2";"972";"972-Mar";"MAR/972-Mar"
-"203";"Le Nord-Atlantique";6;"LE NORD ATLANTIQUE";3;"2";"972";"972-Mar";"MAR/972-Mar"
-"204";"Le Nord-Caraibe";8;"LE NORD CARAIBE";3;"2";"972";"972-Mar";"MAR/972-Mar"
-"205";"Le Sud";5;"LE SUD";3;"2";"972";"972-Mar";"MAR/972-Mar"
-"206";"Le Sud-Caraibe";7;"LE SUD CARAIBE";2;"2";"972";"972-Mar";"MAR/972-Mar"
-"301";"Est-littoral";10;"EST LITTORAL";2;"3";"973";"973-Guy";"GUY/973-Guy"
-"302";"Ouest-Guyanais";8;"OUEST GUYANAIS";3;"3";"973";"973-Guy";"GUY/973-Guy"
-"303";"Savanes";4;"SAVANES";2;"3";"973";"973-Guy";"GUY/973-Guy"
-"401";"L'Est";6;"L EST";2;"4";"974";"974-Réu";"REU/974-Réu"
-"402";"L'Ouest";5;"L OUEST";2;"4";"974";"974-Réu";"REU/974-Réu"
-"403";"Le Nord";3;"LE NORD";1;"4";"974";"974-Réu";"REU/974-Réu"
-"404";"Le Sud";10;"LE SUD";2;"4";"974";"974-Réu";"REU/974-Réu"
-"601";"Mayotte";17;"MAYOTTE";2;"6";"976";"976-May";"MAY/976-May"
-"1101";"Cergy-Vexin";120;"CERGY VEXIN";1;"11";"95";"95-VdO";"IDF/95-VdO"
-"1102";"Coulommiers";54;"COULOMMIERS";3;"11";"77";"77-SeM";"IDF/77-SeM"
-"1103";"Étampes";64;"ETAMPES";2;"11";"91";"91-Ess";"IDF/91-Ess"
-"1104";"Évry-Courcouronnes";68;"EVRY COURCOURONNES";1;"11";"91";"91-Ess";"IDF/91-Ess"
-"1105";"Fontainebleau-Nemours";106;"FONTAINEBLEAU NEMOURS";2;"11";"77";"77-SeM";"IDF/77-SeM"
-"1106";"Marne-la-Vallée";69;"MARNE LA VALLEE";2;"11";"77";"77-SeM";"IDF/77-SeM"
-"1107";"Meaux";102;"MEAUX";2;"11";"77";"77-SeM";"IDF/77-SeM"
-"1108";"Melun";71;"MELUN";2;"11";"77";"77-SeM";"IDF/77-SeM"
-"1109";"Paris";122;"PARIS";1;"11";"94";"94-VdM";"IDF/94-VdM"
-"1110";"Provins";81;"PROVINS";3;"11";"77";"77-SeM";"IDF/77-SeM"
-"1111";"Rambouillet";36;"RAMBOUILLET";2;"11";"78";"78-Yve";"IDF/78-Yve"
-"1112";"Roissy";87;"ROISSY";1;"11";"95";"95-VdO";"IDF/95-VdO"
-"1113";"Saclay";62;"SACLAY";1;"11";"91";"91-Ess";"IDF/91-Ess"
-"1114";"Seine-Yvelinoise";121;"SEINE YVELINOISE";1;"11";"78";"78-Yve";"IDF/78-Yve"
-"1115";"Versailles-Saint-Quentin";103;"VERSAILLES SAINT QUENTIN";1;"11";"78";"78-Yve";"IDF/78-Yve"
-"2401";"Blois";104;"BLOIS";3;"24";"41";"41-LeC";"CVL/41-LeC"
-"2402";"Bourges";170;"BOURGES";3;"24";"18";"18-Che";"CVL/18-Che"
-"2403";"Chartres";150;"CHARTRES";2;"24";"28";"28-EeL";"CVL/28-EeL"
-"2404";"Châteaudun";63;"CHATEAUDUN";3;"24";"28";"28-EeL";"CVL/28-EeL"
-"2405";"Châteauroux";213;"CHATEAUROUX";3;"24";"36";"36-Ind";"CVL/36-Ind"
-"2406";"Chinon";42;"CHINON";3;"24";"37";"37-IeL";"CVL/37-IeL"
-"2407";"Gien";67;"GIEN";3;"24";"45";"45-Lot";"CVL/45-Lot"
-"2408";"Loches";78;"LOCHES";3;"24";"37";"37-IeL";"CVL/37-IeL"
-"2409";"Montargis";96;"MONTARGIS";3;"24";"45";"45-Lot";"CVL/45-Lot"
-"2410";"Orléans";133;"ORLEANS";2;"24";"45";"45-Lot";"CVL/45-Lot"
-"2411";"Pithiviers";78;"PITHIVIERS";3;"24";"45";"45-Lot";"CVL/45-Lot"
-"2412";"Romorantin-Lanthenay";70;"ROMORANTIN LANTHENAY";3;"24";"41";"41-LeC";"CVL/41-LeC"
-"2413";"Tours";166;"TOURS";2;"24";"37";"37-IeL";"CVL/37-IeL"
-"2414";"Vendôme";89;"VENDOME";3;"24";"41";"41-LeC";"CVL/41-LeC"
-"2415";"Vierzon";28;"VIERZON";2;"24";"18";"18-Che";"CVL/18-Che"
-"2701";"Autun";66;"AUTUN";3;"27";"71";"71-SeL";"BFC/71-SeL"
-"2702";"Auxerre";211;"AUXERRE";3;"27";"89";"89-Yon";"BFC/89-Yon"
-"2703";"Avallon";172;"AVALLON";3;"27";"89";"89-Yon";"BFC/89-Yon"
-"2704";"Beaune";143;"BEAUNE";3;"27";"21";"21-CdO";"BFC/21-CdO"
-"2705";"Belfort";164;"BELFORT";2;"27";"90";"90-TdB";"BFC/90-TdB"
-"2706";"Besançon";408;"BESANCON";2;"27";"25";"25-Dou";"BFC/25-Dou"
-"2707";"Chalon-sur-Saône";133;"CHALON SUR SAONE";3;"27";"71";"71-SeL";"BFC/71-SeL"
-"2708";"Charolais";132;"CHAROLAIS";3;"27";"71";"71-SeL";"BFC/71-SeL"
-"2709";"Châtillon-Montbard";233;"CHATILLON MONTBARD";3;"27";"21";"21-CdO";"BFC/21-CdO"
-"2710";"Creusot-Montceau";57;"CREUSOT MONTCEAU";2;"27";"71";"71-SeL";"BFC/71-SeL"
-"2711";"Dijon";322;"DIJON";2;"27";"21";"21-CdO";"BFC/21-CdO"
-"2712";"Dole";123;"DOLE";3;"27";"39";"39-Jur";"BFC/39-Jur"
-"2713";"Lons-le-Saunier";333;"LONS LE SAUNIER";3;"27";"39";"39-Jur";"BFC/39-Jur"
-"2714";"Montbéliard";146;"MONTBELIARD";2;"27";"25";"25-Dou";"BFC/25-Dou"
-"2715";"Pontarlier";174;"PONTARLIER";3;"27";"25";"25-Dou";"BFC/25-Dou"
-"2716";"Saint-Claude";71;"SAINT CLAUDE";3;"27";"39";"39-Jur";"BFC/39-Jur"
-"2717";"Sens";102;"SENS";3;"27";"89";"89-Yon";"BFC/89-Yon"
-"2718";"Vesoul";336;"VESOUL";3;"27";"70";"70-HSa";"BFC/70-HSa"
-"2801";"Argentan";73;"ARGENTAN";3;"28";"61";"61-Orn";"NOR/61-Orn"
-"2802";"Avranches";101;"AVRANCHES";3;"28";"50";"50-Man";"NOR/50-Man"
-"2803";"Bernay";106;"BERNAY";3;"28";"27";"27-Eur";"NOR/27-Eur"
-"2804";"Caen";378;"CAEN";2;"28";"14";"14-Cal";"NOR/14-Cal"
-"2805";"Cherbourg-en-Cotentin";135;"CHERBOURG EN COTENTIN";3;"28";"50";"50-Man";"NOR/50-Man"
-"2806";"Coutances";67;"COUTANCES";3;"28";"50";"50-Man";"NOR/50-Man"
-"2807";"Dieppe-Caux maritime";196;"DIEPPE CAUX MARITIME";3;"28";"76";"76-SMa";"NOR/76-SMa"
-"2808";"Évreux";167;"EVREUX";3;"28";"27";"27-Eur";"NOR/27-Eur"
-"2809";"Flers";91;"FLERS";3;"28";"61";"61-Orn";"NOR/61-Orn"
-"2810";"Granville";45;"GRANVILLE";3;"28";"50";"50-Man";"NOR/50-Man"
-"2811";"Honfleur Pont-Audemer";119;"HONFLEUR PONT AUDEMER";3;"28";"27";"27-Eur";"NOR/27-Eur"
-"2812";"L'Aigle";79;"L AIGLE";3;"28";"61";"61-Orn";"NOR/61-Orn"
-"2813";"Le Havre";115;"LE HAVRE";1;"28";"76";"76-SMa";"NOR/76-SMa"
-"2814";"Lisieux";93;"LISIEUX";3;"28";"14";"14-Cal";"NOR/14-Cal"
-"2815";"Rouen";299;"ROUEN";2;"28";"76";"76-SMa";"NOR/76-SMa"
-"2816";"Saint-Lô";104;"SAINT LO";3;"28";"50";"50-Man";"NOR/50-Man"
-"2817";"Vernon-Gisors";110;"VERNON GISORS";3;"28";"27";"27-Eur";"NOR/27-Eur"
-"2818";"Vire Normandie";21;"VIRE NORMANDIE";3;"28";"14";"14-Cal";"NOR/14-Cal"
-"2819";"Yvetot-Vallée du Commerce";99;"YVETOT VALLEE DU COMMERCE";3;"28";"76";"76-SMa";"NOR/76-SMa"
-"3201";"Abbeville";165;"ABBEVILLE";3;"32";"80";"80-Som";"HDF/80-Som"
-"3202";"Amiens";455;"AMIENS";2;"32";"80";"80-Som";"HDF/80-Som"
-"3203";"Arras";232;"ARRAS";2;"32";"62";"62-PdC";"HDF/62-PdC"
-"3204";"Berck";201;"BERCK";3;"32";"62";"62-PdC";"HDF/62-PdC"
-"3205";"Béthune";109;"BETHUNE";2;"32";"62";"62-PdC";"HDF/62-PdC"
-"3206";"Boulogne-sur-Mer";92;"BOULOGNE SUR MER";2;"32";"62";"62-PdC";"HDF/62-PdC"
-"3207";"Calais";51;"CALAIS";2;"32";"62";"62-PdC";"HDF/62-PdC"
-"3208";"Cambrai";111;"CAMBRAI";2;"32";"59";"59-Nor";"HDF/59-Nor"
-"3209";"Château-Thierry";119;"CHATEAU THIERRY";3;"32";"02";"02-Ais";"HDF/02-Ais"
-"3210";"Compiègne";181;"COMPIEGNE";2;"32";"60";"60-Ois";"HDF/60-Ois"
-"3211";"Creil";134;"CREIL";2;"32";"60";"60-Ois";"HDF/60-Ois"
-"3212";"Douai";71;"DOUAI";2;"32";"59";"59-Nor";"HDF/59-Nor"
-"3213";"Dunkerque";75;"DUNKERQUE";2;"32";"59";"59-Nor";"HDF/59-Nor"
-"3214";"Laon";225;"LAON";3;"32";"02";"02-Ais";"HDF/02-Ais"
-"3215";"Lens";58;"LENS";2;"32";"62";"62-PdC";"HDF/62-PdC"
-"3216";"Lille";133;"LILLE";1;"32";"59";"59-Nor";"HDF/59-Nor"
-"3217";"Maubeuge";199;"MAUBEUGE";2;"32";"59";"59-Nor";"HDF/59-Nor"
-"3218";"Roubaix-Tourcoing";22;"ROUBAIX TOURCOING";1;"32";"59";"59-Nor";"HDF/59-Nor"
-"3219";"Saint-Omer";126;"SAINT OMER";3;"32";"62";"62-PdC";"HDF/62-PdC"
-"3220";"Saint-Quentin";326;"SAINT QUENTIN";3;"32";"02";"02-Ais";"HDF/02-Ais"
-"3221";"Soissons";232;"SOISSONS";3;"32";"02";"02-Ais";"HDF/02-Ais"
-"3222";"Valenciennes";125;"VALENCIENNES";2;"32";"59";"59-Nor";"HDF/59-Nor"
-"4401";"Bar-le-Duc";154;"BAR LE DUC";3;"44";"55";"55-Meu";"GES/55-Meu"
-"4402";"Châlons-en-Champagne";151;"CHALONS EN CHAMPAGNE";2;"44";"51";"51-Mar";"GES/51-Mar"
-"4403";"Charleville-Mézières";180;"CHARLEVILLE MEZIERES";2;"44";"08";"08-Ard";"GES/08-Ard"
-"4404";"Chaumont";369;"CHAUMONT";3;"44";"52";"52-HMa";"GES/52-HMa"
-"4405";"Colmar";100;"COLMAR";2;"44";"68";"68-HRh";"GES/68-HRh"
-"4406";"Épernay";113;"EPERNAY";3;"44";"51";"51-Mar";"GES/51-Mar"
-"4407";"Épinal";328;"EPINAL";3;"44";"88";"88-Vos";"GES/88-Vos"
-"4408";"Forbach";30;"FORBACH";2;"44";"57";"57-Mos";"GES/57-Mos"
-"4409";"Haguenau";164;"HAGUENAU";3;"44";"67";"67-BRh";"GES/67-BRh"
-"4410";"Metz";246;"METZ";2;"44";"57";"57-Mos";"GES/57-Mos"
-"4411";"Mulhouse";170;"MULHOUSE";2;"44";"68";"68-HRh";"GES/68-HRh"
-"4412";"Nancy";445;"NANCY";2;"44";"54";"54-MeM";"GES/54-MeM"
-"4413";"Reims";225;"REIMS";1;"44";"51";"51-Mar";"GES/51-Mar"
-"4414";"Remiremont";49;"REMIREMONT";3;"44";"88";"88-Vos";"GES/88-Vos"
-"4415";"Romilly-sur-Seine";170;"ROMILLY SUR SEINE";3;"44";"51";"51-Mar";"GES/51-Mar"
-"4416";"Saint-Avold";131;"SAINT AVOLD";3;"44";"57";"57-Mos";"GES/57-Mos"
-"4417";"Saint-Dié-des-Vosges";110;"SAINT DIE DES VOSGES";3;"44";"88";"88-Vos";"GES/88-Vos"
-"4418";"Saint-Louis";91;"SAINT LOUIS";2;"44";"68";"68-HRh";"GES/68-HRh"
-"4419";"Sarrebourg";215;"SARREBOURG";3;"44";"57";"57-Mos";"GES/57-Mos"
-"4420";"Sarreguemines";141;"SARREGUEMINES";3;"44";"57";"57-Mos";"GES/57-Mos"
-"4421";"Sedan";245;"SEDAN";3;"44";"08";"08-Ard";"GES/08-Ard"
-"4422";"Sélestat";72;"SELESTAT";3;"44";"67";"67-BRh";"GES/67-BRh"
-"4423";"Strasbourg";213;"STRASBOURG";1;"44";"67";"67-BRh";"GES/67-BRh"
-"4424";"Thionville";190;"THIONVILLE";2;"44";"57";"57-Mos";"GES/57-Mos"
-"4425";"Troyes";358;"TROYES";2;"44";"10";"10-Aub";"GES/10-Aub"
-"4426";"Verdun";231;"VERDUN";3;"44";"55";"55-Meu";"GES/55-Meu"
-"4427";"Vitry-le-François Saint-Dizier";224;"VITRY LE FRANCOIS SAINT DIZIER";3;"44";"51";"51-Mar";"GES/51-Mar"
-"5201";"Ancenis";23;"ANCENIS";3;"52";"44";"44-LoA";"PDL/44-LoA"
-"5202";"Angers";67;"ANGERS";2;"52";"49";"49-MeL";"PDL/49-MeL"
-"5203";"Challans";42;"CHALLANS";3;"52";"85";"85-Ven";"PDL/85-Ven"
-"5204";"Château-Gontier-sur-Mayenne";32;"CHATEAU GONTIER SUR MAYENNE";3;"52";"53";"53-May";"PDL/53-May"
-"5205";"Châteaubriant";32;"CHATEAUBRIANT";3;"52";"44";"44-LoA";"PDL/44-LoA"
-"5206";"Cholet";35;"CHOLET";3;"52";"49";"49-MeL";"PDL/49-MeL"
-"5207";"Fontenay-le-Comte";98;"FONTENAY LE COMTE";3;"52";"85";"85-Ven";"PDL/85-Ven"
-"5208";"La Ferté-Bernard";80;"LA FERTE BERNARD";3;"52";"72";"72-Sar";"PDL/72-Sar"
-"5209";"La Flèche";28;"LA FLECHE";3;"52";"72";"72-Sar";"PDL/72-Sar"
-"5210";"La Roche-sur-Yon";45;"LA ROCHE SUR YON";3;"52";"85";"85-Ven";"PDL/85-Ven"
-"5211";"Laval";85;"LAVAL";3;"52";"53";"53-May";"PDL/53-May"
-"5212";"Le Mans";148;"LE MANS";2;"52";"72";"72-Sar";"PDL/72-Sar"
-"5213";"Les Herbiers-Montaigu";49;"LES HERBIERS MONTAIGU";3;"52";"85";"85-Ven";"PDL/85-Ven"
-"5214";"Les Sables-d'Olonne";18;"LES SABLES D OLONNE";3;"52";"85";"85-Ven";"PDL/85-Ven"
-"5215";"Mayenne";92;"MAYENNE";3;"52";"53";"53-May";"PDL/53-May"
-"5216";"Nantes";95;"NANTES";2;"52";"44";"44-LoA";"PDL/44-LoA"
-"5217";"Pornic";16;"PORNIC";3;"52";"44";"44-LoA";"PDL/44-LoA"
-"5218";"Sablé-sur-Sarthe";52;"SABLE SUR SARTHE";3;"52";"72";"72-Sar";"PDL/72-Sar"
-"5219";"Saint-Nazaire";37;"SAINT NAZAIRE";2;"52";"44";"44-LoA";"PDL/44-LoA"
-"5220";"Saumur";45;"SAUMUR";3;"52";"49";"49-MeL";"PDL/49-MeL"
-"5221";"Segré-en-Anjou Bleu";30;"SEGRE EN ANJOU BLEU";3;"52";"49";"49-MeL";"PDL/49-MeL"
-"5301";"Auray";28;"AURAY";3;"53";"56";"56-Mor";"BRE/56-Mor"
-"5302";"Brest";92;"BREST";2;"53";"29";"29-Fin";"BRE/29-Fin"
-"5303";"Carhaix-Plouguer";81;"CARHAIX PLOUGUER";3;"53";"22";"22-CdA";"BRE/22-CdA"
-"5304";"Dinan";66;"DINAN";3;"53";"22";"22-CdA";"BRE/22-CdA"
-"5305";"Fougères";45;"FOUGERES";3;"53";"35";"35-IeV";"BRE/35-IeV"
-"5306";"Guingamp";49;"GUINGAMP";3;"53";"22";"22-CdA";"BRE/22-CdA"
-"5307";"Lamballe-Armor";40;"LAMBALLE ARMOR";3;"53";"22";"22-CdA";"BRE/22-CdA"
-"5308";"Lannion";65;"LANNION";3;"53";"22";"22-CdA";"BRE/22-CdA"
-"5309";"Lorient";35;"LORIENT";2;"53";"56";"56-Mor";"BRE/56-Mor"
-"5310";"Morlaix";59;"MORLAIX";3;"53";"29";"29-Fin";"BRE/29-Fin"
-"5311";"Ploërmel";53;"PLOERMEL";3;"53";"56";"56-Mor";"BRE/56-Mor"
-"5312";"Pontivy-Loudéac";64;"PONTIVY LOUDEAC";3;"53";"56";"56-Mor";"BRE/56-Mor"
-"5313";"Quimper";83;"QUIMPER";3;"53";"29";"29-Fin";"BRE/29-Fin"
-"5314";"Quimperlé";18;"QUIMPERLE";3;"53";"29";"29-Fin";"BRE/29-Fin"
-"5315";"Rennes";160;"RENNES";2;"53";"35";"35-IeV";"BRE/35-IeV"
-"5316";"Saint-Brieuc";58;"SAINT BRIEUC";3;"53";"22";"22-CdA";"BRE/22-CdA"
-"5317";"Saint-Malo";54;"SAINT MALO";3;"53";"35";"35-IeV";"BRE/35-IeV"
-"5318";"Vannes";60;"VANNES";3;"53";"56";"56-Mor";"BRE/56-Mor"
-"5319";"Vitré";56;"VITRE";3;"53";"35";"35-IeV";"BRE/35-IeV"
-"7501";"Agen";99;"AGEN";3;"75";"47";"47-LeG";"NAQ/47-LeG"
-"7502";"Angoulême";229;"ANGOULEME";3;"75";"16";"16-Cha";"NAQ/16-Cha"
-"7503";"Bayonne";111;"BAYONNE";2;"75";"64";"64-PyA";"NAQ/64-PyA"
-"7504";"Bergerac";153;"BERGERAC";3;"75";"24";"24-Dor";"NAQ/24-Dor"
-"7505";"Bordeaux";164;"BORDEAUX";1;"75";"33";"33-Gir";"NAQ/33-Gir"
-"7506";"Bressuire";80;"BRESSUIRE";3;"75";"79";"79-DSè";"NAQ/79-DSè"
-"7507";"Brive-la-Gaillarde";98;"BRIVE LA GAILLARDE";3;"75";"19";"19-Cor";"NAQ/19-Cor"
-"7508";"Châtellerault";50;"CHATELLERAULT";3;"75";"86";"86-Vie";"NAQ/86-Vie"
-"7509";"Cognac";191;"COGNAC";3;"75";"17";"17-ChM";"NAQ/17-ChM"
-"7510";"Dax";119;"DAX";3;"75";"40";"40-Lan";"NAQ/40-Lan"
-"7511";"Guéret";255;"GUERET";3;"75";"23";"23-Cre";"NAQ/23-Cre"
-"7512";"La Rochelle";83;"LA ROCHELLE";2;"75";"17";"17-ChM";"NAQ/17-ChM"
-"7513";"La Teste-de-Buch";33;"LA TESTE DE BUCH";2;"75";"40";"40-Lan";"NAQ/40-Lan"
-"7514";"Langon";175;"LANGON";3;"75";"33";"33-Gir";"NAQ/33-Gir"
-"7515";"Lesparre-Médoc";40;"LESPARRE MEDOC";3;"75";"33";"33-Gir";"NAQ/33-Gir"
-"7516";"Libourne";140;"LIBOURNE";3;"75";"33";"33-Gir";"NAQ/33-Gir"
-"7517";"Limoges";130;"LIMOGES";2;"75";"87";"87-HVi";"NAQ/87-HVi"
-"7518";"Marmande";131;"MARMANDE";3;"75";"47";"47-LeG";"NAQ/47-LeG"
-"7519";"Mont-de-Marsan";166;"MONT DE MARSAN";3;"75";"40";"40-Lan";"NAQ/40-Lan"
-"7520";"Niort";158;"NIORT";3;"75";"79";"79-DSè";"NAQ/79-DSè"
-"7521";"Oloron-Sainte-Marie";163;"OLORON SAINTE MARIE";3;"75";"64";"64-PyA";"NAQ/64-PyA"
-"7522";"Pau";286;"PAU";2;"75";"64";"64-PyA";"NAQ/64-PyA"
-"7523";"Périgueux";231;"PERIGUEUX";3;"75";"24";"24-Dor";"NAQ/24-Dor"
-"7524";"Poitiers";163;"POITIERS";3;"75";"86";"86-Vie";"NAQ/86-Vie"
-"7525";"Rochefort";41;"ROCHEFORT";3;"75";"17";"17-ChM";"NAQ/17-ChM"
-"7526";"Royan";51;"ROYAN";3;"75";"17";"17-ChM";"NAQ/17-ChM"
-"7527";"Saint-Junien";104;"SAINT JUNIEN";3;"75";"87";"87-HVi";"NAQ/87-HVi"
-"7528";"Saintes";147;"SAINTES";3;"75";"17";"17-ChM";"NAQ/17-ChM"
-"7529";"Sarlat-la-Canéda";107;"SARLAT LA CANEDA";3;"75";"24";"24-Dor";"NAQ/24-Dor"
-"7530";"Thouars";76;"THOUARS";3;"75";"86";"86-Vie";"NAQ/86-Vie"
-"7531";"Tulle";130;"TULLE";3;"75";"19";"19-Cor";"NAQ/19-Cor"
-"7532";"Villeneuve-sur-Lot";98;"VILLENEUVE SUR LOT";3;"75";"47";"47-LeG";"NAQ/47-LeG"
-"7601";"Agde-Pézenas";18;"AGDE PEZENAS";2;"76";"34";"34-Hér";"OCC/34-Hér"
-"7602";"Albi";190;"ALBI";2;"76";"81";"81-Tar";"OCC/81-Tar"
-"7603";"Alès-Le Vigan";172;"ALES LE VIGAN";3;"76";"30";"30-Gar";"OCC/30-Gar"
-"7604";"Auch";392;"AUCH";3;"76";"32";"32-Ger";"OCC/32-Ger"
-"7605";"Bagnols-sur-Cèze";52;"BAGNOLS SUR CEZE";3;"76";"30";"30-Gar";"OCC/30-Gar"
-"7606";"Béziers";110;"BEZIERS";3;"76";"34";"34-Hér";"OCC/34-Hér"
-"7607";"Cahors";134;"CAHORS";3;"76";"46";"46-Lot";"OCC/46-Lot"
-"7608";"Carcassonne-Limoux";309;"CARCASSONNE LIMOUX";3;"76";"11";"11-Aud";"OCC/11-Aud"
-"7609";"Castelsarrasin-Moissac";104;"CASTELSARRASIN MOISSAC";3;"76";"82";"82-TeG";"OCC/82-TeG"
-"7610";"Castres-Mazamet";134;"CASTRES MAZAMET";3;"76";"81";"81-Tar";"OCC/81-Tar"
-"7611";"Figeac-Villefranche";136;"FIGEAC VILLEFRANCHE";3;"76";"46";"46-Lot";"OCC/46-Lot"
-"7612";"Foix-Pamiers";268;"FOIX PAMIERS";3;"76";"09";"09-Ari";"OCC/09-Ari"
-"7613";"Mende";135;"MENDE";3;"76";"48";"48-Loz";"OCC/48-Loz"
-"7614";"Millau";91;"MILLAU";3;"76";"12";"12-Ave";"OCC/12-Ave"
-"7615";"Montauban";101;"MONTAUBAN";3;"76";"82";"82-TeG";"OCC/82-TeG"
-"7616";"Montpellier";172;"MONTPELLIER";2;"76";"34";"34-Hér";"OCC/34-Hér"
-"7617";"Narbonne";102;"NARBONNE";2;"76";"11";"11-Aud";"OCC/11-Aud"
-"7618";"Nîmes";118;"NIMES";2;"76";"30";"30-Gar";"OCC/30-Gar"
-"7619";"Nord-du-Lot";110;"NORD DU LOT";3;"76";"46";"46-Lot";"OCC/46-Lot"
-"7620";"Perpignan";235;"PERPIGNAN";2;"76";"66";"66-PyO";"OCC/66-PyO"
-"7621";"Rodez";133;"RODEZ";3;"76";"12";"12-Ave";"OCC/12-Ave"
-"7622";"Saint-Gaudens";387;"SAINT GAUDENS";3;"76";"31";"31-HGa";"OCC/31-HGa"
-"7623";"Sète";11;"SETE";2;"76";"34";"34-Hér";"OCC/34-Hér"
-"7624";"Tarbes-Lourdes";477;"TARBES LOURDES";3;"76";"65";"65-HPy";"OCC/65-HPy"
-"7625";"Toulouse";335;"TOULOUSE";1;"76";"31";"31-HGa";"OCC/31-HGa"
-"8401";"Annecy";98;"ANNECY";2;"84";"74";"74-HSv";"ARA/74-HSv"
-"8402";"Aubenas";175;"AUBENAS";3;"84";"07";"07-Ard";"ARA/07-Ard"
-"8403";"Aurillac";102;"AURILLAC";3;"84";"15";"15-Can";"ARA/15-Can"
-"8404";"Belley";72;"BELLEY";3;"84";"01";"01-Ain";"ARA/01-Ain"
-"8405";"Bourg-en-Bresse";166;"BOURG EN BRESSE";3;"84";"01";"01-Ain";"ARA/01-Ain"
-"8406";"Bourgoin-Jallieu";106;"BOURGOIN JALLIEU";3;"84";"38";"38-Isè";"ARA/38-Isè"
-"8407";"Chambéry";110;"CHAMBERY";2;"84";"73";"73-Sav";"ARA/73-Sav"
-"8408";"Clermont-Ferrand";191;"CLERMONT FERRAND";2;"84";"63";"63-PdD";"ARA/63-PdD"
-"8409";"Grenoble";189;"GRENOBLE";1;"84";"38";"38-Isè";"ARA/38-Isè"
-"8410";"Issoire";138;"ISSOIRE";3;"84";"63";"63-PdD";"ARA/63-PdD"
-"8411";"La Maurienne";48;"LA MAURIENNE";3;"84";"73";"73-Sav";"ARA/73-Sav"
-"8412";"La Plaine du Forez";88;"LA PLAINE DU FOREZ";3;"84";"42";"42-Loi";"ARA/42-Loi"
-"8413";"La Tarentaise";68;"LA TARENTAISE";3;"84";"73";"73-Sav";"ARA/73-Sav"
-"8414";"La Vallée de l'Arve";28;"LA VALLEE DE L ARVE";2;"84";"74";"74-HSv";"ARA/74-HSv"
-"8415";"Le Chablais";48;"LE CHABLAIS";2;"84";"74";"74-HSv";"ARA/74-HSv"
-"8416";"Le Genevois Français";146;"LE GENEVOIS FRANCAIS";2;"84";"74";"74-HSv";"ARA/74-HSv"
-"8417";"Le Livradois";109;"LE LIVRADOIS";3;"84";"63";"63-PdD";"ARA/63-PdD"
-"8418";"Le Mont Blanc";20;"LE MONT BLANC";2;"84";"74";"74-HSv";"ARA/74-HSv"
-"8419";"Le Puy-en-Velay";184;"LE PUY EN VELAY";3;"84";"43";"43-HLo";"ARA/43-HLo"
-"8420";"Les Sources de la Loire";77;"LES SOURCES DE LA LOIRE";3;"84";"43";"43-HLo";"ARA/43-HLo"
-"8421";"Lyon";235;"LYON";1;"84";"69";"69-Rhô";"ARA/69-Rhô"
-"8422";"Montélimar";65;"MONTELIMAR";3;"84";"26";"26-Drô";"ARA/26-Drô"
-"8423";"Montluçon";114;"MONTLUCON";3;"84";"03";"03-All";"ARA/03-All"
-"8424";"Moulins";101;"MOULINS";3;"84";"03";"03-All";"ARA/03-All"
-"8425";"Oyonnax";35;"OYONNAX";2;"84";"01";"01-Ain";"ARA/01-Ain"
-"8426";"Roanne";76;"ROANNE";3;"84";"42";"42-Loi";"ARA/42-Loi"
-"8427";"Romans-sur-Isère";57;"ROMANS SUR ISERE";3;"84";"26";"26-Drô";"ARA/26-Drô"
-"8428";"Saint-Étienne";134;"SAINT ETIENNE";2;"84";"42";"42-Loi";"ARA/42-Loi"
-"8429";"Saint-Flour";88;"SAINT FLOUR";3;"84";"15";"15-Can";"ARA/15-Can"
-"8430";"Tarare";42;"TARARE";3;"84";"69";"69-Rhô";"ARA/69-Rhô"
-"8431";"Valence";157;"VALENCE";2;"84";"26";"26-Drô";"ARA/26-Drô"
-"8432";"Vichy";144;"VICHY";3;"84";"03";"03-All";"ARA/03-All"
-"8433";"Vienne-Annonay";146;"VIENNE ANNONAY";3;"84";"07";"07-Ard";"ARA/07-Ard"
-"8434";"Villefranche-sur-Saône";92;"VILLEFRANCHE SUR SAONE";2;"84";"69";"69-Rhô";"ARA/69-Rhô"
-"8435";"Voiron";130;"VOIRON";3;"84";"38";"38-Isè";"ARA/38-Isè"
-"9301";"Aix-en-Provence";61;"AIX EN PROVENCE";2;"93";"13";"13-BdR";"PACA/13-BdR"
-"9302";"Briançon";36;"BRIANCON";3;"93";"05";"05-HAl";"PACA/05-HAl"
-"9303";"Brignoles";41;"BRIGNOLES";3;"93";"83";"83-Var";"PACA/83-Var"
-"9304";"Cannes";50;"CANNES";2;"93";"06";"06-AMa";"PACA/06-AMa"
-"9305";"Carpentras";29;"CARPENTRAS";2;"93";"84";"84-Vau";"PACA/84-Vau"
-"9306";"Cavaillon";54;"CAVAILLON";2;"93";"84";"84-Vau";"PACA/84-Vau"
-"9307";"Digne-les-Bains";123;"DIGNE LES BAINS";3;"93";"04";"04-AHP";"PACA/04-AHP"
-"9308";"Draguignan";39;"DRAGUIGNAN";2;"93";"83";"83-Var";"PACA/83-Var"
-"9309";"Fréjus";5;"FREJUS";2;"93";"83";"83-Var";"PACA/83-Var"
-"9310";"Gap";125;"GAP";3;"93";"05";"05-HAl";"PACA/05-HAl"
-"9311";"Manosque";67;"MANOSQUE";3;"93";"04";"04-AHP";"PACA/04-AHP"
-"9312";"Marseille";32;"MARSEILLE";1;"93";"13";"13-BdR";"PACA/13-BdR"
-"9313";"Martigues-Salon";26;"MARTIGUES SALON";2;"93";"13";"13-BdR";"PACA/13-BdR"
-"9314";"Menton";18;"MENTON";2;"93";"06";"06-AMa";"PACA/06-AMa"
-"9315";"Nice";116;"NICE";1;"93";"06";"06-AMa";"PACA/06-AMa"
-"9316";"Orange";16;"ORANGE";3;"93";"84";"84-Vau";"PACA/84-Vau"
-"9317";"Sainte-Maxime";12;"SAINTE MAXIME";2;"93";"83";"83-Var";"PACA/83-Var"
-"9318";"Toulon";33;"TOULON";1;"93";"83";"83-Var";"PACA/83-Var"
-"9401";"Ajaccio";81;"AJACCIO";1;"94";"2A";"2A-CdS";"COR/2A-CdS"
-"9402";"Bastia";112;"BASTIA";2;"94";"2B";"2B-HCo";"COR/2B-HCo"
-"9403";"Calvi";36;"CALVI";3;"94";"2B";"2B-HCo";"COR/2B-HCo"
-"9404";"Corte";58;"CORTE";3;"94";"2B";"2B-HCo";"COR/2B-HCo"
-"9405";"Ghisonaccia";30;"GHISONACCIA";3;"94";"2B";"2B-HCo";"COR/2B-HCo"
-"9406";"Porto-Vecchio";12;"PORTO VECCHIO";3;"94";"2A";"2A-CdS";"COR/2A-CdS"
-"9407";"Propriano";31;"PROPRIANO";3;"94";"2A";"2A-CdS";"COR/2A-CdS"
+﻿ZE2020;ZE2020lib;NB_COM;ZE2020libNCC;dens3;REG_dom;DEP_dom;DEPshort_dom;regdep;has_metropole
+51;Alençon;184;ALENCON;3;28;61;61-Orn;NOR/61-Orn;0
+52;Arles;20;ARLES;2;93;13;13-BdR;PACA/13-BdR;0
+53;Avignon;36;AVIGNON;2;76;30;30-Gar;OCC/30-Gar;0
+54;Beauvais;327;BEAUVAIS;3;32;60;60-Ois;HDF/60-Ois;0
+55;Bollène-Pierrelatte;29;BOLLENE PIERRELATTE;2;84;26;26-Drô;ARA/26-Drô;0
+56;Cosne-Cours-sur-Loire;119;COSNE COURS SUR LOIRE;3;27;58;58-Niè;BFC/58-Niè;0
+57;Dreux;115;DREUX;3;24;28;28-EeL;CVL/28-EeL;0
+58;La Vallée de la Bresle-Vimeu;93;LA VALLEE DE LA BRESLE VIMEU;3;28;76;76-SMa;NOR/76-SMa;0
+59;Mâcon;159;MACON;3;27;71;71-SeL;BFC/71-SeL;0
+60;Nevers;180;NEVERS;3;27;58;58-Niè;BFC/58-Niè;0
+61;Nogent-le-Rotrou;82;NOGENT LE ROTROU;3;24;28;28-EeL;CVL/28-EeL;0
+62;Redon;43;REDON;3;53;56;56-Mor;BRE/56-Mor;0
+63;Ussel;186;USSEL;3;75;19;19-Cor;NAQ/19-Cor;0
+64;Valréas;114;VALREAS;3;84;26;26-Drô;ARA/26-Drô;0
+101;Côte sous le vent;3;COTE SOUS LE VENT;3;1;971;971-Gua;GUA/971-Gua;0
+102;Est Grande Terre;6;EST GRANDE TERRE;3;1;971;971-Gua;GUA/971-Gua;0
+103;Marie-Galante;3;MARIE GALANTE;3;1;971;971-Gua;GUA/971-Gua;0
+104;Région Pointoise;10;REGION POINTOISE;2;1;971;971-Gua;GUA/971-Gua;0
+105;Sud Basse-Terre;10;SUD BASSE TERRE;2;1;971;971-Gua;GUA/971-Gua;0
+201;Le Centre-Atlantique;4;LE CENTRE ATLANTIQUE;2;2;972;972-Mar;MAR/972-Mar;0
+202;Le Centre agglomération;4;LE CENTRE AGGLOMERATION;1;2;972;972-Mar;MAR/972-Mar;0
+203;Le Nord-Atlantique;6;LE NORD ATLANTIQUE;3;2;972;972-Mar;MAR/972-Mar;0
+204;Le Nord-Caraibe;8;LE NORD CARAIBE;3;2;972;972-Mar;MAR/972-Mar;0
+205;Le Sud;5;LE SUD;3;2;972;972-Mar;MAR/972-Mar;0
+206;Le Sud-Caraibe;7;LE SUD CARAIBE;2;2;972;972-Mar;MAR/972-Mar;0
+301;Est-littoral;10;EST LITTORAL;2;3;973;973-Guy;GUY/973-Guy;0
+302;Ouest-Guyanais;8;OUEST GUYANAIS;3;3;973;973-Guy;GUY/973-Guy;0
+303;Savanes;4;SAVANES;2;3;973;973-Guy;GUY/973-Guy;0
+401;L'Est;6;L EST;2;4;974;974-Réu;REU/974-Réu;0
+402;L'Ouest;5;L OUEST;2;4;974;974-Réu;REU/974-Réu;0
+403;Le Nord;3;LE NORD;1;4;974;974-Réu;REU/974-Réu;0
+404;Le Sud;10;LE SUD;2;4;974;974-Réu;REU/974-Réu;0
+601;Mayotte;17;MAYOTTE;2;6;976;976-May;MAY/976-May;0
+1101;Cergy-Vexin;120;CERGY VEXIN;1;11;95;95-VdO;IDF/95-VdO;0
+1102;Coulommiers;54;COULOMMIERS;3;11;77;77-SeM;IDF/77-SeM;0
+1103;Étampes;64;ETAMPES;2;11;91;91-Ess;IDF/91-Ess;0
+1104;Évry-Courcouronnes;68;EVRY COURCOURONNES;1;11;91;91-Ess;IDF/91-Ess;0
+1105;Fontainebleau-Nemours;106;FONTAINEBLEAU NEMOURS;2;11;77;77-SeM;IDF/77-SeM;0
+1106;Marne-la-Vallée;69;MARNE LA VALLEE;2;11;77;77-SeM;IDF/77-SeM;0
+1107;Meaux;102;MEAUX;2;11;77;77-SeM;IDF/77-SeM;0
+1108;Melun;71;MELUN;2;11;77;77-SeM;IDF/77-SeM;0
+1109;Paris;122;PARIS;1;11;94;94-VdM;IDF/94-VdM;1
+1110;Provins;81;PROVINS;3;11;77;77-SeM;IDF/77-SeM;0
+1111;Rambouillet;36;RAMBOUILLET;2;11;78;78-Yve;IDF/78-Yve;0
+1112;Roissy;87;ROISSY;1;11;95;95-VdO;IDF/95-VdO;1
+1113;Saclay;62;SACLAY;1;11;91;91-Ess;IDF/91-Ess;0
+1114;Seine-Yvelinoise;121;SEINE YVELINOISE;1;11;78;78-Yve;IDF/78-Yve;0
+1115;Versailles-Saint-Quentin;103;VERSAILLES SAINT QUENTIN;1;11;78;78-Yve;IDF/78-Yve;0
+2401;Blois;104;BLOIS;3;24;41;41-LeC;CVL/41-LeC;0
+2402;Bourges;170;BOURGES;3;24;18;18-Che;CVL/18-Che;0
+2403;Chartres;150;CHARTRES;2;24;28;28-EeL;CVL/28-EeL;0
+2404;Châteaudun;63;CHATEAUDUN;3;24;28;28-EeL;CVL/28-EeL;0
+2405;Châteauroux;213;CHATEAUROUX;3;24;36;36-Ind;CVL/36-Ind;0
+2406;Chinon;42;CHINON;3;24;37;37-IeL;CVL/37-IeL;0
+2407;Gien;67;GIEN;3;24;45;45-Lot;CVL/45-Lot;0
+2408;Loches;78;LOCHES;3;24;37;37-IeL;CVL/37-IeL;0
+2409;Montargis;96;MONTARGIS;3;24;45;45-Lot;CVL/45-Lot;0
+2410;Orléans;133;ORLEANS;2;24;45;45-Lot;CVL/45-Lot;1
+2411;Pithiviers;78;PITHIVIERS;3;24;45;45-Lot;CVL/45-Lot;0
+2412;Romorantin-Lanthenay;70;ROMORANTIN LANTHENAY;3;24;41;41-LeC;CVL/41-LeC;0
+2413;Tours;166;TOURS;2;24;37;37-IeL;CVL/37-IeL;1
+2414;Vendôme;89;VENDOME;3;24;41;41-LeC;CVL/41-LeC;0
+2415;Vierzon;28;VIERZON;2;24;18;18-Che;CVL/18-Che;0
+2701;Autun;66;AUTUN;3;27;71;71-SeL;BFC/71-SeL;0
+2702;Auxerre;211;AUXERRE;3;27;89;89-Yon;BFC/89-Yon;0
+2703;Avallon;172;AVALLON;3;27;89;89-Yon;BFC/89-Yon;0
+2704;Beaune;143;BEAUNE;3;27;21;21-CdO;BFC/21-CdO;0
+2705;Belfort;164;BELFORT;2;27;90;90-TdB;BFC/90-TdB;0
+2706;Besançon;408;BESANCON;2;27;25;25-Dou;BFC/25-Dou;0
+2707;Chalon-sur-Saône;133;CHALON SUR SAONE;3;27;71;71-SeL;BFC/71-SeL;0
+2708;Charolais;132;CHAROLAIS;3;27;71;71-SeL;BFC/71-SeL;0
+2709;Châtillon-Montbard;233;CHATILLON MONTBARD;3;27;21;21-CdO;BFC/21-CdO;0
+2710;Creusot-Montceau;57;CREUSOT MONTCEAU;2;27;71;71-SeL;BFC/71-SeL;0
+2711;Dijon;322;DIJON;2;27;21;21-CdO;BFC/21-CdO;1
+2712;Dole;123;DOLE;3;27;39;39-Jur;BFC/39-Jur;0
+2713;Lons-le-Saunier;333;LONS LE SAUNIER;3;27;39;39-Jur;BFC/39-Jur;0
+2714;Montbéliard;146;MONTBELIARD;2;27;25;25-Dou;BFC/25-Dou;0
+2715;Pontarlier;174;PONTARLIER;3;27;25;25-Dou;BFC/25-Dou;0
+2716;Saint-Claude;71;SAINT CLAUDE;3;27;39;39-Jur;BFC/39-Jur;0
+2717;Sens;102;SENS;3;27;89;89-Yon;BFC/89-Yon;0
+2718;Vesoul;336;VESOUL;3;27;70;70-HSa;BFC/70-HSa;0
+2801;Argentan;73;ARGENTAN;3;28;61;61-Orn;NOR/61-Orn;0
+2802;Avranches;101;AVRANCHES;3;28;50;50-Man;NOR/50-Man;0
+2803;Bernay;106;BERNAY;3;28;27;27-Eur;NOR/27-Eur;0
+2804;Caen;378;CAEN;2;28;14;14-Cal;NOR/14-Cal;0
+2805;Cherbourg-en-Cotentin;135;CHERBOURG EN COTENTIN;3;28;50;50-Man;NOR/50-Man;0
+2806;Coutances;67;COUTANCES;3;28;50;50-Man;NOR/50-Man;0
+2807;Dieppe-Caux maritime;196;DIEPPE CAUX MARITIME;3;28;76;76-SMa;NOR/76-SMa;0
+2808;Évreux;167;EVREUX;3;28;27;27-Eur;NOR/27-Eur;0
+2809;Flers;91;FLERS;3;28;61;61-Orn;NOR/61-Orn;0
+2810;Granville;45;GRANVILLE;3;28;50;50-Man;NOR/50-Man;0
+2811;Honfleur Pont-Audemer;119;HONFLEUR PONT AUDEMER;3;28;27;27-Eur;NOR/27-Eur;0
+2812;L'Aigle;79;L AIGLE;3;28;61;61-Orn;NOR/61-Orn;0
+2813;Le Havre;115;LE HAVRE;1;28;76;76-SMa;NOR/76-SMa;0
+2814;Lisieux;93;LISIEUX;3;28;14;14-Cal;NOR/14-Cal;0
+2815;Rouen;299;ROUEN;2;28;76;76-SMa;NOR/76-SMa;1
+2816;Saint-Lô;104;SAINT LO;3;28;50;50-Man;NOR/50-Man;0
+2817;Vernon-Gisors;110;VERNON GISORS;3;28;27;27-Eur;NOR/27-Eur;0
+2818;Vire Normandie;21;VIRE NORMANDIE;3;28;14;14-Cal;NOR/14-Cal;0
+2819;Yvetot-Vallée du Commerce;99;YVETOT VALLEE DU COMMERCE;3;28;76;76-SMa;NOR/76-SMa;0
+3201;Abbeville;165;ABBEVILLE;3;32;80;80-Som;HDF/80-Som;0
+3202;Amiens;455;AMIENS;2;32;80;80-Som;HDF/80-Som;0
+3203;Arras;232;ARRAS;2;32;62;62-PdC;HDF/62-PdC;0
+3204;Berck;201;BERCK;3;32;62;62-PdC;HDF/62-PdC;0
+3205;Béthune;109;BETHUNE;2;32;62;62-PdC;HDF/62-PdC;0
+3206;Boulogne-sur-Mer;92;BOULOGNE SUR MER;2;32;62;62-PdC;HDF/62-PdC;0
+3207;Calais;51;CALAIS;2;32;62;62-PdC;HDF/62-PdC;0
+3208;Cambrai;111;CAMBRAI;2;32;59;59-Nor;HDF/59-Nor;0
+3209;Château-Thierry;119;CHATEAU THIERRY;3;32;02;02-Ais;HDF/02-Ais;0
+3210;Compiègne;181;COMPIEGNE;2;32;60;60-Ois;HDF/60-Ois;0
+3211;Creil;134;CREIL;2;32;60;60-Ois;HDF/60-Ois;0
+3212;Douai;71;DOUAI;2;32;59;59-Nor;HDF/59-Nor;0
+3213;Dunkerque;75;DUNKERQUE;2;32;59;59-Nor;HDF/59-Nor;0
+3214;Laon;225;LAON;3;32;02;02-Ais;HDF/02-Ais;0
+3215;Lens;58;LENS;2;32;62;62-PdC;HDF/62-PdC;0
+3216;Lille;133;LILLE;1;32;59;59-Nor;HDF/59-Nor;1
+3217;Maubeuge;199;MAUBEUGE;2;32;59;59-Nor;HDF/59-Nor;0
+3218;Roubaix-Tourcoing;22;ROUBAIX TOURCOING;1;32;59;59-Nor;HDF/59-Nor;1
+3219;Saint-Omer;126;SAINT OMER;3;32;62;62-PdC;HDF/62-PdC;0
+3220;Saint-Quentin;326;SAINT QUENTIN;3;32;02;02-Ais;HDF/02-Ais;0
+3221;Soissons;232;SOISSONS;3;32;02;02-Ais;HDF/02-Ais;0
+3222;Valenciennes;125;VALENCIENNES;2;32;59;59-Nor;HDF/59-Nor;0
+4401;Bar-le-Duc;154;BAR LE DUC;3;44;55;55-Meu;GES/55-Meu;0
+4402;Châlons-en-Champagne;151;CHALONS EN CHAMPAGNE;2;44;51;51-Mar;GES/51-Mar;0
+4403;Charleville-Mézières;180;CHARLEVILLE MEZIERES;2;44;08;08-Ard;GES/08-Ard;0
+4404;Chaumont;369;CHAUMONT;3;44;52;52-HMa;GES/52-HMa;0
+4405;Colmar;100;COLMAR;2;44;68;68-HRh;GES/68-HRh;0
+4406;Épernay;113;EPERNAY;3;44;51;51-Mar;GES/51-Mar;0
+4407;Épinal;328;EPINAL;3;44;88;88-Vos;GES/88-Vos;0
+4408;Forbach;30;FORBACH;2;44;57;57-Mos;GES/57-Mos;0
+4409;Haguenau;164;HAGUENAU;3;44;67;67-BRh;GES/67-BRh;0
+4410;Metz;246;METZ;2;44;57;57-Mos;GES/57-Mos;1
+4411;Mulhouse;170;MULHOUSE;2;44;68;68-HRh;GES/68-HRh;0
+4412;Nancy;445;NANCY;2;44;54;54-MeM;GES/54-MeM;1
+4413;Reims;225;REIMS;1;44;51;51-Mar;GES/51-Mar;0
+4414;Remiremont;49;REMIREMONT;3;44;88;88-Vos;GES/88-Vos;0
+4415;Romilly-sur-Seine;170;ROMILLY SUR SEINE;3;44;51;51-Mar;GES/51-Mar;0
+4416;Saint-Avold;131;SAINT AVOLD;3;44;57;57-Mos;GES/57-Mos;0
+4417;Saint-Dié-des-Vosges;110;SAINT DIE DES VOSGES;3;44;88;88-Vos;GES/88-Vos;0
+4418;Saint-Louis;91;SAINT LOUIS;2;44;68;68-HRh;GES/68-HRh;0
+4419;Sarrebourg;215;SARREBOURG;3;44;57;57-Mos;GES/57-Mos;0
+4420;Sarreguemines;141;SARREGUEMINES;3;44;57;57-Mos;GES/57-Mos;0
+4421;Sedan;245;SEDAN;3;44;08;08-Ard;GES/08-Ard;0
+4422;Sélestat;72;SELESTAT;3;44;67;67-BRh;GES/67-BRh;0
+4423;Strasbourg;213;STRASBOURG;1;44;67;67-BRh;GES/67-BRh;1
+4424;Thionville;190;THIONVILLE;2;44;57;57-Mos;GES/57-Mos;0
+4425;Troyes;358;TROYES;2;44;10;10-Aub;GES/10-Aub;0
+4426;Verdun;231;VERDUN;3;44;55;55-Meu;GES/55-Meu;0
+4427;Vitry-le-François Saint-Dizier;224;VITRY LE FRANCOIS SAINT DIZIER;3;44;51;51-Mar;GES/51-Mar;0
+5201;Ancenis;23;ANCENIS;3;52;44;44-LoA;PDL/44-LoA;0
+5202;Angers;67;ANGERS;2;52;49;49-MeL;PDL/49-MeL;0
+5203;Challans;42;CHALLANS;3;52;85;85-Ven;PDL/85-Ven;0
+5204;Château-Gontier-sur-Mayenne;32;CHATEAU GONTIER SUR MAYENNE;3;52;53;53-May;PDL/53-May;0
+5205;Châteaubriant;32;CHATEAUBRIANT;3;52;44;44-LoA;PDL/44-LoA;0
+5206;Cholet;35;CHOLET;3;52;49;49-MeL;PDL/49-MeL;0
+5207;Fontenay-le-Comte;98;FONTENAY LE COMTE;3;52;85;85-Ven;PDL/85-Ven;0
+5208;La Ferté-Bernard;80;LA FERTE BERNARD;3;52;72;72-Sar;PDL/72-Sar;0
+5209;La Flèche;28;LA FLECHE;3;52;72;72-Sar;PDL/72-Sar;0
+5210;La Roche-sur-Yon;45;LA ROCHE SUR YON;3;52;85;85-Ven;PDL/85-Ven;0
+5211;Laval;85;LAVAL;3;52;53;53-May;PDL/53-May;0
+5212;Le Mans;148;LE MANS;2;52;72;72-Sar;PDL/72-Sar;0
+5213;Les Herbiers-Montaigu;49;LES HERBIERS MONTAIGU;3;52;85;85-Ven;PDL/85-Ven;0
+5214;Les Sables-d'Olonne;18;LES SABLES D OLONNE;3;52;85;85-Ven;PDL/85-Ven;0
+5215;Mayenne;92;MAYENNE;3;52;53;53-May;PDL/53-May;0
+5216;Nantes;95;NANTES;2;52;44;44-LoA;PDL/44-LoA;1
+5217;Pornic;16;PORNIC;3;52;44;44-LoA;PDL/44-LoA;0
+5218;Sablé-sur-Sarthe;52;SABLE SUR SARTHE;3;52;72;72-Sar;PDL/72-Sar;0
+5219;Saint-Nazaire;37;SAINT NAZAIRE;2;52;44;44-LoA;PDL/44-LoA;0
+5220;Saumur;45;SAUMUR;3;52;49;49-MeL;PDL/49-MeL;0
+5221;Segré-en-Anjou Bleu;30;SEGRE EN ANJOU BLEU;3;52;49;49-MeL;PDL/49-MeL;0
+5301;Auray;28;AURAY;3;53;56;56-Mor;BRE/56-Mor;0
+5302;Brest;92;BREST;2;53;29;29-Fin;BRE/29-Fin;1
+5303;Carhaix-Plouguer;81;CARHAIX PLOUGUER;3;53;22;22-CdA;BRE/22-CdA;0
+5304;Dinan;66;DINAN;3;53;22;22-CdA;BRE/22-CdA;0
+5305;Fougères;45;FOUGERES;3;53;35;35-IeV;BRE/35-IeV;0
+5306;Guingamp;49;GUINGAMP;3;53;22;22-CdA;BRE/22-CdA;0
+5307;Lamballe-Armor;40;LAMBALLE ARMOR;3;53;22;22-CdA;BRE/22-CdA;0
+5308;Lannion;65;LANNION;3;53;22;22-CdA;BRE/22-CdA;0
+5309;Lorient;35;LORIENT;2;53;56;56-Mor;BRE/56-Mor;0
+5310;Morlaix;59;MORLAIX;3;53;29;29-Fin;BRE/29-Fin;0
+5311;Ploërmel;53;PLOERMEL;3;53;56;56-Mor;BRE/56-Mor;0
+5312;Pontivy-Loudéac;64;PONTIVY LOUDEAC;3;53;56;56-Mor;BRE/56-Mor;0
+5313;Quimper;83;QUIMPER;3;53;29;29-Fin;BRE/29-Fin;0
+5314;Quimperlé;18;QUIMPERLE;3;53;29;29-Fin;BRE/29-Fin;0
+5315;Rennes;160;RENNES;2;53;35;35-IeV;BRE/35-IeV;1
+5316;Saint-Brieuc;58;SAINT BRIEUC;3;53;22;22-CdA;BRE/22-CdA;0
+5317;Saint-Malo;54;SAINT MALO;3;53;35;35-IeV;BRE/35-IeV;0
+5318;Vannes;60;VANNES;3;53;56;56-Mor;BRE/56-Mor;0
+5319;Vitré;56;VITRE;3;53;35;35-IeV;BRE/35-IeV;0
+7501;Agen;99;AGEN;3;75;47;47-LeG;NAQ/47-LeG;0
+7502;Angoulême;229;ANGOULEME;3;75;16;16-Cha;NAQ/16-Cha;0
+7503;Bayonne;111;BAYONNE;2;75;64;64-PyA;NAQ/64-PyA;0
+7504;Bergerac;153;BERGERAC;3;75;24;24-Dor;NAQ/24-Dor;0
+7505;Bordeaux;164;BORDEAUX;1;75;33;33-Gir;NAQ/33-Gir;1
+7506;Bressuire;80;BRESSUIRE;3;75;79;79-DSè;NAQ/79-DSè;0
+7507;Brive-la-Gaillarde;98;BRIVE LA GAILLARDE;3;75;19;19-Cor;NAQ/19-Cor;0
+7508;Châtellerault;50;CHATELLERAULT;3;75;86;86-Vie;NAQ/86-Vie;0
+7509;Cognac;191;COGNAC;3;75;17;17-ChM;NAQ/17-ChM;0
+7510;Dax;119;DAX;3;75;40;40-Lan;NAQ/40-Lan;0
+7511;Guéret;255;GUERET;3;75;23;23-Cre;NAQ/23-Cre;0
+7512;La Rochelle;83;LA ROCHELLE;2;75;17;17-ChM;NAQ/17-ChM;0
+7513;La Teste-de-Buch;33;LA TESTE DE BUCH;2;75;40;40-Lan;NAQ/40-Lan;0
+7514;Langon;175;LANGON;3;75;33;33-Gir;NAQ/33-Gir;0
+7515;Lesparre-Médoc;40;LESPARRE MEDOC;3;75;33;33-Gir;NAQ/33-Gir;0
+7516;Libourne;140;LIBOURNE;3;75;33;33-Gir;NAQ/33-Gir;0
+7517;Limoges;130;LIMOGES;2;75;87;87-HVi;NAQ/87-HVi;0
+7518;Marmande;131;MARMANDE;3;75;47;47-LeG;NAQ/47-LeG;0
+7519;Mont-de-Marsan;166;MONT DE MARSAN;3;75;40;40-Lan;NAQ/40-Lan;0
+7520;Niort;158;NIORT;3;75;79;79-DSè;NAQ/79-DSè;0
+7521;Oloron-Sainte-Marie;163;OLORON SAINTE MARIE;3;75;64;64-PyA;NAQ/64-PyA;0
+7522;Pau;286;PAU;2;75;64;64-PyA;NAQ/64-PyA;0
+7523;Périgueux;231;PERIGUEUX;3;75;24;24-Dor;NAQ/24-Dor;0
+7524;Poitiers;163;POITIERS;3;75;86;86-Vie;NAQ/86-Vie;0
+7525;Rochefort;41;ROCHEFORT;3;75;17;17-ChM;NAQ/17-ChM;0
+7526;Royan;51;ROYAN;3;75;17;17-ChM;NAQ/17-ChM;0
+7527;Saint-Junien;104;SAINT JUNIEN;3;75;87;87-HVi;NAQ/87-HVi;0
+7528;Saintes;147;SAINTES;3;75;17;17-ChM;NAQ/17-ChM;0
+7529;Sarlat-la-Canéda;107;SARLAT LA CANEDA;3;75;24;24-Dor;NAQ/24-Dor;0
+7530;Thouars;76;THOUARS;3;75;86;86-Vie;NAQ/86-Vie;0
+7531;Tulle;130;TULLE;3;75;19;19-Cor;NAQ/19-Cor;0
+7532;Villeneuve-sur-Lot;98;VILLENEUVE SUR LOT;3;75;47;47-LeG;NAQ/47-LeG;0
+7601;Agde-Pézenas;18;AGDE PEZENAS;2;76;34;34-Hér;OCC/34-Hér;0
+7602;Albi;190;ALBI;2;76;81;81-Tar;OCC/81-Tar;0
+7603;Alès-Le Vigan;172;ALES LE VIGAN;3;76;30;30-Gar;OCC/30-Gar;0
+7604;Auch;392;AUCH;3;76;32;32-Ger;OCC/32-Ger;0
+7605;Bagnols-sur-Cèze;52;BAGNOLS SUR CEZE;3;76;30;30-Gar;OCC/30-Gar;0
+7606;Béziers;110;BEZIERS;3;76;34;34-Hér;OCC/34-Hér;0
+7607;Cahors;134;CAHORS;3;76;46;46-Lot;OCC/46-Lot;0
+7608;Carcassonne-Limoux;309;CARCASSONNE LIMOUX;3;76;11;11-Aud;OCC/11-Aud;0
+7609;Castelsarrasin-Moissac;104;CASTELSARRASIN MOISSAC;3;76;82;82-TeG;OCC/82-TeG;0
+7610;Castres-Mazamet;134;CASTRES MAZAMET;3;76;81;81-Tar;OCC/81-Tar;0
+7611;Figeac-Villefranche;136;FIGEAC VILLEFRANCHE;3;76;46;46-Lot;OCC/46-Lot;0
+7612;Foix-Pamiers;268;FOIX PAMIERS;3;76;09;09-Ari;OCC/09-Ari;0
+7613;Mende;135;MENDE;3;76;48;48-Loz;OCC/48-Loz;0
+7614;Millau;91;MILLAU;3;76;12;12-Ave;OCC/12-Ave;0
+7615;Montauban;101;MONTAUBAN;3;76;82;82-TeG;OCC/82-TeG;0
+7616;Montpellier;172;MONTPELLIER;2;76;34;34-Hér;OCC/34-Hér;1
+7617;Narbonne;102;NARBONNE;2;76;11;11-Aud;OCC/11-Aud;0
+7618;Nîmes;118;NIMES;2;76;30;30-Gar;OCC/30-Gar;0
+7619;Nord-du-Lot;110;NORD DU LOT;3;76;46;46-Lot;OCC/46-Lot;0
+7620;Perpignan;235;PERPIGNAN;2;76;66;66-PyO;OCC/66-PyO;0
+7621;Rodez;133;RODEZ;3;76;12;12-Ave;OCC/12-Ave;0
+7622;Saint-Gaudens;387;SAINT GAUDENS;3;76;31;31-HGa;OCC/31-HGa;0
+7623;Sète;11;SETE;2;76;34;34-Hér;OCC/34-Hér;0
+7624;Tarbes-Lourdes;477;TARBES LOURDES;3;76;65;65-HPy;OCC/65-HPy;0
+7625;Toulouse;335;TOULOUSE;1;76;31;31-HGa;OCC/31-HGa;1
+8401;Annecy;98;ANNECY;2;84;74;74-HSv;ARA/74-HSv;0
+8402;Aubenas;175;AUBENAS;3;84;07;07-Ard;ARA/07-Ard;0
+8403;Aurillac;102;AURILLAC;3;84;15;15-Can;ARA/15-Can;0
+8404;Belley;72;BELLEY;3;84;01;01-Ain;ARA/01-Ain;0
+8405;Bourg-en-Bresse;166;BOURG EN BRESSE;3;84;01;01-Ain;ARA/01-Ain;0
+8406;Bourgoin-Jallieu;106;BOURGOIN JALLIEU;3;84;38;38-Isè;ARA/38-Isè;0
+8407;Chambéry;110;CHAMBERY;2;84;73;73-Sav;ARA/73-Sav;0
+8408;Clermont-Ferrand;191;CLERMONT FERRAND;2;84;63;63-PdD;ARA/63-PdD;1
+8409;Grenoble;189;GRENOBLE;1;84;38;38-Isè;ARA/38-Isè;1
+8410;Issoire;138;ISSOIRE;3;84;63;63-PdD;ARA/63-PdD;0
+8411;La Maurienne;48;LA MAURIENNE;3;84;73;73-Sav;ARA/73-Sav;0
+8412;La Plaine du Forez;88;LA PLAINE DU FOREZ;3;84;42;42-Loi;ARA/42-Loi;0
+8413;La Tarentaise;68;LA TARENTAISE;3;84;73;73-Sav;ARA/73-Sav;0
+8414;La Vallée de l'Arve;28;LA VALLEE DE L ARVE;2;84;74;74-HSv;ARA/74-HSv;0
+8415;Le Chablais;48;LE CHABLAIS;2;84;74;74-HSv;ARA/74-HSv;0
+8416;Le Genevois Français;146;LE GENEVOIS FRANCAIS;2;84;74;74-HSv;ARA/74-HSv;0
+8417;Le Livradois;109;LE LIVRADOIS;3;84;63;63-PdD;ARA/63-PdD;0
+8418;Le Mont Blanc;20;LE MONT BLANC;2;84;74;74-HSv;ARA/74-HSv;0
+8419;Le Puy-en-Velay;184;LE PUY EN VELAY;3;84;43;43-HLo;ARA/43-HLo;0
+8420;Les Sources de la Loire;77;LES SOURCES DE LA LOIRE;3;84;43;43-HLo;ARA/43-HLo;0
+8421;Lyon;235;LYON;1;84;69;69-Rhô;ARA/69-Rhô;1
+8422;Montélimar;65;MONTELIMAR;3;84;26;26-Drô;ARA/26-Drô;0
+8423;Montluçon;114;MONTLUCON;3;84;03;03-All;ARA/03-All;0
+8424;Moulins;101;MOULINS;3;84;03;03-All;ARA/03-All;0
+8425;Oyonnax;35;OYONNAX;2;84;01;01-Ain;ARA/01-Ain;0
+8426;Roanne;76;ROANNE;3;84;42;42-Loi;ARA/42-Loi;0
+8427;Romans-sur-Isère;57;ROMANS SUR ISERE;3;84;26;26-Drô;ARA/26-Drô;0
+8428;Saint-Étienne;134;SAINT ETIENNE;2;84;42;42-Loi;ARA/42-Loi;1
+8429;Saint-Flour;88;SAINT FLOUR;3;84;15;15-Can;ARA/15-Can;0
+8430;Tarare;42;TARARE;3;84;69;69-Rhô;ARA/69-Rhô;0
+8431;Valence;157;VALENCE;2;84;26;26-Drô;ARA/26-Drô;0
+8432;Vichy;144;VICHY;3;84;03;03-All;ARA/03-All;0
+8433;Vienne-Annonay;146;VIENNE ANNONAY;3;84;07;07-Ard;ARA/07-Ard;0
+8434;Villefranche-sur-Saône;92;VILLEFRANCHE SUR SAONE;2;84;69;69-Rhô;ARA/69-Rhô;0
+8435;Voiron;130;VOIRON;3;84;38;38-Isè;ARA/38-Isè;0
+9301;Aix-en-Provence;61;AIX EN PROVENCE;2;93;13;13-BdR;PACA/13-BdR;1
+9302;Briançon;36;BRIANCON;3;93;05;05-HAl;PACA/05-HAl;0
+9303;Brignoles;41;BRIGNOLES;3;93;83;83-Var;PACA/83-Var;0
+9304;Cannes;50;CANNES;2;93;06;06-AMa;PACA/06-AMa;0
+9305;Carpentras;29;CARPENTRAS;2;93;84;84-Vau;PACA/84-Vau;0
+9306;Cavaillon;54;CAVAILLON;2;93;84;84-Vau;PACA/84-Vau;0
+9307;Digne-les-Bains;123;DIGNE LES BAINS;3;93;04;04-AHP;PACA/04-AHP;1
+9308;Draguignan;39;DRAGUIGNAN;2;93;83;83-Var;PACA/83-Var;0
+9309;Fréjus;5;FREJUS;2;93;83;83-Var;PACA/83-Var;0
+9310;Gap;125;GAP;3;93;05;05-HAl;PACA/05-HAl;0
+9311;Manosque;67;MANOSQUE;3;93;04;04-AHP;PACA/04-AHP;1
+9312;Marseille;32;MARSEILLE;1;93;13;13-BdR;PACA/13-BdR;1
+9313;Martigues-Salon;26;MARTIGUES SALON;2;93;13;13-BdR;PACA/13-BdR;1
+9314;Menton;18;MENTON;2;93;06;06-AMa;PACA/06-AMa;1
+9315;Nice;116;NICE;1;93;06;06-AMa;PACA/06-AMa;1
+9316;Orange;16;ORANGE;3;93;84;84-Vau;PACA/84-Vau;0
+9317;Sainte-Maxime;12;SAINTE MAXIME;2;93;83;83-Var;PACA/83-Var;0
+9318;Toulon;33;TOULON;1;93;83;83-Var;PACA/83-Var;1
+9401;Ajaccio;81;AJACCIO;1;94;2A;2A-CdS;COR/2A-CdS;0
+9402;Bastia;112;BASTIA;2;94;2B;2B-HCo;COR/2B-HCo;0
+9403;Calvi;36;CALVI;3;94;2B;2B-HCo;COR/2B-HCo;0
+9404;Corte;58;CORTE;3;94;2B;2B-HCo;COR/2B-HCo;0
+9405;Ghisonaccia;30;GHISONACCIA;3;94;2B;2B-HCo;COR/2B-HCo;0
+9406;Porto-Vecchio;12;PORTO VECCHIO;3;94;2A;2A-CdS;COR/2A-CdS;0
+9407;Propriano;31;PROPRIANO;3;94;2A;2A-CdS;COR/2A-CdS;0

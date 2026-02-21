@@ -411,45 +411,43 @@ h1, h2, h3, h4, h5, h6,
   position: fixed;
   top: 52px;
   left: 260px;
-  width: 28px;
-  background: linear-gradient(180deg, #5b6abf 0%, #4a5aa8 100%);
-  border: none;
-  border-radius: 0 8px 8px 0;
+  width: 22px;
+  background: #c5cad3;
+  border: 1px solid #b0b6c0;
+  border-left: none;
+  border-radius: 0 6px 6px 0;
   cursor: pointer;
   z-index: 96;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 4px;
   transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-              background 0.15s ease,
-              width 0.2s ease;
-  box-shadow: 2px 0 8px rgba(0,0,0,0.15);
-  padding: 10px 2px;
+              background 0.15s ease;
+  box-shadow: 1px 0 4px rgba(0,0,0,0.08);
+  padding: 8px 2px;
 }
 
 .sidebar-toggle:hover {
-  background: linear-gradient(180deg, #6b7acf 0%, #5a6ab8 100%);
-  width: 32px;
-  box-shadow: 3px 0 12px rgba(0,0,0,0.2);
+  background: #a8afba;
+  box-shadow: 2px 0 6px rgba(0,0,0,0.12);
 }
 
 .sidebar-toggle .toggle-chevron {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
-  color: #fff;
+  color: #556;
   line-height: 1;
 }
 
 .sidebar-toggle .toggle-label {
   writing-mode: vertical-rl;
   text-orientation: mixed;
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
-  color: rgba(255,255,255,0.9);
-  letter-spacing: 0.8px;
-  text-transform: uppercase;
+  color: #556;
+  letter-spacing: 0.5px;
 }
 
 /* &s SIDEBAR_COLLAPSED — État replié */
@@ -460,15 +458,14 @@ body.sidebar-collapsed .left-panel {
 
 body.sidebar-collapsed .sidebar-toggle {
   left: 0;
-  width: 32px;
-  border-radius: 0 8px 8px 0;
-  background: linear-gradient(180deg, #5b6abf 0%, #4a5aa8 100%);
-  box-shadow: 3px 0 12px rgba(0,0,0,0.2);
+  width: 24px;
+  border-left: 1px solid #b0b6c0;
+  background: #d0d5dd;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.12);
 }
 
 body.sidebar-collapsed .sidebar-toggle:hover {
-  background: linear-gradient(180deg, #6b7acf 0%, #5a6ab8 100%);
-  width: 36px;
+  background: #b8bec8;
 }
 
 body.sidebar-collapsed .sub-banner {
@@ -1099,14 +1096,17 @@ td.num, th.num {
   max-width: 90px;
   z-index: 10;
 }
-/* Barre horizontale : adapter max-width + positionnement centré bas */
+/* Barre horizontale : transparent, pas d'encadré — marqueurs ont leur propre fond */
 .legend-bottom-left:has(.legend-bar-h) {
   max-width: none;
-  left: 50%;
-  transform: translateX(-50%);
+  left: 4px;
+  transform: none;
   bottom: 2px;
-  padding: 4px 8px 2px;
-  background: rgba(255, 255, 255, 0.92);
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 /* Bouton export SVG sous le bouton fullscreen */
@@ -1131,10 +1131,11 @@ td.num, th.num {
   background: #f3f4f6;
 }
 
-/* Titre + sous-titre carte */
+/* Titre + sous-titre carte — hauteur fixe pour homogénéité entre cartes */
 .map-title-block {
   text-align: left;
   padding: 4px 8px 2px;
+  min-height: 42px;
 }
 
 .map-title {
@@ -1265,6 +1266,9 @@ td.num, th.num {
 }
 .map-content.modal-open .legend-bottom-left:has(.legend-bar-h) {
   max-width: none;
+  background: none;
+  border: none;
+  box-shadow: none;
 }
 
 .map-content.modal-open .zoom-btn {
@@ -1926,5 +1930,24 @@ td.num, th.num {
   }
 }
 /* &e MOBILE */
+
+/* &s SKELETON — Shimmer loading placeholders */
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+.skeleton-map { height: 380px; margin: 8px; }
+.skeleton-table { height: 200px; margin: 8px; }
+.skeleton-kpi { height: 40px; width: 140px; display: inline-block; margin: 4px 8px; border-radius: 4px; }
+.skeleton-chart { height: 220px; margin: 8px; }
+.skeleton-text { height: 14px; width: 60%; margin: 6px 8px; border-radius: 3px; }
+.skeleton-text.short { width: 35%; }
+/* &e SKELETON */
 
 /* &e DASHBOARD_LIGHT */

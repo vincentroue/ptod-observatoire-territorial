@@ -185,8 +185,10 @@ const TAB_DEFS = {
 
 <!-- &s INIT -->
 ```js
-const initData = await DATA_HANDLES["Zone d'emploi"].json()
-const initTopoRaw = await GEO_HANDLES["Zone d'emploi"].json()
+const [initData, initTopoRaw] = await Promise.all([
+  DATA_HANDLES["Zone d'emploi"].json(),
+  GEO_HANDLES["Zone d'emploi"].json()
+])
 const initGeo = rewind(topojson.feature(initTopoRaw, initTopoRaw.objects[Object.keys(initTopoRaw.objects)[0]]), true)
 
 const aggDataCache = new Map([["Zone d'emploi", initData]])

@@ -79,8 +79,8 @@ export function renderChoropleth(config) {
     title = null,           // Titre SVG (s'exporte avec la carte)
     width = 540,
     height = 560,
-    marginLeft = 50,        // Espace blanc gauche (légende peut chevaucher)
-    marginTop = 30,         // Espace pour titre si présent
+    marginLeft = 50,
+    marginTop = 30,
     marginRight = 10,
     marginBottom = 10
   } = config;
@@ -101,22 +101,22 @@ export function renderChoropleth(config) {
 
   // Construire marks optimisés
   const marks = [
-    // 1. Contour France en fond : stroke gris (bordure extérieure + côte)
-    Plot.geo(geoData, { fill: "none", stroke: "#555", strokeWidth: 0.8 }),
+    // 1. Contour France en fond : stroke gris (côte + frontières)
+    Plot.geo(geoData, { fill: "none", stroke: "#777", strokeWidth: 0.6 }),
 
-    // 2. Fill + stroke intérieur blanc fin
+    // 2. Fill + stroke intérieur blanc léger (séparation territoires)
     Plot.geo(geoData, {
       fill: d => getColor(d.properties[valueCol], d),
-      stroke: "#fff",
-      strokeWidth: 0.12
+      stroke: "rgba(255,255,255,0.5)",
+      strokeWidth: 0.15
     }),
 
     // Overlay contours (départements sur ZE/EPCI/etc.)
     overlayGeo ? Plot.geo(overlayGeo, {
       fill: "none",
-      stroke: "#666",
-      strokeWidth: 0.5,
-      strokeOpacity: 0.5
+      stroke: "#888",
+      strokeWidth: 0.35,
+      strokeOpacity: 0.4
     }) : null,
 
     // Surbrillance sélection (AVANT labels pour que les étiquettes passent devant)
@@ -679,7 +679,7 @@ export function addZoomBehavior(map, config = {}) {
 
   // Fonction : déterminer les labels visibles sans chevauchement
   // Double contrôle : anti-collision + cap adaptatif à la densité du viewport
-  const MAX_INITIAL = 12;  // Labels max sans zoom
+  const MAX_INITIAL = 8;  // Labels max sans zoom (réduit : EPCI dense → moins de clutter)
 
   function computeVisibleLabels(k, tx, ty) {
     const margin = 30;

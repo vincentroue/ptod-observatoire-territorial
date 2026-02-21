@@ -219,6 +219,16 @@ export async function queryCommunes({ conn }, options = {}) {
     // Convertir ArrowTable en array d'objets
     return result.toArray().map(row => row.toJSON());
   } catch (err) {
+    // Si colonne manquante : retirer les colonnes invalides et retenter
+    const match = err.message.match(/Referenced column "([^"]+)" not found/);
+    if (match && columns.length > 1 && columns[0] !== "*") {
+      const badCol = match[1];
+      console.warn(`[DuckDB] Colonne "${badCol}" absente du parquet — retrait et retry`);
+      const safeCols = columns.filter(c => c !== badCol);
+      if (safeCols.length > 0) {
+        return queryCommunes({ conn }, { ...options, columns: safeCols });
+      }
+    }
     console.error("[DuckDB] Erreur:", err.message);
     return [];
   }
