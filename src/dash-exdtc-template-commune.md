@@ -207,6 +207,20 @@ const communesGeo = rewind(topojson.feature(communesTopo, communesTopo.objects.d
 
 const { db, conn } = duckRes;
 
+// Preload: toutes colonnes communes >= 3000 hab + ligne France
+// Élimine la requête DuckDB à chaque changement d'indicateur (carte)
+const [_preloadedComm, _preloadedFr] = await Promise.all([
+  queryCommunes({ conn }, { tableName: "communes", columns: ["*"], minPop: 3000, limit: 5000 }),
+  (async () => {
+    try {
+      const r = await conn.query("SELECT * FROM 'communes.parquet' WHERE code = '00FR' LIMIT 1");
+      const rows = r.toArray();
+      return rows.length > 0 ? rows[0].toJSON() : null;
+    } catch(e) { return null; }
+  })()
+]);
+const _preloadedCommMap = new Map(_preloadedComm.map(d => [d.code, d]));
+
 // LabelMaps pour tous les échelons (chargement parallèle)
 await Promise.all(ECHELONS_SIDEBAR.map(async (ech) => {
   const data = await getData(ech);
@@ -498,13 +512,10 @@ const label2 = getIndicLabel(indic2, "long");
 // Commune : DuckDB + 3Ksup geo | Autres : JSON + topojson échelon
 const { currentGeo, rawData, frData, dataNoFrance } = await (async () => {
   if (isCommune) {
-    const commData = await queryCommunes({ conn }, {
-      tableName: "communes",
-      columns: ["code", "libelle", "regdep", "P23_POP", colKey1, colKey2],
-      minPop: 3000, limit: 5000
-    });
-    const frRow = await queryFrance({ conn }, "communes", [colKey1, colKey2]);
-    const commMap = new Map(commData.map(d => [d.code, d]));
+    // Données préchargées au init (toutes colonnes, pas de requête DuckDB ici)
+    const commData = _preloadedComm;
+    const frRow = _preloadedFr;
+    const commMap = _preloadedCommMap;
     const geo = {
       type: "FeatureCollection",
       features: communesGeo.features.map(f => {
@@ -1247,18 +1258,20 @@ const extraCols = (extraIndics || []).filter(i => !i.startsWith("__sep_")).map(i
 // Ordre : extras ajoutés en PREMIER (après pop), puis cartes, puis défauts
 const allIndicCols = [...new Set([...extraCols, colKey1, colKey2, ...defaultIndicCols])];
 
-// Si sélection: limite 500. Sinon: communes > MIN_POP_DEFAULT hab (~950 communes)
-// MIN_POP_DEFAULT importé de constants.js (10000)
-const communesData = await queryCommunes({ conn }, {
-  tableName: "communes",
-  filter: tableFilter,
-  columns: ["code", "libelle", "regdep", "P23_POP", ...allIndicCols],
-  limit: hasSelection ? 500 : undefined,
-  minPop: hasSelection ? 0 : MIN_POP_DEFAULT
-});
+// Si sélection: DuckDB (codes spécifiques, potentiellement < 3000 hab)
+// Sinon: données préchargées filtrées >= MIN_POP_DEFAULT (10000)
+const communesData = hasSelection
+  ? await queryCommunes({ conn }, {
+      tableName: "communes",
+      filter: tableFilter,
+      columns: ["code", "libelle", "regdep", "P23_POP", ...allIndicCols],
+      limit: 500,
+      minPop: 0
+    })
+  : _preloadedComm.filter(d => (d.P22_POP || 0) >= MIN_POP_DEFAULT);
 
-// Ligne France (lue depuis 00FR ou calculée) — toujours en 1ère ligne + regshort dérivé
-const frRow = await queryFrance({ conn }, "communes", allIndicCols);
+// Ligne France préchargée (toutes colonnes)
+const frRow = _preloadedFr;
 const tableData = (frRow ? [frRow, ...communesData] : communesData).map(d => ({
   ...d, regshort: d.regdep ? d.regdep.split("/")[0] : ""
 }));
