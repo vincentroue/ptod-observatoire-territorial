@@ -200,11 +200,9 @@ try {
     ? ", " + _logOnlyCols.map(c => 'l."' + c + '"').join(", ")
     : "";
   await conn.query(`CREATE OR REPLACE VIEW communes_v AS SELECT g.*${logSelect} FROM 'communes_geo.parquet' g LEFT JOIN 'communes_log.parquet' l ON g.code = l.code`);
-  console.log("[EXDLOG] VIEW communes_v créée — g.* (" + _geoCols.size + " cols) + " + _logOnlyCols.length + " cols log-only");
 } catch (err) {
   console.error("[EXDLOG] VIEW création échouée:", err.message);
   await conn.query(`CREATE OR REPLACE VIEW communes_v AS SELECT * FROM 'communes_geo.parquet'`);
-  console.log("[EXDLOG] Fallback: VIEW = communes_geo only");
 }
 
 // Indicateurs logement : filtrés par thèmes log* + colonnes disponibles dans les données
@@ -245,7 +243,6 @@ const seriesEpciAll = seriesResult.toArray().map(row => {
     logcom: r.logcom != null ? Number(r.logcom) : null
   };
 });
-console.log(`[EXDLOG] Séries EPCI chargées: ${seriesEpciAll.length} lignes`);
 
 // Agréger France (moyenne prix, somme volumes)
 const seriesByYear = new Map();
@@ -268,7 +265,6 @@ const seriesFrance = [...seriesByYear.values()]
     logaut: a.logaut
   }))
   .sort((a, b) => a.annee - b.annee);
-console.log(`[EXDLOG] Séries France agrégées: ${seriesFrance.length} années`);
 
 // Codes territoires pré-sélectionnés
 const RENNES_CODE = "243500139";
@@ -601,22 +597,18 @@ display(_sbBlock);
 ```js
 // === SIDEBAR SEARCH ===
 const searchData = dataNoFrance.map(d => ({ code: d.code, label: d.libelle || d.code, pop: d.P23_POP, regdep: d.regdep || "" }));
-console.log(`[EXDLOG] searchData: ${searchData.length} territoires`);
 
 const searchBox = createSearchBox({
   data: searchData, selection: mapSelectionState, onToggle: toggleMapSelection, onClear: clearMapSelection,
   placeholder: "Recherche (ex: hdf/59)...", maxResults: 8, maxChips: 4, maxWidth: 230, showClearAll: true, showCount: true
 });
-console.log("[EXDLOG] searchBox créé:", searchBox ? "OK" : "FAIL");
 
 // Attendre que le DOM soit prêt
 setTimeout(() => {
   const searchContainer = document.getElementById('search-container');
-  console.log("[EXDLOG] searchContainer trouvé:", searchContainer ? "OK" : "NOT FOUND");
   if (searchContainer) {
     searchContainer.innerHTML = '';
     searchContainer.appendChild(searchBox);
-    console.log("[EXDLOG] searchBox inséré");
   }
 }, 100);
 ```

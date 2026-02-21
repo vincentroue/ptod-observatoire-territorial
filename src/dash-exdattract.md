@@ -227,17 +227,13 @@ async function ensureDuckDB() {
   if (!_duckReady) {
     _duckReady = (async () => {
       try {
-        console.log("[EXDATTRACT] DuckDB init start...")
         const { db, conn } = await initDuckDB()
         if (!conn) throw new Error("conn is null after initDuckDB")
         const pqUrl = await COMMUNES_PARQUET.url()
-        console.log("[EXDATTRACT] Registering parquet:", pqUrl)
         await registerParquet(db, "communes", pqUrl)
         _duckDB = db; _duckConn = conn
-        console.log("[EXDATTRACT] DuckDB ready, loading topo...")
         const topoRaw = await COMMUNES_TOPO.json()
         _communesGeo = rewind(topojson.feature(topoRaw, topoRaw.objects[Object.keys(topoRaw.objects)[0]]), true)
-        console.log("[EXDATTRACT] Communes geo loaded:", _communesGeo.features.length, "features")
       } catch (err) {
         console.error("[EXDATTRACT] DuckDB init failed:", err.message, err)
         _duckReady = null // reset pour permettre retry
