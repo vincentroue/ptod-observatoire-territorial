@@ -1203,11 +1203,12 @@ const tableEl = renderTable({
   setSort: setEchSort2,
   indicColKey: colKey1,
   compact: true,
-  maxHeight: 1800,  // Plus grand pour couvrir cartes + scatter plots
   scrollX: true,
   scrollbarTop: true,
   stickyFirstCol: 2  // Freeze Rég + Territoire
 });
+// Flex-fill + scroll vertical (s'aligne sur la hauteur de la colonne gauche)
+tableEl.style.cssText += "flex:1;min-height:0;overflow-y:auto;";
 tableWrapper.appendChild(tableEl);
 display(tableWrapper);
 void 0;
