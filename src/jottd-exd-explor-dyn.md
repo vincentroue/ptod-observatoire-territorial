@@ -90,6 +90,7 @@ import {
   createTypologieLegend,
   createGradientLegend,
   createBinsLegend,
+  createBinsLegendBar,
   createEcartFranceLegend,
   getGradientColors
 } from "./helpers/legend.js";
@@ -1213,16 +1214,16 @@ if (map1622) {
         max: gradientDomainL[1],
         showZero: isDivergent,
         decimals: 1,
-        title: legendTitleL
+        unit: legendTitleL
       });
     } else {
-      mapLegend1622 = createBinsLegend({
+      mapLegend1622 = createBinsLegendBar({
         colors: PAL_BINS,
         labels: BINS_LABELS,
         counts: binCountsL,
-        vertical: true,
-        reverse: !isDivergent,
-        title: legendTitleL,
+        thresholds: BINS,
+        unit: legendTitleL,
+        franceValue: frX_1622, franceLabel: "Fr.",
         interactive: true, onFilter: _filterMapL
       });
     }
@@ -1384,16 +1385,16 @@ if (map1116) {
         max: gradientDomainR[1],
         showZero: isDivergentR,
         decimals: 1,
-        title: legendTitleR
+        unit: legendTitleR
       });
     } else {
-      mapLegend1116 = createBinsLegend({
+      mapLegend1116 = createBinsLegendBar({
         colors: PAL_BINS_R,
         labels: BINS_LABELS_R,
         counts: binCountsR,
-        vertical: true,
-        reverse: !isDivergentR,
-        title: legendTitleR,
+        thresholds: BINS_R,
+        unit: legendTitleR,
+        franceValue: frX_1116, franceLabel: "Fr.",
         interactive: true, onFilter: _filterMapR
       });
     }
@@ -1922,7 +1923,7 @@ display(renderArrowTypo({
   polarity: polarityL,
   franceT1: grilleFrance?.[col1116],
   franceT2: grilleFrance?.[col1622],
-  options: { width: 520, unit: indicXUnit_L }
+  options: { width: 520, unit: indicXUnit_L, grilleKey }
 }));
 ```
 

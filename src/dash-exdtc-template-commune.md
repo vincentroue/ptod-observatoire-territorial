@@ -685,7 +685,7 @@ const legend1 = _isBins1
   : createGradientLegend({
       colors: gradient1.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient1.min, max: gradient1.max, showZero: gradient1.divergent,
-      decimals: 2, title: unit1 || "",
+      decimals: 2, unit: unit1 || "",
       capped: true, rawMin: gradient1.rawMin, rawMax: gradient1.rawMax
     });
 // Tooltip : toujours passer la ref France + getEcartInfo pour symbole au survol
@@ -770,7 +770,7 @@ const legend2 = _isBins2
   : createGradientLegend({
       colors: gradient2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient2.min, max: gradient2.max, showZero: gradient2.divergent,
-      decimals: 2, title: unit2 || "",
+      decimals: 2, unit: unit2 || "",
       capped: true, rawMin: gradient2.rawMin, rawMax: gradient2.rawMax
     });
 if (map2._tipConfig) {
@@ -913,7 +913,7 @@ const legendC1 = _isBinsC1 && binsC1.thresholds?.length > 0
   : createGradientLegend({
       colors: gradientC1.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradientC1.min, max: gradientC1.max, showZero: gradientC1.divergent,
-      decimals: 2, title: unit1 || "",
+      decimals: 2, unit: unit1 || "",
       capped: true, rawMin: gradientC1.rawMin, rawMax: gradientC1.rawMax
     });
 // Tooltip : ref France + getEcartInfo pour symbole au survol (zoom communes)
@@ -966,7 +966,7 @@ const legendC2 = _isBinsC2 && binsC2.thresholds?.length > 0
   : createGradientLegend({
       colors: gradientC2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradientC2.min, max: gradientC2.max, showZero: gradientC2.divergent,
-      decimals: 2, title: unit2 || "",
+      decimals: 2, unit: unit2 || "",
       capped: true, rawMin: gradientC2.rawMin, rawMax: gradientC2.rawMax
     });
 // Tooltip : ref France + getEcartInfo pour symbole au survol (zoom communes)

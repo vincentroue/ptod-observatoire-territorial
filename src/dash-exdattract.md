@@ -39,7 +39,7 @@ import { getDefaultZoomCode, ECHELONS_ATTRACT, DENS_COLORS, DENS_LABELS } from "
 import { getPeriodesForIndicateur, getDefaultPeriode, buildColKey, getIndicLabel, getPeriodeLabel } from "./helpers/selectindic.js"
 import { formatValue, INDICATEURS, THEMES, getIndicOptionsByAggDash, getSource } from "./helpers/indicators-ddict-js.js"
 import { computeIndicBins, countBins, createGradientScale, GRADIENT_PALETTES, computeEcartFrance, PAL_ECART_FRANCE, ECART_FRANCE_SYMBOLS } from "./helpers/colors.js"
-import { createBinsLegend, createGradientLegend, createEcartFranceLegend } from "./helpers/legend.js"
+import { createBinsLegend, createBinsLegendBar, createGradientLegend, createEcartFranceLegend } from "./helpers/legend.js"
 import { renderChoropleth, createMapWrapper, addZoomBehavior } from "./helpers/maps.js"
 import { createSearchBox } from "./helpers/search.js"
 import { sortTableData, computeBarStats, getIndicUnit, renderTable, exportCSV, openTableFullscreen } from "./helpers/0table.js"
@@ -938,12 +938,13 @@ const legend = isEcart && ecart
   ? createGradientLegend({
       colors: gradient.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient.min, max: gradient.max, showZero: gradient.divergent,
-      decimals: 2, title: unit || "",
+      decimals: 2, unit: unit || "",
       capped: true, rawMin: gradient.rawMin, rawMax: gradient.rawMax
     })
-  : createBinsLegend({
+  : createBinsLegendBar({
       colors: indicBins.palette, labels: indicBins.bins.labels || [], counts,
-      vertical: true, unit, reverse: !indicBins.isDiv,
+      thresholds: indicBins.bins.thresholds || [], unit: unit || "",
+      franceValue: frData?.[colKey1], franceLabel: "Fr.",
       interactive: true, onFilter: filterMapPaths(map, currentGeo, colKey1, indicBins.getBinIdx, getColor)
     })
 
@@ -1025,12 +1026,13 @@ const legend2 = isEcart2 && ecart2
   ? createGradientLegend({
       colors: gradient2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient2.min, max: gradient2.max, showZero: gradient2.divergent,
-      decimals: 2, title: unit2 || "",
+      decimals: 2, unit: unit2 || "",
       capped: true, rawMin: gradient2.rawMin, rawMax: gradient2.rawMax
     })
-  : createBinsLegend({
+  : createBinsLegendBar({
       colors: indicBins2.palette, labels: indicBins2.bins.labels || [], counts: counts2,
-      vertical: true, unit: unit2, reverse: !indicBins2.isDiv,
+      thresholds: indicBins2.bins.thresholds || [], unit: unit2 || "",
+      franceValue: frData?.[colKey2], franceLabel: "Fr.",
       interactive: true, onFilter: filterMapPaths(map2, currentGeo, colKey2, indicBins2.getBinIdx, getColor2)
     })
 

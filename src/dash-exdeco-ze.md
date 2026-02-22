@@ -62,7 +62,7 @@ import { DEFAULT_ECO_TABLE_INDICS, getDefaultZoomCode, DENS_COLORS, DENS_LABELS 
 import { getIndicOptionsByVolet, getPeriodesForIndicateur, getDefaultPeriode, buildColKey, getIndicLabel, getPeriodeLabel } from "./helpers/selectindic.js";
 import { formatValue, INDICATEURS } from "./helpers/indicators-ddict-js.js";
 import { computeIndicBins, countBins, createGradientScale, GRADIENT_PALETTES, computeEcartFrance, PAL_ECART_FRANCE, ECART_FRANCE_SYMBOLS } from "./helpers/colors.js";
-import { createBinsLegend, createGradientLegend, createEcartFranceLegend } from "./helpers/legend.js";
+import { createBinsLegend, createBinsLegendBar, createGradientLegend, createEcartFranceLegend } from "./helpers/legend.js";
 import { renderChoropleth, createMapWrapper, addZoomBehavior } from "./helpers/maps.js";
 import { createSearchBox } from "./helpers/search.js";
 import { sortTableData, computeBarStats, getIndicUnit, renderTable, renderPagination, exportCSV, createTableToolbar, openTableFullscreen } from "./helpers/0table.js";
@@ -618,7 +618,7 @@ function buildCommMap(tCode, tData, w, h, opts = {}) {
     ? createEcartFranceLegend({ palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS, pctLabels: tEcart.pctLabels, counts: tEcartCounts, title: "±Fr." })
     : _isG
     ? createGradientLegend({ colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential, min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent, decimals: 2, capped: true, rawMin: tGrad.rawMin, rawMax: tGrad.rawMax })
-    : createBinsLegend({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, _ck, tBins.bins.thresholds || []), vertical: true, unit: getIndicUnit(_ck), reverse: !tBins.isDiv });
+    : createBinsLegendBar({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, _ck, tBins.bins.thresholds || []), thresholds: tBins.bins.thresholds || [], unit: getIndicUnit(_ck), franceValue: frData?.[_ck], franceLabel: "Fr." });
   const card = document.createElement("div");
   card.style.cssText = "padding:4px;";
   card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), { exportSVGFn: exportSVG, echelon: tLabel, colKey: _ck, title: `${_il} — ${tLabel}` }));
@@ -722,15 +722,15 @@ const legend = isEcart
   ? createGradientLegend({
       colors: gradient.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient.min, max: gradient.max, showZero: gradient.divergent,
-      decimals: 2, title: unit || "",
+      decimals: 2, unit: unit || "",
       capped: true, rawMin: gradient.rawMin, rawMax: gradient.rawMax
     })
-  : createBinsLegend({
+  : createBinsLegendBar({
       colors: PAL, labels: bins.labels || [], counts,
-      vertical: true, unit, reverse: !isDiv,
+      thresholds: bins.thresholds || [], unit: unit || "",
+      franceValue: frData?.[colKey1], franceLabel: "Fr.",
       interactive: true,
       onFilter: (activeIndices) => {
-        // Cibler le 2e groupe <g> (fill paths), PAS le 1er (contour fill="none")
         const zc = map.querySelector("g.zoom-content") || map.querySelector("svg");
         const groups = Array.from(zc.children).filter(c => c.tagName === 'g');
         const fp = groups.length >= 2
@@ -835,12 +835,13 @@ const legend2 = isEcart2
   ? createGradientLegend({
       colors: gradient2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient2.min, max: gradient2.max, showZero: gradient2.divergent,
-      decimals: 2, title: unit2 || "",
+      decimals: 2, unit: unit2 || "",
       capped: true, rawMin: gradient2.rawMin, rawMax: gradient2.rawMax
     })
-  : createBinsLegend({
+  : createBinsLegendBar({
       colors: indicBins2.palette, labels: indicBins2.bins.labels || [], counts: counts2,
-      vertical: true, unit: unit2, reverse: !indicBins2.isDiv,
+      thresholds: indicBins2.bins.thresholds || [], unit: unit2 || "",
+      franceValue: frData?.[colKey2], franceLabel: "Fr.",
       interactive: true,
       onFilter: (activeIndices) => {
         const zc2 = map2.querySelector("g.zoom-content") || map2.querySelector("svg");

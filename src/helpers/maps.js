@@ -751,7 +751,7 @@ export function addZoomBehavior(map, config = {}) {
         const info = baseInfo.get(this);
         if (!info) return;
         // Skip labels avec positions NaN (features sans géométrie valide)
-        if (isNaN(info.x) && isNaN(info.y) && info.origTransform && info.origTransform.includes("NaN")) return;
+        if (isNaN(info.x) || isNaN(info.y) || (info.origTransform && info.origTransform.includes("NaN"))) return;
         if (info.origTransform) {
           // Cas A : texte positionné via transform → append scale
           d3.select(this)

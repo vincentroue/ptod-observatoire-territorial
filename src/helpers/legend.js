@@ -80,20 +80,22 @@ export function createTypologieLegend(config) {
 export function createGradientLegend(config) {
   const {
     colors, min, max, showZero = true, decimals = 1, title = "",
+    unit = "",
     capped = false, rawMin, rawMax
   } = config;
 
-  // Fallback colors si undefined
+  // Fallback: BYRV warm gradient (synced with PAL_SEQ7_BYRV)
   const safeColors = Array.isArray(colors) && colors.length > 0
     ? colors
-    : ["#761548", "#af1f6b", "#d96fa3", "#f5f5f5", "#c8e8bf", "#5ba55b", "#2c5c2d"];
+    : ["#f0ebe0", "#ffe68a", "#fecc5c", "#fd8d3c", "#fc4e2a", "#bd0026", "#5b1a8c"];
 
   // Formatage avec indicateur cap si nécessaire
   const formatVal = (val, isMin) => {
     if (val == null) return '−';
-    const formatted = val.toFixed(decimals);
+    const a = Math.abs(val);
+    const dec = a >= 10 ? 0 : Math.max(decimals, 1);
+    const formatted = dec === 0 ? Math.round(val).toLocaleString("fr-FR") : val.toFixed(dec);
     if (capped) {
-      // Ajouter ≤ ou ≥ pour indiquer le clamp
       return isMin ? `≤${formatted}` : `≥${formatted}`;
     }
     return isMin ? formatted : (val >= 0 ? `+${formatted}` : formatted);
@@ -105,19 +107,21 @@ export function createGradientLegend(config) {
   // Styles inline pour autonomie
   const wrapperStyle = "padding:6px 0;min-width:120px;";
   const titleStyle = "font-size:9px;font-weight:600;color:#374151;margin-bottom:4px;text-align:center;";
-  const barStyle = `height:14px;border-radius:2px;border:1px solid #9ca3af;margin:2px 0;background:linear-gradient(to right, ${safeColors.join(', ')});`;
-  const axisStyle = "display:flex;justify-content:space-between;font-size:9px;color:#4b5563;font-variant-numeric:tabular-nums;";
-  // Couleurs distinctes: violet (min/négatif), gris (zéro), vert (max/positif)
-  const minStyle = "color:#761548;font-weight:500;";
+  const barStyle = `height:8px;border-radius:2px;border:0.5px solid rgba(0,0,0,0.2);margin:2px 0;background:linear-gradient(to right, ${safeColors.join(', ')});`;
+  const axisStyle = "display:flex;align-items:center;font-size:8.5px;color:#4b5563;font-variant-numeric:tabular-nums;gap:2px;";
+  const minStyle = "color:#5b1a8c;font-weight:500;";
   const zeroStyle = "color:#6b7280;";
-  const maxStyle = "color:#2c5c2d;font-weight:500;";
+  const maxStyle = "color:#5b1a8c;font-weight:500;";
 
   return html`<div style="${wrapperStyle}">
     ${title ? html`<div style="${titleStyle}">${title}</div>` : ""}
-    <div style="${barStyle}"></div>
-    <div style="${axisStyle}">
+    <div style="display:flex;align-items:center;gap:3px;">
+      ${unit ? html`<span style="font-size:8.5px;font-weight:600;color:#555;white-space:nowrap;">${unit}</span>` : ""}
+      <div style="flex:1;${barStyle}"></div>
+    </div>
+    <div style="${axisStyle}${unit ? `margin-left:${unit.length * 6 + 6}px;` : ''}">
       <span style="${minStyle}">${gMin}</span>
-      ${showZero ? html`<span style="${zeroStyle}">0</span>` : ''}
+      ${showZero ? html`<span style="${zeroStyle};flex:1;text-align:center;">0</span>` : html`<span style="flex:1;"></span>`}
       <span style="${maxStyle}">${gMax}</span>
     </div>
   </div>`;

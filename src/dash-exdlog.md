@@ -63,7 +63,7 @@ import {
 } from "./helpers/colors.js";
 
 // === legend.js ===
-import { createBinsLegend, createGradientLegend, createEcartFranceLegend } from "./helpers/legend.js";
+import { createBinsLegend, createBinsLegendBar, createGradientLegend, createEcartFranceLegend } from "./helpers/legend.js";
 
 // === maps.js ===
 import { renderChoropleth, createMapWrapper, addZoomBehavior } from "./helpers/maps.js";
@@ -685,7 +685,7 @@ function buildCommMap(tCode, tData, w, h, opts = {}) {
     ? createEcartFranceLegend({ palette: tEcart.palette, symbols: ECART_FRANCE_SYMBOLS, pctLabels: tEcart.pctLabels, counts: tEcartCounts, title: "±Fr.", interactive: true, onFilter: _fmComm })
     : _isG
     ? createGradientLegend({ colors: tGrad.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential, min: tGrad.min, max: tGrad.max, showZero: tGrad.divergent, decimals: 2, capped: true, rawMin: tGrad.rawMin, rawMax: tGrad.rawMax })
-    : createBinsLegend({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, _ck, tBins.bins.thresholds || []), vertical: true, unit: getIndicUnit(_ck), reverse: !tBins.isDiv, interactive: true, onFilter: _fmComm });
+    : createBinsLegendBar({ colors: tBins.palette, labels: tBins.bins.labels || [], counts: countBins(tData, _ck, tBins.bins.thresholds || []), thresholds: tBins.bins.thresholds || [], unit: getIndicUnit(_ck), franceValue: frData?.[_ck], franceLabel: "Fr.", interactive: true, onFilter: _fmComm });
   const card = document.createElement("div");
   card.style.cssText = "padding:4px;";
   card.appendChild(createMapWrapper(cMap, null, cLegend, addZoomBehavior(cMap, {}), { exportSVGFn: exportSVG, echelon: tLabel, colKey: _ck, title: `${_il} — ${tLabel}` }));
@@ -752,12 +752,13 @@ const legend = isEcart
   ? createGradientLegend({
       colors: gradient.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient.min, max: gradient.max, showZero: gradient.divergent,
-      decimals: 2, title: unit || "",
+      decimals: 2, unit: unit || "",
       capped: true, rawMin: gradient.rawMin, rawMax: gradient.rawMax
     })
-  : createBinsLegend({
+  : createBinsLegendBar({
       colors: PAL, labels: bins.labels || [], counts,
-      vertical: true, unit, reverse: !isDiv,
+      thresholds: bins.thresholds || [], unit: unit || "",
+      franceValue: frData?.[colKey], franceLabel: "Fr.",
       interactive: true, onFilter: _filterMapLog(map, currentGeo, colKey, indicBins.getBinIdx, getColor)
     });
 
@@ -834,12 +835,13 @@ const legend2 = isEcart2
   ? createGradientLegend({
       colors: gradient2.divergent ? GRADIENT_PALETTES.divergent["Violet-Vert"] : GRADIENT_PALETTES.sequential,
       min: gradient2.min, max: gradient2.max, showZero: gradient2.divergent,
-      decimals: 2, title: unit2log || "",
+      decimals: 2, unit: unit2log || "",
       capped: true, rawMin: gradient2.rawMin, rawMax: gradient2.rawMax
     })
-  : createBinsLegend({
+  : createBinsLegendBar({
       colors: indicBins2.palette, labels: indicBins2.bins.labels || [], counts: counts2,
-      vertical: true, unit: unit2log, reverse: !indicBins2.isDiv,
+      thresholds: indicBins2.bins.thresholds || [], unit: unit2log || "",
+      franceValue: frData?.[colKey2], franceLabel: "Fr.",
       interactive: true, onFilter: _filterMapLog(map2, currentGeo, colKey2, indicBins2.getBinIdx, getColor2)
     });
 

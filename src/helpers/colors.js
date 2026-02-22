@@ -60,13 +60,13 @@ export const PAL_SEQ_ORANGE = [
  * Nom harmonisé avec jcn-setup.R : pal_seq7_byrv
  */
 export const PAL_SEQ7_BYRV = [
-  "#89bed4",  // Bleu désaturé — < P5  (extrême bas, 5%)
-  "#ffffb2",  // Jaune pâle — P5-P20
+  "#f0ebe0",  // Beige quasi-blanc — < P5  (extrême bas, 5%)
+  "#ffe68a",  // Jaune franc — P5-P20
   "#fecc5c",  // Jaune doré — P20-P40
   "#fd8d3c",  // Orange — P40-P60
   "#fc4e2a",  // Rouge clair — P60-P80
-  "#bd0026",  // Rouge foncé — P80-P95
-  "#4a0010"   // Bordeaux très foncé — > P95  (extrême haut, 5%)
+  "#bd0026",  // Rouge bordeaux — P80-P95
+  "#5b1a8c"   // Violet sombre atténué — > P95  (extrême haut, 5%)
 ];
 
 /**
@@ -75,12 +75,12 @@ export const PAL_SEQ7_BYRV = [
  * Nom harmonisé avec jcn-setup.R : pal_seq6_byrv
  */
 export const PAL_SEQ6_BYRV = [
-  "#89bed4",  // Bleu désaturé — < P5
+  "#d4c9af",  // Beige — < P5
   "#ffffb2",  // Jaune pâle — P5-P25
   "#fecc5c",  // Jaune doré — P25-P50
   "#fd8d3c",  // Orange — P50-P75
   "#e31a1c",  // Rouge — P75-P95
-  "#4a0010"   // Bordeaux très foncé — > P95
+  "#5b1a8c"   // Violet sombre atténué — > P95
 ];
 
 // Alias rétro-compatible
@@ -119,7 +119,8 @@ export const GRADIENT_PALETTES = {
     "Violet-Vert": ["#761548", "#af1f6b", "#e46aa7", "#f5f5f5", "#bcdeb4", "#98cf90", "#2c5c2d"],
     "Bleu-Jaune": ["#b8860b", "#d4a017", "#f5e6a0", "#f8f8f8", "#a8d4e8", "#5ba3d0", "#084594"]
   },
-  sequential: ["#f7fbff", "#c6dbef", "#6baed6", "#2171b5", "#08519c", "#08306b"]  // ColorBrewer Blues
+  // SYNC: PAL_SEQ7_BYRV — Beige-Jaune-Rouge-Violet (chaud)
+  sequential: ["#f0ebe0", "#ffe68a", "#fecc5c", "#fd8d3c", "#fc4e2a", "#bd0026", "#5b1a8c"]
 };
 
 // ============================================================
