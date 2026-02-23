@@ -468,17 +468,13 @@ const extraIndics = view(Inputs.select(
 <!-- &s LAYOUT_MAIN -->
 <div class="layout-main">
 
-<!-- Skeleton placeholders (remplacés par le contenu réel au chargement) -->
-<div id="skeleton-maps" style="display:flex;gap:8px;padding:8px;">
-<div class="skeleton skeleton-map" style="flex:1;"></div>
-<div class="skeleton skeleton-map" style="flex:1;"></div>
+<!-- Preview image : aperçu cartes pendant chargement, retiré dès que les données arrivent -->
+<div id="preview-maps" style="text-align:center;padding:12px 8px;">
+<img src="./data/preview-maps-exdtc.png" style="width:100%;max-width:900px;opacity:0.5;filter:blur(1.5px);border-radius:6px;">
 </div>
-<div id="skeleton-table" class="skeleton skeleton-table" style="margin:8px;"></div>
 
 ```js
-// Retirer les skeletons dès que les données arrivent
-document.getElementById('skeleton-maps')?.remove();
-document.getElementById('skeleton-table')?.remove();
+document.getElementById('preview-maps')?.remove();
 
 // === DONNÉES ===
 const isCommune = echelon === "Commune";

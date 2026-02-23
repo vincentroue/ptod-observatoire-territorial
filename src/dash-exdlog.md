@@ -453,18 +453,7 @@ const extraIndics = view(Inputs.select(
 <!-- &s LAYOUT_MAIN -->
 <div class="layout-main" style="margin-top:0;">
 
-<!-- Skeleton placeholders -->
-<div id="skeleton-maps" style="display:flex;gap:8px;padding:8px;">
-<div class="skeleton skeleton-map" style="flex:1;"></div>
-<div class="skeleton skeleton-map" style="flex:1;"></div>
-</div>
-<div id="skeleton-table" class="skeleton skeleton-table" style="margin:8px;"></div>
-
 ```js
-// Retirer les skeletons
-document.getElementById('skeleton-maps')?.remove();
-document.getElementById('skeleton-table')?.remove();
-
 // === DONNÉES ===
 const meta = getEchelonMeta(echelon);
 const currentGeo = await getGeo(echelon);

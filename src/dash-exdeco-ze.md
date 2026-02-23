@@ -401,18 +401,7 @@ const extraIndics = view(Inputs.select(
 <!-- &s LAYOUT_MAIN -->
 <div class="layout-main" style="margin-top:0;">
 
-<!-- Skeleton placeholders -->
-<div id="skeleton-maps" style="display:flex;gap:8px;padding:8px;">
-<div class="skeleton skeleton-map" style="flex:1;"></div>
-<div class="skeleton skeleton-map" style="flex:1;"></div>
-</div>
-<div id="skeleton-table" class="skeleton skeleton-table" style="margin:8px;"></div>
-
 ```js
-// Retirer les skeletons dès que les données arrivent
-document.getElementById('skeleton-maps')?.remove();
-document.getElementById('skeleton-table')?.remove();
-
 // === SOUS-BANNIÈRE : Profil comparé (collapsible) ===
 const _sbBlock = document.createElement("div");
 _sbBlock.style.cssText = "margin:-6px -20px 0 -16px;padding:0;";
