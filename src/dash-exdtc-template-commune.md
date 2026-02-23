@@ -98,18 +98,12 @@ import {
 // === search.js — Recherche fuzzy Fuse.js ===
 import { createSearchBox } from "./helpers/search.js";  // ({data, selection, onToggle}) → searchbox
 
-// === duckdb.js — Queries Parquet ===
+// === parquet-lite.js — Lecteur Parquet léger (remplace DuckDB-WASM) ===
 import {
-  initDuckDB,              // () → {db, conn}
-  initDuckDBBackground,    // () → void (lance init en arrière-plan)
-  waitForDuckDB,           // () → {db, conn} (attend fin init)
-  registerParquet,         // (db, tableName, url) → void
-  queryCommunes,           // ({conn}, options) → data[]
-  queryFrance              // ({conn}, tableName, columns) → row France (agrégats)
-} from "./helpers/duckdb.js";
-
-// Démarrer DuckDB init en arrière-plan (non-bloquant)
-initDuckDBBackground();
+  loadParquet,             // (fileAttachment) → data[] (charge Parquet complet en mémoire)
+  queryData,               // (allData, options) → data[] (filtre en mémoire)
+  getFranceRow             // (allData) → row France
+} from "./helpers/parquet-lite.js";
 
 // === 0table.js — Tableau triable avec barres ===
 import {
@@ -190,35 +184,20 @@ async function getGeo(ech) {
 
 <!-- &s INIT -->
 ```js
-// Chargement parallèle : données + géo + DuckDB en même temps
-const [defaultData, defaultGeo, communesTopo, depGeo, duckRes] = await Promise.all([
+// Chargement parallèle : données + géo + Parquet communes (hyparquet ~10KB, pas DuckDB ~40MB)
+const [defaultData, defaultGeo, communesTopo, depGeo, _allCommunes] = await Promise.all([
   getData("Zone d'emploi"),
   getGeo("Zone d'emploi"),
   COMMUNES_TOPO.json(),
   getGeo("Département"),
-  (async () => {
-    const { db, conn } = await initDuckDB();
-    await registerParquet(db, "communes", await COMMUNES_PARQUET.url());
-    return { db, conn };
-  })()
+  loadParquet(COMMUNES_PARQUET)
 ]);
 const communesGeo = rewind(topojson.feature(communesTopo, communesTopo.objects.data), true);
 // communesGeo = 3Ksup (3713 communes >= 3000 + 1 FOND_RURAL fusionné)
 
-const { db, conn } = duckRes;
-
-// Preload: toutes colonnes communes >= 3000 hab + ligne France
-// Élimine la requête DuckDB à chaque changement d'indicateur (carte)
-const [_preloadedComm, _preloadedFr] = await Promise.all([
-  queryCommunes({ conn }, { tableName: "communes", columns: ["*"], minPop: 3000, limit: 5000 }),
-  (async () => {
-    try {
-      const r = await conn.query("SELECT * FROM 'communes.parquet' WHERE code = '00FR' LIMIT 1");
-      const rows = r.toArray();
-      return rows.length > 0 ? rows[0].toJSON() : null;
-    } catch(e) { return null; }
-  })()
-]);
+// Données communes en mémoire — filtre JS au lieu de requêtes DuckDB
+const _preloadedFr = getFranceRow(_allCommunes);
+const _preloadedComm = queryData(_allCommunes, { minPop: 3000 });
 const _preloadedCommMap = new Map(_preloadedComm.map(d => [d.code, d]));
 
 // LabelMaps pour tous les échelons (chargement parallèle)
@@ -826,10 +805,10 @@ const zoomDep = isCommune
 // EPCI spécial : OR logic pour MGP (EPCI_EPT=code pour Paris arrond., EPCI=code pour 150 communes MGP)
 const zoomFilter = isEPCI ? null : isCommune ? { DEP: [zoomDep] } : { [filterKey]: [zoomCode] };
 const zoomCustomWhere = isEPCI
-  ? `(CAST("EPCI_EPT" AS VARCHAR) = '${zoomCode}' OR CAST("EPCI" AS VARCHAR) = '${zoomCode}')`
+  ? (d) => String(d.EPCI_EPT) === zoomCode || String(d.EPCI) === zoomCode
   : null;
-const zoomData = await queryCommunes({ conn }, {
-  tableName: "communes", filter: zoomFilter, customWhere: zoomCustomWhere,
+const zoomData = queryData(_allCommunes, {
+  filter: zoomFilter, customWhere: zoomCustomWhere,
   columns: ["code", "libelle", "P23_POP", colKey1, colKey2], limit: 2000
 });
 const zoomDataMap = new Map(zoomData.map(d => [d.code, d]));
@@ -1259,11 +1238,10 @@ const extraCols = (extraIndics || []).filter(i => !i.startsWith("__sep_")).map(i
 // Ordre : extras ajoutés en PREMIER (après pop), puis cartes, puis défauts
 const allIndicCols = [...new Set([...extraCols, colKey1, colKey2, ...defaultIndicCols])];
 
-// Si sélection: DuckDB (codes spécifiques, potentiellement < 3000 hab)
+// Si sélection: filtre par codes (potentiellement < 3000 hab → _allCommunes)
 // Sinon: données préchargées filtrées >= MIN_POP_DEFAULT (10000)
 const communesData = hasSelection
-  ? await queryCommunes({ conn }, {
-      tableName: "communes",
+  ? queryData(_allCommunes, {
       filter: tableFilter,
       columns: ["code", "libelle", "regdep", "P23_POP", ...allIndicCols],
       limit: 500,
