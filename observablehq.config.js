@@ -8,7 +8,8 @@ export default {
     {name: "Exploration Communes", path: "/jottd-exdc-commune"},
     {name: "POC Scatter", path: "/poc-exd-scatter"},
     {name: "Fiche Territoire", path: "/dash-dterr-fiche"},
-    {name: "Fiche IRIS", path: "/dash-dterrb"}
+    {name: "Fiche IRIS", path: "/dash-dterrb"},
+    {name: "Gentrification IRIS", path: "/dash-dpgent"}
     // {name: "Démographie & Flux", path: "/jottd-demig-demog-flux"}  // DÉSACTIVÉ - nécessite communes_unified.csv
   ],
   theme: "light",

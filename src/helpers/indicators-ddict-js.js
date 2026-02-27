@@ -3,7 +3,7 @@
 // AUTO-GÉNÉRÉ depuis config/ddict_indicateurs_ottd.json + CSV volets (v_*)
 // NE PAS MODIFIER - Relancer: Rscript scripts/util-gen-indicators-js.R
 // Volets: source CSV ddict-validation-light_ottd.csv (colonnes v_*)
-// Généré: 2026-02-20 17:56:32.040138
+// Généré: 2026-02-26 12:28:55.04191
 // =======================================================================
 
 import * as d3 from "npm:d3";
@@ -146,11 +146,23 @@ const DDICT = {
       "duree": 3,
       "source": "ANIL"
     },
+    "19_22": {
+      "short": "19-22",
+      "long": "2019-2022",
+      "duree": 4,
+      "source": "SITADEL"
+    },
     "20_24": {
       "short": "20-24",
       "long": "2020-2024",
       "duree": 4,
       "source": "LOVAC"
+    },
+    "26": {
+      "short": "2026",
+      "long": "2026",
+      "type": "stock",
+      "source": "SIRENE"
     }
   },
   "themes": {
@@ -229,6 +241,13 @@ const DDICT = {
       "color": "#f59e0b",
       "icon": "building",
       "ordre": 16
+    },
+    "ecosi": {
+      "label": "SIRENE Économie locale",
+      "color": "#be185d",
+      "icon": "building-2",
+      "ordre": 17,
+      "source": "SIRENE (stock établissements)"
     }
   },
   "indicateurs": {
@@ -254,7 +273,7 @@ const DDICT = {
         "dmf_tmi_cscadre_22",
         "dmf_tmi_a65p_22"
       ],
-      "volets": [],
+      "volets": ["exd", "exdc"],
       "eda": true,
       "priority": 1,
       "polarity": 1,
@@ -5042,15 +5061,37 @@ const DDICT = {
       "type": "pct",
       "short": "% Emménagés réc.",
       "medium": "Part des emménagés récents",
-      "long": "Part des ménages ayant emménagé depuis moins de 4 ans",
+      "long": "Part des ménages ayant emménagé depuis moins de 4 ans (ANEM0002 + ANEM0204 / total ménages)",
       "unit": "%",
       "source": "INSEE RP",
       "periodes": [
-        "22"
+        "22",
+        "16"
       ],
-      "priority": 3,
-      "polarity": 0,
+      "priority": 2,
+      "polarity": 1,
       "symbol": "",
+      "note": "Proxy renouvellement population. Composante idx_gentri IRIS (remplace TMI non disponible à l'IRIS).",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "log_emmenrec_vdifp": {
+      "theme": "log",
+      "type": "vdifp",
+      "short": "△ Emménagés réc.",
+      "medium": "Évolution part emménagés récents",
+      "long": "Variation en points de % de la part des ménages emménagés récents (<4 ans) entre 2016 et 2022",
+      "unit": "pts %",
+      "source": "INSEE RP",
+      "periodes": [
+        "1622"
+      ],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "▲",
+      "note": "Hausse = accélération du renouvellement résidentiel, signal gentrification.",
       "volets": [],
       "agg_dash": false,
       "agg_ecodash": false,
@@ -5766,39 +5807,80 @@ const DDICT = {
       "agg_ecodash": false,
       "agg_logdash": false
     },
-    "logd_px2_global": {
-      "type": "vol",
-      "unit": "€/m²",
+    "logs_logcom_stock": {
+      "short": "% Expansion parc",
+      "medium": "Logements commencés / stock RP",
+      "long": "Part des logements commencés (cumul 4 ans) rapportée au stock de logements RP 2022 (SITADEL + INSEE)",
+      "tooltip": "Effort de construction rapporté au parc existant. Valeur superieure a {percentile}% des territoires.",
+      "type": "vevol",
+      "unit": "%",
+      "theme": "logs",
       "periodes": [
-        "24"
+        "19_22",
+        "22_25"
       ],
-      "short": "Prix m² global",
-      "medium": "Prix médian au m² tous biens",
-      "long": "Prix m² moyen pondéré (appart & maisons)",
-      "source": "DVF",
-      "theme": "logd",
-      "priority": 3,
-      "polarity": 0,
-      "symbol": "",
+      "source": "SITADEL+RP",
+      "priority": 2,
+      "polarity": 1,
       "volets": [],
       "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
-    "logd_px2_global_vevol": {
+    "logs_logcom_pind": {
+      "short": "% Individuel",
+      "medium": "Part individuel dans commencés",
+      "long": "Part des logements individuels (purs + groupés) dans les logements commencés (SITADEL)",
+      "type": "pct",
+      "unit": "%",
+      "theme": "logs",
+      "periodes": [
+        "19_22",
+        "22_25"
+      ],
+      "source": "SITADEL",
+      "priority": 3,
+      "polarity": 0,
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "logs_locm2_1kemp": {
+      "short": "m²loc/1000emp",
+      "medium": "m² locaux activité pour 1000 emplois",
+      "long": "Surface de plancher locaux activité commencés (cumul 4 ans) pour 1000 emplois (SITADEL + INSEE RP)",
+      "tooltip": "Intensité investissement immobilier économique. Exclut exploitation agricole et hébergement hôtelier.",
+      "type": "ratio",
+      "unit": "m²/1000emp",
+      "theme": "logs",
+      "periodes": [
+        "19_22",
+        "22_25"
+      ],
+      "source": "SITADEL+RP",
+      "priority": 3,
+      "polarity": 0,
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "logd_px2_glb_vevol": {
       "type": "vevol",
       "unit": "△%",
       "periodes": [
+        "14_19",
         "16_24",
         "19_24",
         "22_24"
       ],
-      "short": "△ Prix global",
-      "medium": "△ Évolution du prix global au m²",
-      "long": "Évolution prix m² moyen pondéré (appart & maisons, DVF)",
+      "short": "△ Prix logements",
+      "medium": "△ Évolution prix médian logements",
+      "long": "Évolution du prix médian au m² tous logements (proxy pondéré maisons+apparts, DVF)",
       "source": "DVF",
       "theme": "logd",
-      "priority": 3,
+      "priority": 2,
       "polarity": 0,
       "symbol": "△",
       "volets": [],
@@ -5806,20 +5888,57 @@ const DDICT = {
       "agg_ecodash": false,
       "agg_logdash": false
     },
-    "logd_px2_global_ecfr": {
-      "type": "ecfr",
-      "unit": "% écart",
+    "logd_dpe_fg_pct": {
+      "short": "% Passoires F+G",
+      "medium": "Part logements DPE F ou G",
+      "long": "Part des logements diagnostiqués en classe énergétique F ou G (passoires thermiques, BDNB)",
+      "tooltip": "Passoires thermiques. Un taux élevé indique un parc énergivore nécessitant des rénovations. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
+      "type": "pct",
+      "unit": "%",
+      "theme": "logd",
       "periodes": [
         "24"
       ],
-      "short": "▲ Prix global FR",
-      "medium": "Écart au prix national global",
-      "long": "Écart au prix moyen national pondéré (DVF)",
-      "source": "DVF",
+      "source": "BDNB-DPE",
+      "priority": 2,
+      "polarity": -1,
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "logd_dpe_abc_pct": {
+      "short": "% Performants ABC",
+      "medium": "Part logements DPE A, B ou C",
+      "long": "Part des logements diagnostiqués en classe énergétique A, B ou C (performants, BDNB)",
+      "tooltip": "Logements performants. Un taux élevé indique un parc récent ou rénové. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
+      "type": "pct",
+      "unit": "%",
       "theme": "logd",
-      "priority": 3,
+      "periodes": [
+        "24"
+      ],
+      "source": "BDNB-DPE",
+      "priority": 2,
+      "polarity": 1,
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "logd_dpe_total": {
+      "short": "Nb DPE",
+      "medium": "Nombre total de logements diagnostiqués",
+      "long": "Nombre total de logements avec un DPE enregistré (BDNB)",
+      "type": "vol",
+      "unit": "nb",
+      "theme": "logd",
+      "periodes": [
+        "24"
+      ],
+      "source": "BDNB-DPE",
+      "priority": 4,
       "polarity": 0,
-      "symbol": "",
       "volets": [],
       "agg_dash": false,
       "agg_ecodash": false,
@@ -5983,6 +6102,277 @@ const DDICT = {
       "symbol": "◆",
       "definition": "Ancien indice composite déprécié. Remplacé par idxresid_dyn_ind et idxeco_dyn_ind.",
       "note": "Colonne sans suffixe période. Conservé pour compatibilité."
+    },
+    "&comment_ecosi": "══════════ SIRENE ÉCONOMIE LOCALE (ecosi) ══════════",
+    "ecosi_etab_vol": {
+      "short": "Nb étab.",
+      "medium": "Nombre total d'établissements actifs",
+      "long": "Nombre total d'établissements actifs (SIRENE stock)",
+      "type": "vol",
+      "unit": "nb",
+      "theme": "ecosi",
+      "ordre": 1,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Nombre total d'établissements actifs implantés sur l'IRIS (stock SIRENE). Inclut EI, sociétés, sièges et établissements secondaires.",
+      "note": "Stock à date, pas un flux. Un même entreprise peut avoir plusieurs établissements."
+    },
+    "ecosi_emp_vol": {
+      "short": "Étab. employeurs",
+      "medium": "Établissements avec salariés",
+      "long": "Nombre d'établissements employant au moins un salarié",
+      "type": "vol",
+      "unit": "nb",
+      "theme": "ecosi",
+      "ordre": 2,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Établissements déclarant au moins un salarié. Proxy de la densité d'emploi local.",
+      "note": ""
+    },
+    "ecosi_emp_pct": {
+      "short": "% employeurs",
+      "medium": "Part des établissements avec salariés",
+      "long": "Part des établissements employant au moins un salarié (%)",
+      "type": "pct",
+      "unit": "%",
+      "theme": "ecosi",
+      "ordre": 3,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Proportion des établissements actifs employant au moins un salarié. Indicateur de maturité du tissu économique local.",
+      "note": "Part élevée = tissu structuré avec emploi salarié. Part faible = dominance micro-entrepreneurs/EI."
+    },
+    "ecosi_soc_vol": {
+      "short": "Nb sociétés",
+      "medium": "Nombre de sociétés",
+      "long": "Nombre de sociétés (SA, SAS, SARL, etc.)",
+      "type": "vol",
+      "unit": "nb",
+      "theme": "ecosi",
+      "ordre": 4,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Nombre de sociétés (hors EI). Formes juridiques : SA, SAS, SARL, SCI, etc.",
+      "note": ""
+    },
+    "ecosi_soc_pct": {
+      "short": "% sociétés",
+      "medium": "Part des sociétés",
+      "long": "Part des sociétés parmi les établissements (%)",
+      "type": "pct",
+      "unit": "%",
+      "theme": "ecosi",
+      "ordre": 5,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Proportion de sociétés (vs entrepreneurs individuels). Indicateur de structuration économique.",
+      "note": "Valeur élevée = tissu d'entreprises structurées. Faible = dominance auto-entrepreneurs."
+    },
+    "ecosi_eiemp_vol": {
+      "short": "EI employeurs",
+      "medium": "Entrepreneurs individuels avec salariés",
+      "long": "Nombre d'EI employant au moins un salarié",
+      "type": "vol",
+      "unit": "nb",
+      "theme": "ecosi",
+      "ordre": 6,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 4,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Entrepreneurs individuels (EI) déclarant au moins un salarié. Catégorie résiduelle en forte baisse.",
+      "note": ""
+    },
+    "ecosi_einonemp_vol": {
+      "short": "EI sans salarié",
+      "medium": "Entrepreneurs individuels sans salarié",
+      "long": "Nombre d'EI sans salarié (dont micro-entrepreneurs)",
+      "type": "vol",
+      "unit": "nb",
+      "theme": "ecosi",
+      "ordre": 7,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Entrepreneurs individuels sans salarié, dont micro-entrepreneurs. Boom post-2009 (régime auto-entrepreneur).",
+      "note": ""
+    },
+    "ecosi_einonemp_pct": {
+      "short": "% EI sans salarié",
+      "medium": "Part des EI sans salarié",
+      "long": "Part des entrepreneurs individuels sans salarié (%)",
+      "type": "pct",
+      "unit": "%",
+      "theme": "ecosi",
+      "ordre": 8,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Proportion d'EI sans salarié parmi les établissements. Forte dans les quartiers résidentiels (services à domicile, livraison).",
+      "note": ""
+    },
+    "ecosi_etabrec_vol": {
+      "short": "Étab. récents",
+      "medium": "Établissements récents (≤3 ans)",
+      "long": "Nombre d'établissements créés depuis 3 ans ou moins",
+      "type": "vol",
+      "unit": "nb",
+      "theme": "ecosi",
+      "ordre": 9,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Établissements dont la date de création remonte à 3 ans ou moins. Proxy du dynamisme entrepreneurial local.",
+      "note": ""
+    },
+    "ecosi_etabrec_pct": {
+      "short": "% étab. récents",
+      "medium": "Part des établissements récents",
+      "long": "Part des établissements créés depuis ≤3 ans (%)",
+      "type": "pct",
+      "unit": "%",
+      "theme": "ecosi",
+      "ordre": 10,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Taux de renouvellement du tissu économique : part des établissements de moins de 3 ans. Indicateur clé de gentrification commerciale.",
+      "note": "Valeur très élevée peut signaler un turnover excessif (commerces éphémères) plutôt qu'un dynamisme sain."
+    },
+    "ecosi_siege_vol": {
+      "short": "Nb sièges",
+      "medium": "Nombre de sièges sociaux",
+      "long": "Nombre de sièges sociaux implantés sur l'IRIS",
+      "type": "vol",
+      "unit": "nb",
+      "theme": "ecosi",
+      "ordre": 11,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Nombre de sièges sociaux d'entreprises. Concentration forte dans les quartiers d'affaires.",
+      "note": ""
+    },
+    "ecosi_shannon_ind": {
+      "short": "◆ Shannon",
+      "medium": "◆ Indice de Shannon — diversité sectorielle",
+      "long": "Indice de Shannon mesurant la diversité sectorielle NAF",
+      "type": "ind",
+      "unit": "ind",
+      "theme": "ecosi",
+      "ordre": 12,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Indice de Shannon calculé sur la répartition des établissements par division NAF. Mesure la diversité sectorielle. Max théorique = ln(nb_divisions).",
+      "note": "Valeur élevée = économie locale diversifiée. Faible = spécialisation sectorielle forte."
+    },
+    "ecosi_equit_ind": {
+      "short": "◆ Équitabilité",
+      "medium": "◆ Indice d'équitabilité (Pielou)",
+      "long": "Indice d'équitabilité de Pielou — régularité répartition sectorielle",
+      "type": "ind",
+      "unit": "ind",
+      "theme": "ecosi",
+      "ordre": 13,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Rapport Shannon / ln(nb_divisions). Mesure l'homogénéité de la répartition entre secteurs. 1 = répartition parfaitement uniforme.",
+      "note": "Complément du Shannon : un IRIS avec 2 secteurs équilibrés (50/50) aura une forte équitabilité mais un faible Shannon."
+    },
+    "ecosi_nbdiv_vol": {
+      "short": "Nb divisions NAF",
+      "medium": "Nombre de divisions NAF distinctes",
+      "long": "Nombre de divisions NAF présentes sur l'IRIS",
+      "type": "vol",
+      "unit": "nb",
+      "theme": "ecosi",
+      "ordre": 14,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Nombre de divisions NAF (niveau 2 — 88 divisions) ayant au moins un établissement sur l'IRIS.",
+      "note": ""
+    },
+    "ecosi_nafdomql_ind": {
+      "short": "◆ Score NAF dom.",
+      "medium": "◆ Score qualitatif du secteur dominant",
+      "long": "Score qualitatif du secteur NAF dominant",
+      "type": "ind",
+      "unit": "ind",
+      "theme": "ecosi",
+      "ordre": 15,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "◆",
+      "definition": "Score attribué au secteur NAF dominant de l'IRIS. Reflète le positionnement qualitatif du tissu économique local.",
+      "note": "Échelle indicative. Valeur élevée = secteur à forte valeur ajoutée (finance, conseil). Faible = commerce de détail, services basiques."
     }
   },
   "mapping_observable_to_new": {
