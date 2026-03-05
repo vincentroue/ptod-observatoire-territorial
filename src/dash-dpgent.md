@@ -33,13 +33,13 @@ style: styles/dashboard-light.css
 .maplibregl-popup { z-index: 10 !important; }
 .maplibregl-canvas { cursor: default !important; }
 .maplibregl-canvas:active { cursor: grabbing !important; }
-.pgent-city-row { display: flex; gap: 8px; margin-bottom: 36px; margin-top: 4px; }
+.pgent-city-row { display: flex; gap: 8px; margin-bottom: 6px; margin-top: 1px; }
 .pgent-maps-col { flex: 1 1 58%; min-width: 0; }
 .pgent-table-col { flex: 0 0 40%; min-width: 340px; max-width: 520px; display: flex; flex-direction: column; }
 .pgent-pair { display: flex; gap: 6px; margin-bottom: 3px; }
 .pgent-pair > div { flex: 1; position: relative; }
 .pgent-map-title { font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
-.pgent-section { font-size: 13px; font-weight: 600; color: #374151; margin: 6px 0 2px; border: none !important; text-decoration: none; outline: none; }
+.pgent-section { font-size: 13px; font-weight: 600; color: #374151; margin: 4px 0 2px; border: none !important; text-decoration: none; outline: none; }
 .pgent-section::after { display: none !important; }
 .pgent-leg-wrap { position: absolute; bottom: 6px; left: 6px; right: auto; top: auto; z-index: 4; background: rgba(255,255,255,0.92); border: 1px solid #e0e5ea; border-radius: 4px; padding: 3px 6px; backdrop-filter: blur(2px); pointer-events: auto; }
 .pgent-tab { padding:4px 12px; font-size:11px; font-weight:500; border:1px solid #d1d5db; background:#f9fafb; color:#6b7280; cursor:pointer; border-bottom:none; border-radius:4px 4px 0 0; margin-bottom:-1px; }
@@ -244,9 +244,9 @@ window.divGauge = function(val, mean, std) {
 
 // DDICT pour tableojs (headers + formatting)
 const _tblDdict = {};
-_tblDdict["idxg_t2_ind"] = { short: "Idx T2", unit: "ind.", type: "ind" };
+_tblDdict["idxg_t2_ind"] = { short: "Idx", unit: "ind.", type: "ind" };
 _tblDdict["P22_POP"] = { short: "Pop.", unit: "hab", type: "stock" };
-_tblDdict["dm_pop_vtcam_1622"] = { short: "Évol.", unit: "% TCAM 16-22", type: "pct" };
+_tblDdict["dm_pop_vtcam_1622"] = { short: "Évol.", unit: "TCAM 16-22", type: "dec1" };
 _tblDdict["ecosi_etab_vol_26"] = { short: "Étab.", unit: "", type: "stock" };
 _tblDdict["logd_pxmoisrev_21"] = { short: "Px/Rev", unit: "mois", type: "ratio" };
 _tblDdict["ecosi_renouv_horsmE_pct_26"] = { short: "Renouv.", unit: "% hors mE", type: "pct" };
@@ -286,14 +286,17 @@ window.DDICT = _tblDdict;
 
 <!-- &s INDICATORS_SELECT -->
 ```js
-// Idxg pinned at top of dropdown
+// Idxg pinned at top of dropdown (1 entry per concept, period via dropdown)
 const IDXG_OPTIONS = [
   ["── ◆ Gentrification ──", "__sep_idxg__"],
-  ["◆ Indice gentri. T2 (16-22)", "idxg_t2_ind"],
-  ["◆ Indice gentri. T1 (11-16)", "idxg_ind"],
-  ["◆ Percentile gentri. T2", "idxg_t2_pct"],
-  ["◆ Percentile gentri. T1", "idxg_pct"],
+  ["◆ Indice gentrification", "idxg_ind"],
+  ["◆ Percentile gentrification", "idxg_pct"],
+  ["◆ % IRIS top 20% gentri. [commune]", "idxg_com_pct_top20"],
 ];
+// Period map for idxg (même pattern que les autres indicateurs)
+const IDXG_PERIODES = new Map([["16-22", "t2"], ["11-16", "t1"]]);
+// Build colKey: idxg_ind + t2 → idxg_t2_ind, idxg_ind + t1 → idxg_ind
+function buildIdxgColKey(base, per) { return per === "t2" ? base.replace("idxg_", "idxg_t2_") : base; }
 const availableCols = new Set(Object.keys(allDepData[0][0] || {}));
 const stdOptions = [...getIndicOptionsAll(availableCols)];
 // Filtrer dropdown avec whitelist curatée (indicators-dpgent.js)
@@ -320,27 +323,40 @@ const indicOptions = new Map([...IDXG_OPTIONS, ...filtered]);
 
 <!-- &s SUB_BANNER -->
 <style>
-.pgent-sub { display:flex; align-items:center; gap:6px; padding:5px 10px; background:#fff; border-bottom:1px solid #e5e7eb; flex-wrap:wrap; font-size:11px; }
-.pgent-sub form { margin:0; }
-.pgent-sub select { font-size:11px; padding:2px 4px; border:1px solid #d1d5db; border-radius:3px; background:#fff; }
-.pgent-lbl { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:0.4px; }
-.pgent-grp { display:flex; align-items:center; gap:4px; }
-.pgent-sep { width:1px; height:22px; background:#d1d5db; margin:0 2px; }
-.pgent-per select { max-width:72px; font-size:10px; padding:1px 3px; background:#fff; }
+.pgent-sub { display:flex; flex-direction:column; gap:0; border-bottom:1px solid #e5e7eb; font-size:11px; }
+.pgent-sub form { margin:0; flex:0 0 auto; }
+.pgent-sub select { font-size:10.5px; padding:2px 4px; border:1px solid #d1d5db; border-radius:3px; background:#fff; }
+.pgent-lbl { font-size:8.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#9ca3af; }
+.pgent-side-lbl { font-size:9.5px; font-weight:700; letter-spacing:0.3px; min-width:62px; }
+.pgent-grp { display:flex; align-items:center; gap:3px; flex:0 0 auto; }
+.pgent-sep { width:1px; height:18px; background:#d1d5db; margin:0 2px; flex:0 0 1px; }
+.pgent-per { flex:0 0 auto; }
+.pgent-per select { max-width:78px; font-size:10px; padding:1px 3px; background:#fff; }
+.pgent-grp-indic select { max-width:175px; }
+.pgent-ctrl-row { display:flex; align-items:center; gap:4px; padding:2px 8px; flex-wrap:nowrap; }
+.pgent-ctrl-row > * { flex:0 0 auto; }
+.pgent-mode-sel select { max-width:90px; font-size:10px; }
+.pgent-sub input[type="checkbox"] { margin:0; }
+.pgent-sub label { font-size:10px; margin:0; }
+.pgent-row-idf { background:#fdfaf7; }
+.pgent-row-m13 { background:#f7f9fd; }
 </style>
 <div class="pgent-sub">
 
+<div class="pgent-ctrl-row pgent-row-idf">
+<span class="pgent-side-lbl" style="color:#7f1d1d;">Vue Gauche</span>
+
 <div class="pgent-grp pgent-grp-indic">
-<span class="pgent-lbl" style="color:#dc2626;">Gauche</span>
 
 ```js
-const indic1 = view(Inputs.select(indicOptions, { value: "idxg_t2_ind", label: "" }));
+const indic1 = view(Inputs.select(indicOptions, { value: "idxg_com_pct_top20", label: "" }));
 ```
 
+</div>
 <div class="pgent-per">
 
 ```js
-const per1Map = getPeriodesForIndicateur(indic1, availableCols);
+const per1Map = indic1.startsWith("idxg_") ? IDXG_PERIODES : getPeriodesForIndicateur(indic1, availableCols);
 const per1Vals = [...per1Map.values()];
 const periode1 = per1Vals.length > 0
   ? view(Inputs.select(per1Map, { value: per1Vals[0], label: "" }))
@@ -348,21 +364,67 @@ const periode1 = per1Vals.length > 0
 ```
 
 </div>
-</div>
 
-<div class="pgent-sep pgent-grp-indic"></div>
+<div class="pgent-sep"></div>
 
-<div class="pgent-grp pgent-grp-indic">
-<span class="pgent-lbl" style="color:#2563eb;">Droite</span>
+<span class="pgent-lbl">Maille</span>
+<div class="pgent-grp">
 
 ```js
-const indic2 = view(Inputs.select(indicOptions, { value: "rev_med", label: "" }));
+const _viewMode1 = view(Inputs.radio(new Map([["IRIS", "iris"], ["Comm.", "commune"]]), { value: "commune", label: "" }));
 ```
 
+</div>
+
+<div class="pgent-sep"></div>
+
+<span class="pgent-lbl">Mode</span>
+<div class="pgent-grp pgent-mode-sel">
+
+```js
+const paletteMode1 = view(Inputs.select(new Map([["Valeurs", "abs"], ["± Moy.", "ecart"], ["Gradient", "gradient"]]), { value: "gradient", label: "" }));
+```
+
+</div>
+
+<div class="pgent-sep"></div>
+
+<span class="pgent-lbl">Étiq.</span>
+<div class="pgent-grp pgent-mode-sel" style="gap:2px;">
+
+```js
+const _showLabels = view(Inputs.toggle({ label: "", value: false }));
+```
+
+```js
+const _labelMode = view(Inputs.select(new Map([["Top5/Bot5", "top5bot5"], ["Top 10", "top10"]]), { value: "top5bot5", label: "" }));
+```
+
+</div>
+
+<div style="margin-left:auto;flex:0 0 auto;">
+
+```js
+display(html`<span style="font-size:9px;color:#9ca3af;white-space:nowrap;"><b style="color:#7f1d1d;">${idfData.filter(isIrisActive).length}</b>/${idfData.length} IDF</span>`);
+```
+
+</div>
+</div>
+
+<div class="pgent-ctrl-row pgent-row-m13">
+<span class="pgent-side-lbl" style="color:#1e3a5f;">Vue Droite</span>
+
+<div class="pgent-grp pgent-grp-indic">
+
+```js
+const indic2 = view(Inputs.select(indicOptions, { value: "idxg_ind", label: "" }));
+```
+
+</div>
 <div class="pgent-per">
 
 ```js
-const per2Map = getPeriodesForIndicateur(indic2, availableCols);
+const per2Map = indic2.startsWith("idxg_") ? IDXG_PERIODES : getPeriodesForIndicateur(indic2, availableCols);
 const per2Vals = [...per2Map.values()];
 const periode2 = per2Vals.length > 0
   ? view(Inputs.select(per2Map, { value: per2Vals[0], label: "" }))
@@ -370,94 +432,94 @@ const periode2 = per2Vals.length > 0
 ```
 
 </div>
+
+<div class="pgent-sep"></div>
+
+<span class="pgent-lbl">Maille</span>
+<div class="pgent-grp">
+
+```js
+const _viewMode2 = view(Inputs.radio(new Map([["IRIS", "iris"], ["Comm.", "commune"]]), { value: "iris", label: "" }));
+```
+
 </div>
 
 <div class="pgent-sep"></div>
 
-<div class="pgent-grp">
-<span class="pgent-lbl" style="color:#6b7280;">Mode</span>
+<span class="pgent-lbl">Mode</span>
+<div class="pgent-grp pgent-mode-sel">
 
 ```js
-const paletteMode = view(Inputs.radio(new Map([["Valeurs", "abs"], ["± Moy.", "ecart"], ["Gradient", "gradient"]]), { value: "abs", label: "" }));
+const paletteMode2 = view(Inputs.select(new Map([["Valeurs", "abs"], ["± Moy.", "ecart"], ["Gradient", "gradient"]]), { value: "ecart", label: "" }));
 ```
 
 </div>
 
-<div class="pgent-sep pgent-grp-maille"></div>
-
-<div class="pgent-grp pgent-grp-maille">
-<span class="pgent-lbl" style="color:#7c3aed;">Maille</span>
+<div style="margin-left:auto;flex:0 0 auto;">
 
 ```js
-const viewMode = view(Inputs.radio(new Map([["IRIS", "iris"], ["Commune", "commune"]]), { value: "iris", label: "" }));
+display(html`<span style="font-size:9px;color:#9ca3af;white-space:nowrap;"><b style="color:#1e3a5f;">${m13Data.filter(isIrisActive).length}</b>/${m13Data.length} Mars. · idx: <b style="color:#7c3aed;">${allData.filter(d => d.idxg_t2_ind != null).length}</b></span>`);
 ```
 
 </div>
-
-<span id="pgent-preset-label" style="display:none;font-size:10px;color:#4b5563;flex:1;"></span>
-
-```js
-display(html`<div style="display:flex; gap:10px; font-size:10px; color:#6b7280; margin-left:auto; white-space:nowrap;">
-  <span><b style="color:#dc2626;">${idfData.filter(isIrisActive).length}</b>/${idfData.length} IDF</span>
-  <span><b style="color:#dc2626;">${m13Data.filter(isIrisActive).length}</b>/${m13Data.length} Mars.</span>
-  <span>idx: <b style="color:#7c3aed;">${allData.filter(d => d.idxg_t2_ind != null).length}</b></span>
-</div>`);
-```
+</div>
 
 </div>
 <!-- &e SUB_BANNER -->
 
 <!-- &s TAB_BAR — 3 onglets narratifs : Gentrification / Commerce / Croisement -->
 ```js
-const TAB_PRESETS = {
-  gentri: { colKey1: "idxg_t2_com_pct_top20", colKey2: "idxg_t2_ind", vm1: "commune", vm2: "iris", label1: "% IRIS top 20% gentri. T2 [commune]", label2: "◆ Indice gentrification T2 (16-22)" },
-  commerce: { colKey1: "ecosi_renouv_horsmE_pct_26", colKey2: "ecosi_shannon_ind_26", vm1: "iris", vm2: "iris", label1: "Renouvellement éco. hors mE (%)", label2: "Diversité Shannon (indice)" },
+const TAB_QUESTIONS = {
+  gentri: "Quelles communes et quartiers se gentrifient, à quel rythme, et avec quelle hétérogénéité intra-communale ?",
+  commerce: "Quel est le tissu économique local à l'IRIS ?",
+  explor: ""
 };
 ```
 ```js
 const _tabBarEl = (() => {
   const el = document.createElement("div");
-  el.style.cssText = "display:flex;gap:0;border-bottom:2px solid #e5e7eb;padding:0 10px;background:#fafafa;";
+  el.style.cssText = "display:flex;flex-direction:column;background:#f3f4f6;border-bottom:2px solid #e5e7eb;";
   el.value = "gentri";
+  const row = document.createElement("div");
+  row.style.cssText = "display:flex;gap:2px;padding:4px 10px 0;";
+  const qDiv = document.createElement("div");
+  qDiv.className = "pgent-tab-question";
+  qDiv.style.cssText = "padding:3px 12px 5px;font-size:12.5px;font-weight:500;color:#4b5563;min-height:20px;";
+  qDiv.textContent = TAB_QUESTIONS["gentri"];
   for (const [label, key, icon] of [["Gentrification", "gentri", "◆"], ["Tissu économique", "commerce", "⛋"], ["Croisement libre", "explor", "⊞"]]) {
     const btn = document.createElement("button");
     btn.textContent = `${icon} ${label}`;
     btn.dataset.key = key;
     const isFirst = key === "gentri";
-    btn.style.cssText = `padding:6px 16px;font-size:11.5px;font-weight:${isFirst ? 700 : 500};cursor:pointer;border:none;border-bottom:2px solid ${isFirst ? "#dc2626" : "transparent"};margin-bottom:-2px;background:none;color:${isFirst ? "#dc2626" : "#6b7280"};transition:all 0.15s;`;
+    btn.style.cssText = `padding:7px 18px;font-size:12.5px;font-weight:${isFirst ? 700 : 500};cursor:pointer;border:1px solid ${isFirst ? "#c5c9d0" : "#d1d5db"};border-bottom:${isFirst ? "2px solid #fff" : "2px solid transparent"};margin-bottom:-2px;border-radius:6px 6px 0 0;background:${isFirst ? "#fff" : "#f9fafb"};color:${isFirst ? "#dc2626" : "#6b7280"};transition:all 0.15s;letter-spacing:0.2px;box-shadow:${isFirst ? "0 -1px 3px rgba(0,0,0,0.06)" : "none"};`;
+    btn.onmouseenter = () => { if (btn.dataset.key !== el.value) { btn.style.background = "#eef0f3"; btn.style.borderColor = "#b0b5bd"; } };
+    btn.onmouseleave = () => { if (btn.dataset.key !== el.value) { btn.style.background = "#f9fafb"; btn.style.borderColor = "#d1d5db"; } };
     btn.onclick = () => {
       el.value = key;
       el.dispatchEvent(new Event("input"));
-      for (const b of el.querySelectorAll("button")) {
+      qDiv.textContent = TAB_QUESTIONS[key] || "";
+      for (const b of row.querySelectorAll("button")) {
         const active = b.dataset.key === key;
         b.style.fontWeight = active ? "700" : "500";
-        b.style.borderBottomColor = active ? "#dc2626" : "transparent";
+        b.style.border = active ? "1px solid #c5c9d0" : "1px solid #d1d5db";
+        b.style.borderBottom = active ? "2px solid #fff" : "2px solid transparent";
+        b.style.background = active ? "#fff" : "#f9fafb";
         b.style.color = active ? "#dc2626" : "#6b7280";
+        b.style.boxShadow = active ? "0 -1px 3px rgba(0,0,0,0.06)" : "none";
       }
     };
-    el.appendChild(btn);
+    row.appendChild(btn);
   }
+  el.appendChild(row);
+  el.appendChild(qDiv);
   return el;
 })();
 const activeTab = view(_tabBarEl);
 ```
 <!-- &e TAB_BAR -->
 
-<!-- &s SUB_BANNER_TOGGLE — Cacher dropdowns indicateurs sur onglets preset -->
-```js
-{
-  const isPreset = activeTab !== "explor";
-  document.querySelectorAll(".pgent-grp-indic").forEach(el => { el.style.display = isPreset ? "none" : ""; });
-  document.querySelectorAll(".pgent-grp-maille").forEach(el => { el.style.display = isPreset ? "none" : ""; });
-  // Afficher label preset quand pas en mode libre
-  const pl = document.getElementById("pgent-preset-label");
-  if (pl) {
-    const p = TAB_PRESETS[activeTab];
-    pl.style.display = isPreset ? "" : "none";
-    if (p) pl.innerHTML = `<span style="color:#dc2626;">G:</span> ${p.label1} <span style="color:#9ca3af;">·</span> <span style="color:#2563eb;">D:</span> ${p.label2}`;
-  }
-}
-```
+<!-- &s SUB_BANNER_TOGGLE — Indicateurs toujours actifs, KPI adapté au tab -->
+<!-- Dimming supprimé : indicateurs sélectionnables sur tous les onglets -->
 <!-- &e SUB_BANNER_TOGGLE -->
 
 <!-- &s KPI_REACTIVE — KPI strips réactifs selon tab actif -->
@@ -467,25 +529,22 @@ const activeTab = view(_tabBarEl);
   const kpiM13 = document.getElementById("kpi-m13");
   if (kpiIdf) {
     kpiIdf.innerHTML = "";
-    kpiIdf.appendChild(activeTab === "commerce" ? buildCommerceKpiTable(idfData, "#dc2626") : buildIdxKpiTable(idfData, "#dc2626"));
+    kpiIdf.appendChild(activeTab === "commerce" ? buildCommerceKpiTable(idfData, "#7f1d1d") : buildIdxKpiTable(idfData, "#7f1d1d"));
   }
   if (kpiM13) {
     kpiM13.innerHTML = "";
-    kpiM13.appendChild(activeTab === "commerce" ? buildCommerceKpiTable(m13Data, "#2563eb") : buildIdxKpiTable(m13Data, "#2563eb"));
+    kpiM13.appendChild(activeTab === "commerce" ? buildCommerceKpiTable(m13Data, "#1e3a5f") : buildIdxKpiTable(m13Data, "#1e3a5f"));
   }
 }
 ```
 <!-- &e KPI_REACTIVE -->
 
-<!-- &s COLKEYS -->
+<!-- &s COLKEYS — Toujours piloté par les dropdowns (pas d'override preset) -->
 ```js
-const _rawCK1 = indic1.startsWith("idxg_") ? indic1 : buildColKey(indic1, periode1);
-const _rawCK2 = indic2.startsWith("idxg_") ? indic2 : buildColKey(indic2, periode2);
-const _preset = TAB_PRESETS[activeTab];
-const colKey1 = _preset ? _preset.colKey1 : _rawCK1;
-const colKey2 = _preset ? _preset.colKey2 : _rawCK2;
-const viewMode1 = _preset ? _preset.vm1 : viewMode;
-const viewMode2 = _preset ? _preset.vm2 : viewMode;
+const colKey1 = indic1.startsWith("idxg_") ? buildIdxgColKey(indic1, periode1) : buildColKey(indic1, periode1);
+const colKey2 = indic2.startsWith("idxg_") ? buildIdxgColKey(indic2, periode2) : buildColKey(indic2, periode2);
+const viewMode1 = _viewMode1;
+const viewMode2 = _viewMode2;
 ```
 <!-- &e COLKEYS -->
 
@@ -498,10 +557,10 @@ const activeM13Data1 = viewMode1 === "commune" ? comM13Data : m13Data;
 const activeM13Data2 = viewMode2 === "commune" ? comM13Data : m13Data;
 const _checkActive1 = viewMode1 === "commune" ? (() => true) : isIrisActive;
 const _checkActive2 = viewMode2 === "commune" ? (() => true) : isIrisActive;
-const binsIdf1 = computeIrisBins(activeIdfData1, colKey1, paletteMode, _checkActive1);
-const binsIdf2 = computeIrisBins(activeIdfData2, colKey2, paletteMode, _checkActive2);
-const binsM1 = computeIrisBins(activeM13Data1, colKey1, paletteMode, _checkActive1);
-const binsM2 = computeIrisBins(activeM13Data2, colKey2, paletteMode, _checkActive2);
+const binsIdf1 = computeIrisBins(activeIdfData1, colKey1, paletteMode1, _checkActive1);
+const binsIdf2 = computeIrisBins(activeIdfData2, colKey2, paletteMode2, _checkActive2);
+const binsM1 = computeIrisBins(activeM13Data1, colKey1, paletteMode1, _checkActive1);
+const binsM2 = computeIrisBins(activeM13Data2, colKey2, paletteMode2, _checkActive2);
 const getColorIdf1 = makeGetColor(binsIdf1, _checkActive1);
 const getColorIdf2 = makeGetColor(binsIdf2, _checkActive2);
 const getColorM1 = makeGetColor(binsM1, _checkActive1);
@@ -513,10 +572,12 @@ const getColorM2 = makeGetColor(binsM2, _checkActive2);
 ```js
 // &s IDXG_META — Métadonnées indices gentrification IRIS
 const IDXG_LABELS = {
-  "idxg_ind": "◆ Indice gentrification T1 (11-16)",
-  "idxg_t2_ind": "◆ Indice gentrification T2 (16-22)",
-  "idxg_pct": "◆ Gentri. pctl. T1",
-  "idxg_t2_pct": "◆ Gentri. pctl. T2",
+  "idxg_ind": "◆ Indice gentrification 11-16",
+  "idxg_t2_ind": "◆ Indice gentrification 16-22",
+  "idxg_pct": "◆ Percentile gentrification 11-16",
+  "idxg_t2_pct": "◆ Percentile gentrification 16-22",
+  "idxg_com_pct_top20": "% IRIS top 20% gentri. 11-16 [commune]",
+  "idxg_t2_com_pct_top20": "% IRIS top 20% gentri. 16-22 [commune]",
 };
 const IDXG_ZSCORES = {
   t1: ["idxg_z_cadres_evol", "idxg_z_emmenrec_evol", "idxg_z_ouvriers_evol", "idxg_z_prop_evol", "idxg_z_px_evol", "idxg_z_ratio_px_rev", "idxg_z_revmed_evol"],
@@ -545,6 +606,10 @@ function getIdxgRawCols(colKey) {
     if (c.evol[period]) cols.push(c.evol[period]);
     if (c.ref[period]) cols.push(c.ref[period]);
   }
+  // Include idx value + commune aggregates for commune-level tooltip
+  cols.push(period === "t2" ? "idxg_t2_ind" : "idxg_ind");
+  cols.push(period === "t2" ? "idxg_t2_com_med" : "idxg_com_med");
+  cols.push(period === "t2" ? "idxg_t2_com_sd" : "idxg_com_sd");
   return cols;
 }
 // &e IDXG_META
@@ -611,8 +676,9 @@ function computeIrisBins(data, colKey, mode, checkActive = isIrisActive) {
     const s = absMax / 3.5;
     thresholds = [-3*s, -2*s, -s, -s*0.15, s*0.15, s, 2*s];
     palette = PAL_PURPLE_GREEN;
-  } else if (colKey.startsWith("idxg_") && !colKey.includes("_z_")) {
-    // Indices gentrification (0-100 centré 50) — PAL_ECART_FRANCE bleu→blanc→bordeaux
+  } else if (colKey.startsWith("idxg_") && !colKey.includes("_z_") && !colKey.includes("_com_")) {
+    // Indices gentrification IRIS (0-100 centré 50) — PAL_ECART_FRANCE bleu→blanc→bordeaux
+    // Exclut idxg_*_com_* (agrégats commune = % séquentiel, pas centré 50)
     const sd = d3.deviation(vals) || 8;
     thresholds = [50-2.5*sd, 50-1.5*sd, 50-sd, 50-0.3*sd, 50+0.3*sd, 50+sd, 50+1.5*sd, 50+2.5*sd];
     palette = PAL_ECART_FRANCE;
@@ -737,23 +803,86 @@ function makeTooltipFn(mapEl) {
     if (isGreyed) lines.push(`<span style="color:#f87171;font-size:10.5px;">Non classé (pop. &lt; ${POP_MIN} et étab. &lt; ${ETAB_MIN})</span>`);
     // L2 — Valeur indicateur (isolé, gros)
     lines.push(`<span style="color:${valColor};font-size:12.5px;font-weight:600;">${label} : ${valStr}</span>`);
-    // L3 — Percentile + moy zone + classement (tout grisé, compact)
-    if (isIdx && val != null && pct != null && mapEl._sortedVals?.length > 0) {
+    // L3 — Rang simplifié (sans moy zone)
+    if (isIdx && val != null && mapEl._sortedVals?.length > 0) {
       const sv = mapEl._sortedVals;
       const rank = sv.length - d3.bisectLeft(sv, val);
-      const zmStr = zm != null ? (isIdx ? Number(zm).toFixed(1) : formatValue(colKey, zm)) : null;
-      let l3 = `<span style="color:#94a3b8;font-size:10px;">P${pct}`;
-      if (zmStr && zl) l3 += ` · moy.${zl}: ${zmStr}`;
-      l3 += ` · <span style="font-size:9px;">(${rank}<sup style="font-size:6px;">e</sup>/${sv.length})</span>`;
-      l3 += `</span>`;
-      lines.push(l3);
+      const unit = isCom ? "communes" : "IRIS";
+      lines.push(`<span style="color:#94a3b8;font-size:10px;">P${pct} · ${rank}<sup style="font-size:6px;">e</sup>/${sv.length} ${unit}</span>`);
     } else if (!isIdx) {
-      // Non-IDXG : garder format EXDTC (percentile + moy + polarity dots)
       let l2extra = pctTxt + zmInline + rankHtml;
       if (l2extra) lines[lines.length - 1] += l2extra;
     }
-    if (pop) lines.push(`<span style="color:#64748b;font-size:10px;">Pop. ${Math.round(Number(pop)).toLocaleString("fr-FR")} hab.</span>`);
-    if (etab && !isCom) lines.push(`<span style="color:#64748b;font-size:10px;">Étab. ${Number(etab).toLocaleString("fr-FR")}</span>`);
+    // Commune-level _com_ : show median idx + SD
+    if (isIdx && colKey.includes("_com_") && isCom) {
+      const period = colKey.includes("t2") ? "t2" : "t1";
+      const medKey = `_${period === "t2" ? "idxg_t2_com_med" : "idxg_com_med"}`;
+      const sdKey = `_${period === "t2" ? "idxg_t2_com_sd" : "idxg_com_sd"}`;
+      const medVal = props[medKey], sdVal = props[sdKey];
+      if (medVal != null) {
+        let l = `<span style="color:#a78bfa;font-size:10.5px;">◆ Idx médian IRIS : <b>${Number(medVal).toFixed(1)}</b>`;
+        if (sdVal != null) l += ` <span style="color:#94a3b8;font-size:9px;">(σ ${Number(sdVal).toFixed(1)})</span>`;
+        l += `</span>`;
+        lines.push(l);
+      }
+    }
+    // Composantes idx gentrification (barres visuelles + valeur brute + évolution)
+    if (isIdx && val != null) {
+      const period = colKey.includes("t2") ? "t2" : "t1";
+      const perLabel = period === "t2" ? "16-22" : "11-16";
+      const refYear = period === "t2" ? "22" : "16";
+      const zPrefix = period === "t2" ? "idxg_t2_z_" : "idxg_z_";
+      const compLines = [];
+      // Header colonnes
+      compLines.push(
+        `<span style="display:inline-flex;gap:3px;font-size:7.5px;color:#64748b;font-weight:600;letter-spacing:0.2px;margin-top:2px;">` +
+        `<span style="width:64px;display:inline-block;"></span>` +
+        `<span style="width:36px;"></span>` +
+        ` <span style="width:50px;text-align:right;">niveau ${refYear}</span>` +
+        ` <span>△ ${perLabel}</span>` +
+        `</span>`
+      );
+      for (const c of IDXG_COMPONENTS) {
+        const zKey = `_${zPrefix}${c.key}`;
+        const zVal = props[zKey];
+        if (zVal == null) continue;
+        const rawRef = c.ref[period] ? props[`_${c.ref[period]}`] : null;
+        const rawEvol = c.evol[period] ? props[`_${c.evol[period]}`] : null;
+        const zNum = Number(zVal);
+        const barW = Math.min(Math.abs(zNum), 3) * 12;
+        const barCol = zNum > 0 ? "#f87171" : "#60a5fa";
+        const barDir = zNum > 0 ? "right" : "left";
+        let refStr = "";
+        if (rawRef != null) {
+          const rv = c.refFmt === 0 ? Math.round(Number(rawRef)).toLocaleString("fr-FR") : Number(rawRef).toFixed(c.refFmt);
+          refStr = `<span style="color:#cbd5e1;width:50px;text-align:right;display:inline-block;">${rv}${c.refUnit}</span>`;
+        }
+        let evolStr = "";
+        if (rawEvol != null) {
+          const ev = Number(rawEvol);
+          const evTxt = (ev > 0 ? "+" : "") + (c.evolUnit === "pts" ? ev.toFixed(1) + " pts" : ev.toFixed(1) + "%");
+          const evCol = ev > 0 ? "#f87171" : ev < 0 ? "#60a5fa" : "#94a3b8";
+          evolStr = `<span style="color:${evCol};font-weight:600;">${evTxt}</span>`;
+        }
+        compLines.push(
+          `<span style="display:inline-flex;align-items:center;gap:3px;font-size:9.5px;">` +
+          `<span style="color:#94a3b8;width:64px;display:inline-block;">${c.label}</span>` +
+          `<span style="display:inline-block;width:36px;height:5px;background:#1e293b;border-radius:2px;position:relative;overflow:hidden;">` +
+          `<span style="position:absolute;${barDir === "right" ? "left:50%" : `right:50%`};top:0;height:100%;width:${barW}px;background:${barCol};border-radius:2px;"></span></span>` +
+          ` ${refStr}` +
+          ` ${evolStr}` +
+          `</span>`
+        );
+      }
+      if (compLines.length > 1) {
+        lines.push(compLines.join("<br>"));
+      }
+    }
+    // Pop + Étab sur même ligne
+    const metaParts = [];
+    if (pop) metaParts.push(`Pop. ${Math.round(Number(pop)).toLocaleString("fr-FR")} hab.`);
+    if (etab && !isCom) metaParts.push(`${Number(etab).toLocaleString("fr-FR")} étab.`);
+    if (metaParts.length) lines.push(`<span style="color:#64748b;font-size:10px;">${metaParts.join(" · ")}</span>`);
     // Commerce tab : bloc SIRENE enrichi (secteurs dominants, Shannon, densité)
     if (mapEl._activeTab === "commerce") {
       const sd1 = props._ecosi_nafdom1_lib_26, sd1p = props._ecosi_nafdom1_pct_26;
@@ -762,8 +891,8 @@ function makeTooltipFn(mapEl) {
       const dens = props._ecosi_etab_denspop_26;
       const _sep = `<span style="color:#374151;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-top:2px;display:block;">Tissu éco.</span>`;
       let ecoLines = [_sep];
-      if (sd1) ecoLines.push(`<span style="color:#a5b4fc;font-size:10px;">1. ${sd1}${sd1p != null ? ` (${Number(sd1p).toFixed(0)}%)` : ""}</span>`);
-      if (sd2) ecoLines.push(`<span style="color:#a5b4fc;font-size:10px;">2. ${sd2}${sd2p != null ? ` (${Number(sd2p).toFixed(0)}%)` : ""}</span>`);
+      if (sd1) ecoLines.push(`<span style="color:#a5b4fc;font-size:10px;">1. ${sd1}${sd1p != null ? ` (${Number(sd1p).toFixed(1)}%)` : ""}</span>`);
+      if (sd2) ecoLines.push(`<span style="color:#a5b4fc;font-size:10px;">2. ${sd2}${sd2p != null ? ` (${Number(sd2p).toFixed(1)}%)` : ""}</span>`);
       const ecoMeta = [];
       if (shan != null) ecoMeta.push(`Shannon ${Number(shan).toFixed(2)}`);
       if (dens != null) ecoMeta.push(`${Number(dens).toFixed(0)} étab/1k hab`);
@@ -868,24 +997,37 @@ function buildIdxKpiTable(zoneData, accent) {
     return s + v.toFixed(1);
   };
   function kpiItem(label, val, evolStr, evolVal, year) {
-    let h = `<div style="display:flex;align-items:baseline;gap:3px;white-space:nowrap;">`;
-    h += `<span style="color:#6b7280;font-size:9px;">${label}</span> `;
-    h += `<b style="color:#1f2937;font-size:11px;">${val}</b>`;
+    let h = `<div style="display:flex;align-items:baseline;gap:4px;white-space:nowrap;">`;
+    h += `<span style="color:#6b7280;font-size:9.5px;">${label}</span> `;
+    h += `<b style="color:#64748b;font-size:11px;">${val}</b>`;
     if (evolStr) {
-      h += ` <span style="color:${evolColor(evolVal)};font-size:9px;">${evolStr}`;
+      h += ` <span style="color:${evolColor(evolVal)};font-size:11px;font-weight:600;">${evolStr}`;
       if (year) h += ` <span style="color:#b0b7be;font-size:7.5px;">${year}</span>`;
       h += `</span>`;
     }
     return h + `</div>`;
   }
-  const grpStyle = `border-left:2px solid #e5e7eb;padding-left:6px;`;
-  const grpLabel = (t) => `<div style="font-size:7.5px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:1px;">${t}</div>`;
+  const grpStyle = `border-left:2px solid #e5e7eb;padding-left:8px;`;
+  const grpLabel = (t) => `<div style="font-size:9px;font-weight:700;color:#7c8594;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">${t}</div>`;
   const wrap = document.createElement("div");
-  let h = `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;padding:3px 0 5px 12px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
+  let h = `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;padding:5px 6px 6px 12px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
   // CONTEXTE
-  h += `<div style="border-left:2px solid ${accent};padding-left:6px;">${grpLabel("Contexte")}`;
+  h += `<div style="border-left:2px solid ${accent};padding-left:8px;">${grpLabel("Contexte")}`;
   h += kpiItem("Pop.", fvk(total(all, "P22_POP")), fvEvol(med(all, "dm_pop_vtcam_1622"), "%"), med(all, "dm_pop_vtcam_1622"), "TCAM 16-22");
+  h += kpiItem("Étab.", fvk(total(all, "ecosi_etab_vol_26")), null, null, null);
   h += `</div>`;
+  // IDX GENTRIFICATION (after Contexte)
+  if (active.length > 0) {
+    const idxT2 = med(active, "idxg_t2_ind");
+    const idxStr = idxT2 != null ? idxT2.toFixed(1) : "—";
+    const idxTip = "Indice composite : CSP cadres, diplômés sup., prix immobilier, emménagés récents. Centré sur 50, >50 = signaux gentrification.";
+    h += `<div style="border-left:2px solid ${accent};padding-left:8px;">`;
+    h += `<div style="font-size:9px;font-weight:700;color:${accent};text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">`;
+    h += `Idx Gentri. <span style="cursor:help;color:#9ca3af;font-size:10px;" title="${idxTip}">ⓘ</span></div>`;
+    h += `<b style="color:${accent};font-size:16px;">${idxStr}</b>`;
+    h += `<div style="font-size:8px;color:#9ca3af;margin-top:1px;">${active.length} IRIS</div>`;
+    h += `</div>`;
+  }
   // CSP
   h += `<div style="${grpStyle}">${grpLabel("CSP")}`;
   h += kpiItem("Cadres", fvPct(med(all, "dsp_csp_cadres_pct_22")), fvEvol(med(all, "dsp_csp_cadres_vdifp_1622"), "pts"), med(all, "dsp_csp_cadres_vdifp_1622"), "16-22");
@@ -896,27 +1038,17 @@ function buildIdxKpiTable(zoneData, accent) {
   h += kpiItem("Emménag. &lt;5 ans", fvPct(med(all, "log_emmenrec_pct_22")), fvEvol(med(all, "log_emmenrec_vdifp_1622"), "pts"), med(all, "log_emmenrec_vdifp_1622"), "16-22");
   h += kpiItem("Propriétaires", fvPct(med(all, "log_prop_pct_22")), fvEvol(med(all, "log_prop_vdifp_1622"), "pts"), med(all, "log_prop_vdifp_1622"), "16-22");
   h += `</div>`;
-  // MARCHÉ
+  // REVENUS
+  h += `<div style="${grpStyle}">${grpLabel("Revenus")}`;
+  h += kpiItem("Rev. médian", fvEur(med(all, "rev_med_21")), null, null, null);
+  h += kpiItem("Tx pauvreté", fvPct(med(all, "rev_txpauv_21")), null, null, null);
+  h += `</div>`;
+  // MARCHÉ IMMO
   h += `<div style="${grpStyle}">${grpLabel("Marché immo.")}`;
   h += kpiItem("Prix m²", fvEur(med(all, "logd_px2mm3_appt_24")), fvEvol(med(all, "logd_px2_glb_vevol_1624"), "%"), med(all, "logd_px2_glb_vevol_1624"), "16-24");
-  h += kpiItem("Rev. médian", fvEur(med(all, "rev_med_21")), fvEvol(med(all, "rev_med_vevol_1921"), "%"), med(all, "rev_med_vevol_1921"), "19-21");
   const pxRev = med(all, "logd_pxmoisrev_21");
   h += kpiItem("Ratio px/rev", pxRev != null ? Math.round(pxRev) + " mois" : "—", null, null, null);
   h += `</div>`;
-  // IDX GENTRIFICATION
-  if (active.length > 0) {
-    const idxT2 = med(active, "idxg_t2_ind"), idxT1 = med(active, "idxg_ind");
-    const idxEvol = (idxT2 != null && idxT1 != null) ? idxT2 - idxT1 : null;
-    const idxStr = idxT2 != null ? idxT2.toFixed(1) : "—";
-    const idxEvolStr = idxEvol != null ? ((idxEvol > 0 ? "+" : "") + idxEvol.toFixed(1)) : null;
-    h += `<div style="border-left:2px solid ${accent};padding-left:6px;">${grpLabel(`<span style="color:${accent};">Idx Gentri.</span>`)}`;
-    h += `<div style="display:flex;align-items:baseline;gap:4px;">`;
-    h += `<b style="color:${accent};font-size:14px;">${idxStr}</b>`;
-    if (idxEvolStr) h += ` <span style="color:${evolColor(idxEvol)};font-size:10px;">${idxEvolStr} <span style="color:#b0b7be;font-size:7.5px;">T1→T2</span></span>`;
-    h += `</div>`;
-    h += `<div style="font-size:8px;color:#9ca3af;">${active.length} IRIS avec idx</div>`;
-    h += `</div>`;
-  }
   h += `</div>`;
   wrap.innerHTML = h;
   return wrap;
@@ -932,16 +1064,17 @@ function buildCommerceKpiTable(zoneData, accent) {
   const fv1 = (v) => v != null ? v.toFixed(1) : "—";
   const fv2 = (v) => v != null ? v.toFixed(2) : "—";
   function kpiItem(label, val) {
-    return `<div style="display:flex;align-items:baseline;gap:3px;white-space:nowrap;">` +
-      `<span style="color:#6b7280;font-size:9px;">${label}</span> ` +
-      `<b style="color:#1f2937;font-size:11px;">${val}</b></div>`;
+    return `<div style="display:flex;align-items:baseline;gap:4px;white-space:nowrap;">` +
+      `<span style="color:#6b7280;font-size:9.5px;">${label}</span> ` +
+      `<b style="color:#64748b;font-size:11px;">${val}</b></div>`;
   }
-  const grpStyle = `border-left:2px solid #e5e7eb;padding-left:6px;`;
-  const grpLabel = (t) => `<div style="font-size:7.5px;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:1px;">${t}</div>`;
+  const grpStyle = `border-left:2px solid #e5e7eb;padding-left:8px;`;
+  const grpLabel = (t) => `<div style="font-size:9px;font-weight:700;color:#7c8594;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">${t}</div>`;
   const wrap = document.createElement("div");
-  let h = `<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;padding:3px 0 5px 12px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
-  // VOLUME
-  h += `<div style="border-left:2px solid ${accent};padding-left:6px;">${grpLabel("Volume")}`;
+  let h = `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;padding:5px 6px 6px 12px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
+  // CONTEXTE
+  h += `<div style="border-left:2px solid ${accent};padding-left:8px;">${grpLabel("Contexte")}`;
+  h += kpiItem("Pop.", fvk(total(all, "P22_POP")));
   h += kpiItem("Étab. total", fvk(total(all, "ecosi_etab_vol_26")));
   h += kpiItem("Densité", fv1(med(all, "ecosi_etab_denspop_26")) + " /1k hab");
   h += `</div>`;
@@ -957,19 +1090,17 @@ function buildCommerceKpiTable(zoneData, accent) {
   h += kpiItem("% récents", fvPct(med(all, "ecosi_etabrec_pct_26")));
   h += kpiItem("% non-emp.", fvPct(med(all, "ecosi_einonemp_pct_26")));
   h += `</div>`;
-  // CONTEXTE
-  h += `<div style="${grpStyle}">${grpLabel("Contexte")}`;
-  h += kpiItem("Pop.", fvk(total(all, "P22_POP")));
-  h += `</div>`;
   h += `</div>`;
   wrap.innerHTML = h;
   return wrap;
 }
 
-display(html`<div class="pgent-section" style="border-left:3px solid #dc2626;padding-left:8px;" title="Paris (20 arr.) + 27 communes limitrophes"><span style="color:#dc2626;">Paris et 27 communes limitrophes</span> <span style="font-weight:400;font-size:11px;color:#9ca3af;">— ${_idfN} IRIS actifs / ${idfData.length}</span></div>`);
+display(html`<div style="background:#faf7f4;padding:5px 10px 3px;margin:0 -10px;border-bottom:1px solid #f0ebe0;">
+<div style="font-size:13px;font-weight:700;color:#7f1d1d;">Paris et 27 communes limitrophes <span style="font-weight:400;font-size:11px;color:#9ca3af;">— ${_idfN} IRIS actifs / ${idfData.length}</span></div>
+</div>`);
 ```
 
-<div id="kpi-idf" style="min-height:32px;"></div>
+<div id="kpi-idf" style="min-height:32px;padding:3px 0 5px;"></div>
 
 <div class="pgent-city-row">
 <div class="pgent-maps-col">
@@ -995,10 +1126,12 @@ display(html`<div class="pgent-section" style="border-left:3px solid #dc2626;pad
 </div>
 
 ```js
-display(html`<div class="pgent-section" style="border-left:3px solid #2563eb;padding-left:8px;"><span style="color:#2563eb;">Marseille — 16 arrondissements</span> <span style="font-weight:400;font-size:11px;color:#9ca3af;">— ${_m13N} IRIS actifs / ${m13Data.length}</span></div>`);
+display(html`<div style="background:#f5f7fb;padding:5px 10px 3px;margin:0 -10px;border-bottom:1px solid #e0e5f0;">
+<div style="font-size:13px;font-weight:700;color:#1e3a5f;">Marseille — 16 arrondissements <span style="font-weight:400;font-size:11px;color:#9ca3af;">— ${_m13N} IRIS actifs / ${m13Data.length}</span></div>
+</div>`);
 ```
 
-<div id="kpi-m13" style="min-height:32px;"></div>
+<div id="kpi-m13" style="min-height:32px;padding:3px 0 5px;"></div>
 
 <div class="pgent-city-row">
 <div class="pgent-maps-col">
@@ -1235,9 +1368,8 @@ const mapRefs = await (async () => {
   const svM1 = activeM13Data1.filter(d => _isActive1(d) && d[colKey1] != null).map(d => d[colKey1]).sort((a, b) => a - b);
   const svM2 = activeM13Data2.filter(d => _isActive2(d) && d[colKey2] != null).map(d => d[colKey2]).sort((a, b) => a - b);
 
-  const _p = TAB_PRESETS[activeTab];
-  const title1 = _p ? _p.label1 : ((indic1.startsWith("idxg_") ? (IDXG_LABELS[indic1] || indic1) : getFullLabel(indic1, periode1)) + (isCom1 ? " [commune]" : ""));
-  const title2 = _p ? _p.label2 : ((indic2.startsWith("idxg_") ? (IDXG_LABELS[indic2] || indic2) : getFullLabel(indic2, periode2)) + (isCom2 ? " [commune]" : ""));
+  const title1 = (colKey1.startsWith("idxg_") ? (IDXG_LABELS[colKey1] || colKey1) : getFullLabel(indic1, periode1)) + (isCom1 ? " [commune]" : "");
+  const title2 = (colKey2.startsWith("idxg_") ? (IDXG_LABELS[colKey2] || colKey2) : getFullLabel(indic2, periode2)) + (isCom2 ? " [commune]" : "");
 
   // Update titres
   const t1 = document.getElementById("title-idf1"); if (t1) t1.textContent = title1;
@@ -1314,15 +1446,18 @@ const mapRefs = await (async () => {
     ref.container.appendChild(leg);
     ref.container._leg = leg;
 
-    // Labels top 5 / bottom 5 — symbole layer sur centroïdes
+    // Labels top10 + bot5 — toggled/filtered by LABEL_TOGGLE cell
     const labSrcId = ref.sourceId + "-labels";
     const labLayerId = ref.sourceId.replace("src-", "") + "-labels";
     const ranked = geo.features
       .filter(f => f.properties._val != null && !isNaN(f.properties._val) && f.properties._fill !== GREY_NA)
       .sort((a, b) => a.properties._val - b.properties._val);
     const bot5 = ranked.slice(0, 5);
-    const top5 = ranked.slice(-5);
-    const labFeatures = [...top5.map(f => [f, "top"]), ...bot5.map(f => [f, "bot"])].map(([f, rank]) => {
+    const top10 = ranked.slice(-10).reverse();
+    const labFeatures = [
+      ...top10.map((f, i) => [f, "top", i + 1]),
+      ...bot5.map((f, i) => [f, "bot", i + 1])
+    ].map(([f, rank, n]) => {
       const centroid = d3.geoCentroid(f);
       const v = f.properties._val;
       const isIdx = colKey.startsWith("idxg_");
@@ -1331,7 +1466,7 @@ const mapRefs = await (async () => {
       return {
         type: "Feature",
         geometry: { type: "Point", coordinates: centroid },
-        properties: { _labelText: `${name}\n${vStr}`, _rank: rank }
+        properties: { _labelText: `${name}\n${vStr}`, _rank: rank, _n: n }
       };
     });
     const labGeo = { type: "FeatureCollection", features: labFeatures };
@@ -1348,7 +1483,7 @@ const mapRefs = await (async () => {
           "text-anchor": "center",
           "text-allow-overlap": false,
           "text-ignore-placement": false,
-          "text-padding": 3
+          "text-padding": 2
         },
         paint: {
           "text-color": ["case", ["==", ["get", "_rank"], "top"], "#b91c1c", "#1d4ed8"],
@@ -1357,6 +1492,8 @@ const mapRefs = await (async () => {
         }
       });
     }
+    // Default: hidden (toggled + filtered by LABEL_TOGGLE reactive cell)
+    ref.map.setLayoutProperty(labLayerId, "visibility", "none");
   }
 
   updateMap(mapRefs.idf1, geoIdf1, colKey1, svIdf1, binsIdf1, makeFilterCb(mapRefs.idf1), meanIdf1, naIdf1, "IDF", viewMode1);
@@ -1367,6 +1504,26 @@ const mapRefs = await (async () => {
 ```
 <!-- &e MAP_UPDATE -->
 
+<!-- &s LABEL_TOGGLE — Toggle + filtre labels (léger, pas de rebuild carte) -->
+```js
+{
+  // Filter: top5bot5 → n≤5 (both top+bot), top10 → rank=top only
+  const labFilter = _labelMode === "top10"
+    ? ["==", ["get", "_rank"], "top"]
+    : ["<=", ["get", "_n"], 5];
+  for (const refKey of ["idf1", "idf2", "m1", "m2"]) {
+    const ref = mapRefs[refKey];
+    if (!ref?.map) continue;
+    const labLayerId = ref.sourceId.replace("src-", "") + "-labels";
+    if (ref.map.getLayer(labLayerId)) {
+      ref.map.setLayoutProperty(labLayerId, "visibility", _showLabels ? "visible" : "none");
+      ref.map.setFilter(labLayerId, labFilter);
+    }
+  }
+}
+```
+<!-- &e LABEL_TOGGLE -->
+
 <!-- &s SCATTER_UPDATE — Scatter réactif par ville -->
 ```js
 {
@@ -1375,12 +1532,11 @@ const mapRefs = await (async () => {
   const M13_COLORS = { "13": "#2563eb" };
   const M13_LABELS = { "13": "Marseille" };
 
-  // Scatter always uses IRIS data (even if one map is commune). Override colKey1 for Tab 1 (commune→IRIS substitute)
-  const scatterCK1 = (activeTab === "gentri") ? "idxg_t2_ind" : colKey1;
+  // Scatter always uses IRIS data. If left map is commune idx, substitute IRIS idx for scatter
+  const scatterCK1 = (viewMode1 === "commune" && colKey1.includes("_com_")) ? colKey1.replace("_com_pct_top20", "_ind") : colKey1;
   const scatterCK2 = colKey2;
-  const _pLabel = TAB_PRESETS[activeTab];
-  const stitle1 = _pLabel ? (_pLabel.label1.includes("commune") ? "◆ Indice gentrification T2 (16-22)" : _pLabel.label1) : (indic1.startsWith("idxg_") ? (IDXG_LABELS[indic1] || indic1) : getFullLabel(indic1, periode1));
-  const stitle2 = _pLabel ? _pLabel.label2 : (indic2.startsWith("idxg_") ? (IDXG_LABELS[indic2] || indic2) : getFullLabel(indic2, periode2));
+  const stitle1 = colKey1.startsWith("idxg_") ? (IDXG_LABELS[scatterCK1] || scatterCK1) : getFullLabel(indic1, periode1);
+  const stitle2 = colKey2.startsWith("idxg_") ? (IDXG_LABELS[colKey2] || colKey2) : getFullLabel(indic2, periode2);
 
   function renderCityScatter(containerId, legendId, srcData, colorMap, labelMap, isCom) {
     const filterFn = isCom
@@ -1455,8 +1611,8 @@ const mapRefs = await (async () => {
     if (sl) sl.innerHTML = "";
   }
 
-  // Scatter always uses IRIS data for preset tabs, viewMode for free tab
-  const scatterIsCom = activeTab === "explor" && viewMode === "commune";
+  // Scatter uses left-side viewMode1 for data source
+  const scatterIsCom = viewMode1 === "commune";
   const _noMoy = d => d.code !== "MOY_ZONE";
   renderCityScatter("scatter-container-idf", "scatter-legend-idf", scatterIsCom ? comIdfData.filter(_noMoy) : idfData, DEP_COLORS, DEP_LABELS, scatterIsCom);
   renderCityScatter("scatter-container-m13", "scatter-legend-m13", scatterIsCom ? comM13Data.filter(_noMoy) : m13Data, M13_COLORS, M13_LABELS, scatterIsCom);
@@ -1467,8 +1623,8 @@ const mapRefs = await (async () => {
 <!-- &s TABLE_UPDATE — Tableau classement par ville via buildDataTable -->
 ```js
 {
-  // Table viewMode : preset tabs → toujours IRIS, free tab → suit viewMode radio
-  const tblIsCom = activeTab === "explor" && viewMode === "commune";
+  // Table uses left-side viewMode1 for data source
+  const tblIsCom = viewMode1 === "commune";
   const labelCol = tblIsCom ? "libelle" : "_irisLabel";
 
   // Config table selon tab actif
@@ -1574,7 +1730,7 @@ const mapRefs = await (async () => {
     });
   }
 
-  // IDF table — preset tabs toujours IRIS, free tab suit viewMode
+  // IDF table — suit viewMode1 (maille gauche)
   const idfRawData = tblIsCom
     ? comIdfData.filter(d => d.code !== "MOY_ZONE")
     : idfData.filter(d => isIrisActive(d));

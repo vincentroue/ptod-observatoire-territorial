@@ -240,11 +240,14 @@ export function buildDataTable(container, data, config) {
     const meanLine = '<span style="position:absolute;left:' + meanPct +
       '%;top:0;width:1px;height:100%;background:#555;opacity:0.35;"></span>';
 
+    // Negative evolution values → dark red text override
+    const textColor = (isEvol && v < -0.05) ? '#991b1b' : g.text;
+
     return '<div style="display:flex;align-items:center;gap:3px;">' +
       '<div style="width:32px;height:9px;background:#eef0f2;border-radius:2px;position:relative;overflow:hidden;flex-shrink:0;">' +
       '<div style="width:' + w + '%;height:100%;background:' + g.bar +
       ';opacity:' + g.op + ';border-radius:2px;"></div>' + meanLine +
-      '</div><span style="color:' + g.text + ';white-space:nowrap;">' + tri + fmt + '</span>' +
+      '</div><span style="color:' + textColor + ';white-space:nowrap;">' + tri + fmt + '</span>' +
       '</div>';
   }
 
