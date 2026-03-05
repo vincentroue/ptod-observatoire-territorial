@@ -39,6 +39,9 @@ style: styles/dashboard-light.css
 .pgent-pair { display: flex; gap: 6px; margin-bottom: 3px; }
 .pgent-pair > div { flex: 1; position: relative; }
 .pgent-map-title { font-size: 11px; font-weight: 600; color: #374151; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.3px; }
+.pgent-info { display:inline-block; color:#9ca3af; cursor:help; position:relative; font-size:11px; font-weight:400; text-transform:none; letter-spacing:0; margin-left:3px; }
+.pgent-info-tip { display:none; position:absolute; bottom:120%; left:-80px; width:240px; padding:6px 10px; background:#1f2937; color:#e2e8f0; border-radius:5px; font-size:11px; line-height:1.35; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.3); text-transform:none; letter-spacing:0; font-weight:400; }
+.pgent-info:hover .pgent-info-tip { display:block; }
 .pgent-section { font-size: 13px; font-weight: 600; color: #374151; margin: 4px 0 2px; border: none !important; text-decoration: none; outline: none; }
 .pgent-section::after { display: none !important; }
 .pgent-leg-wrap { position: absolute; bottom: 6px; left: 6px; right: auto; top: auto; z-index: 4; background: rgba(255,255,255,0.92); border: 1px solid #e0e5ea; border-radius: 4px; padding: 3px 6px; backdrop-filter: blur(2px); pointer-events: auto; }
@@ -326,19 +329,19 @@ const indicOptions = new Map([...IDXG_OPTIONS, ...filtered]);
 .pgent-sub { display:flex; flex-direction:column; gap:0; border-bottom:1px solid #e5e7eb; font-size:11px; }
 .pgent-sub form { margin:0; flex:0 0 auto; }
 .pgent-sub select { font-size:10.5px; padding:2px 4px; border:1px solid #d1d5db; border-radius:3px; background:#fff; }
-.pgent-lbl { font-size:8.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#9ca3af; }
-.pgent-side-lbl { font-size:9.5px; font-weight:700; letter-spacing:0.3px; min-width:62px; }
-.pgent-grp { display:flex; align-items:center; gap:3px; flex:0 0 auto; }
-.pgent-sep { width:1px; height:18px; background:#d1d5db; margin:0 2px; flex:0 0 1px; }
-.pgent-per { flex:0 0 auto; }
-.pgent-per select { max-width:78px; font-size:10px; padding:1px 3px; background:#fff; }
-.pgent-grp-indic select { max-width:175px; }
-.pgent-ctrl-row { display:flex; align-items:center; gap:4px; padding:2px 8px; flex-wrap:nowrap; }
+.pgent-lbl { font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#9ca3af; }
+.pgent-side-lbl { font-size:9px; font-weight:700; letter-spacing:0.3px; min-width:56px; }
+.pgent-grp { display:flex; align-items:center; gap:2px; flex:0 0 auto; }
+.pgent-sep { width:1px; height:16px; background:#d1d5db; margin:0 2px; flex:0 0 1px; }
+.pgent-per { flex:0 0 auto; margin-left:-2px; }
+.pgent-per select { max-width:72px; font-size:10px; padding:1px 3px; background:#fff; }
+.pgent-grp-indic select { max-width:200px; }
+.pgent-ctrl-row { display:flex; align-items:center; gap:3px; padding:1px 6px; flex-wrap:nowrap; }
 .pgent-ctrl-row > * { flex:0 0 auto; }
-.pgent-mode-sel select { max-width:90px; font-size:10px; }
+.pgent-mode-sel select { max-width:88px; font-size:10px; }
 .pgent-sub input[type="checkbox"] { margin:0; }
 .pgent-sub label { font-size:10px; margin:0; }
-.pgent-row-idf { background:#fdfaf7; }
+.pgent-row-idf { background:#fdfaf7; border-bottom:1px solid #f0ebe0; }
 .pgent-row-m13 { background:#f7f9fd; }
 </style>
 <div class="pgent-sub">
@@ -349,7 +352,7 @@ const indicOptions = new Map([...IDXG_OPTIONS, ...filtered]);
 <div class="pgent-grp pgent-grp-indic">
 
 ```js
-const indic1 = view(Inputs.select(indicOptions, { value: "idxg_com_pct_top20", label: "" }));
+const indic1 = view(Inputs.select(indicOptions, { value: "idxg_ind", label: "" }));
 ```
 
 </div>
@@ -371,7 +374,7 @@ const periode1 = per1Vals.length > 0
 <div class="pgent-grp">
 
 ```js
-const _viewMode1 = view(Inputs.radio(new Map([["IRIS", "iris"], ["Comm.", "commune"]]), { value: "commune", label: "" }));
+const _viewMode1 = view(Inputs.radio(new Map([["IRIS", "iris"], ["Commune ARM", "commune"]]), { value: "commune", label: "" }));
 ```
 
 </div>
@@ -393,11 +396,17 @@ const paletteMode1 = view(Inputs.select(new Map([["Valeurs", "abs"], ["± Moy.",
 <div class="pgent-grp pgent-mode-sel" style="gap:2px;">
 
 ```js
-const _showLabels = view(Inputs.toggle({ label: "", value: false }));
-```
-
-```js
-const _labelMode = view(Inputs.select(new Map([["Top5/Bot5", "top5bot5"], ["Top 10", "top10"]]), { value: "top5bot5", label: "" }));
+const _labelCtrl = view((() => {
+  const wrap = document.createElement("span");
+  wrap.style.cssText = "display:inline-flex;align-items:center;gap:3px;";
+  const tog = Inputs.toggle({ label: "", value: false });
+  const sel = Inputs.select(new Map([["Top5/Bot5", "top5bot5"], ["Top 10", "top10"]]), { value: "top5bot5", label: "" });
+  tog.style.margin = "0"; sel.style.margin = "0";
+  wrap.append(tog, sel);
+  Object.defineProperty(wrap, "value", { get: () => ({ show: tog.value, mode: sel.value }) });
+  tog.oninput = sel.oninput = () => wrap.dispatchEvent(new Event("input", {bubbles: true}));
+  return wrap;
+})());
 ```
 
 </div>
@@ -439,7 +448,7 @@ const periode2 = per2Vals.length > 0
 <div class="pgent-grp">
 
 ```js
-const _viewMode2 = view(Inputs.radio(new Map([["IRIS", "iris"], ["Comm.", "commune"]]), { value: "iris", label: "" }));
+const _viewMode2 = view(Inputs.radio(new Map([["IRIS", "iris"], ["Commune ARM", "commune"]]), { value: "iris", label: "" }));
 ```
 
 </div>
@@ -481,7 +490,7 @@ const _tabBarEl = (() => {
   el.style.cssText = "display:flex;flex-direction:column;background:#f3f4f6;border-bottom:2px solid #e5e7eb;";
   el.value = "gentri";
   const row = document.createElement("div");
-  row.style.cssText = "display:flex;gap:2px;padding:4px 10px 0;";
+  row.style.cssText = "display:flex;gap:2px;padding:2px 8px 0;";
   const qDiv = document.createElement("div");
   qDiv.className = "pgent-tab-question";
   qDiv.style.cssText = "padding:3px 12px 5px;font-size:12.5px;font-weight:500;color:#4b5563;min-height:20px;";
@@ -491,7 +500,7 @@ const _tabBarEl = (() => {
     btn.textContent = `${icon} ${label}`;
     btn.dataset.key = key;
     const isFirst = key === "gentri";
-    btn.style.cssText = `padding:7px 18px;font-size:12.5px;font-weight:${isFirst ? 700 : 500};cursor:pointer;border:1px solid ${isFirst ? "#c5c9d0" : "#d1d5db"};border-bottom:${isFirst ? "2px solid #fff" : "2px solid transparent"};margin-bottom:-2px;border-radius:6px 6px 0 0;background:${isFirst ? "#fff" : "#f9fafb"};color:${isFirst ? "#dc2626" : "#6b7280"};transition:all 0.15s;letter-spacing:0.2px;box-shadow:${isFirst ? "0 -1px 3px rgba(0,0,0,0.06)" : "none"};`;
+    btn.style.cssText = `padding:4px 14px;font-size:11.5px;font-weight:${isFirst ? 700 : 500};cursor:pointer;border:1px solid ${isFirst ? "#c5c9d0" : "#d1d5db"};border-bottom:${isFirst ? "2px solid #fff" : "2px solid transparent"};margin-bottom:-2px;border-radius:5px 5px 0 0;background:${isFirst ? "#fff" : "#f9fafb"};color:${isFirst ? "#dc2626" : "#6b7280"};transition:all 0.15s;box-shadow:${isFirst ? "0 -1px 3px rgba(0,0,0,0.06)" : "none"};`;
     btn.onmouseenter = () => { if (btn.dataset.key !== el.value) { btn.style.background = "#eef0f3"; btn.style.borderColor = "#b0b5bd"; } };
     btn.onmouseleave = () => { if (btn.dataset.key !== el.value) { btn.style.background = "#f9fafb"; btn.style.borderColor = "#d1d5db"; } };
     btn.onclick = () => {
@@ -510,6 +519,21 @@ const _tabBarEl = (() => {
     };
     row.appendChild(btn);
   }
+  // Burger toggle button — collapse/expand .pgent-sub toolbar
+  const burger = document.createElement("button");
+  burger.innerHTML = "☰";
+  burger.title = "Afficher/masquer les contrôles indicateurs";
+  burger.style.cssText = "margin-left:auto;font-size:14px;cursor:pointer;background:none;border:1px solid #d1d5db;border-radius:4px;padding:2px 7px;color:#6b7280;border-bottom:2px solid transparent;margin-bottom:-2px;line-height:1;";
+  burger._collapsed = false;
+  burger.onclick = () => {
+    const sub = document.querySelector(".pgent-sub");
+    if (!sub) return;
+    burger._collapsed = !burger._collapsed;
+    sub.style.display = burger._collapsed ? "none" : "";
+    burger.style.color = burger._collapsed ? "#dc2626" : "#6b7280";
+    burger.style.borderColor = burger._collapsed ? "#fca5a5" : "#d1d5db";
+  };
+  row.appendChild(burger);
   el.appendChild(row);
   el.appendChild(qDiv);
   return el;
@@ -518,9 +542,23 @@ const activeTab = view(_tabBarEl);
 ```
 <!-- &e TAB_BAR -->
 
-<!-- &s SUB_BANNER_TOGGLE — Indicateurs toujours actifs, KPI adapté au tab -->
-<!-- Dimming supprimé : indicateurs sélectionnables sur tous les onglets -->
-<!-- &e SUB_BANNER_TOGGLE -->
+<!-- &s TAB_PRESETS — Indicateurs par défaut selon onglet actif -->
+```js
+{
+  const PRESETS = {
+    gentri: ["idxg_ind", "idxg_ind"],
+    commerce: ["ecosi_shannon_ind", "ecosi_renouv_horsmE_pct"],
+  };
+  const p = PRESETS[activeTab];
+  if (p) {
+    const f1 = document.querySelector(".pgent-row-idf .pgent-grp-indic form");
+    const f2 = document.querySelector(".pgent-row-m13 .pgent-grp-indic form");
+    if (f1 && f1.value !== p[0]) { f1.value = p[0]; f1.dispatchEvent(new Event("input", {bubbles: true})); }
+    if (f2 && f2.value !== p[1]) { f2.value = p[1]; f2.dispatchEvent(new Event("input", {bubbles: true})); }
+  }
+}
+```
+<!-- &e TAB_PRESETS -->
 
 <!-- &s KPI_REACTIVE — KPI strips réactifs selon tab actif -->
 ```js
@@ -1095,12 +1133,12 @@ function buildCommerceKpiTable(zoneData, accent) {
   return wrap;
 }
 
-display(html`<div style="background:#faf7f4;padding:5px 10px 3px;margin:0 -10px;border-bottom:1px solid #f0ebe0;">
+display(html`<div style="background:#faf7f4;padding:5px 10px 0;margin:0 -10px;">
 <div style="font-size:13px;font-weight:700;color:#7f1d1d;">Paris et 27 communes limitrophes <span style="font-weight:400;font-size:11px;color:#9ca3af;">— ${_idfN} IRIS actifs / ${idfData.length}</span></div>
 </div>`);
 ```
 
-<div id="kpi-idf" style="min-height:32px;padding:3px 0 5px;"></div>
+<div id="kpi-idf" style="min-height:32px;padding:0 10px 5px;background:#faf7f4;margin:0 -10px;border-bottom:1px solid #f0ebe0;"></div>
 
 <div class="pgent-city-row">
 <div class="pgent-maps-col">
@@ -1126,12 +1164,12 @@ display(html`<div style="background:#faf7f4;padding:5px 10px 3px;margin:0 -10px;
 </div>
 
 ```js
-display(html`<div style="background:#f5f7fb;padding:5px 10px 3px;margin:0 -10px;border-bottom:1px solid #e0e5f0;">
+display(html`<div style="background:#f0f4fb;padding:5px 10px 0;margin:0 -10px;">
 <div style="font-size:13px;font-weight:700;color:#1e3a5f;">Marseille — 16 arrondissements <span style="font-weight:400;font-size:11px;color:#9ca3af;">— ${_m13N} IRIS actifs / ${m13Data.length}</span></div>
 </div>`);
 ```
 
-<div id="kpi-m13" style="min-height:32px;padding:3px 0 5px;"></div>
+<div id="kpi-m13" style="min-height:32px;padding:0 10px 5px;background:#f0f4fb;margin:0 -10px;border-bottom:1px solid #dde3f0;"></div>
 
 <div class="pgent-city-row">
 <div class="pgent-maps-col">
@@ -1371,11 +1409,29 @@ const mapRefs = await (async () => {
   const title1 = (colKey1.startsWith("idxg_") ? (IDXG_LABELS[colKey1] || colKey1) : getFullLabel(indic1, periode1)) + (isCom1 ? " [commune]" : "");
   const title2 = (colKey2.startsWith("idxg_") ? (IDXG_LABELS[colKey2] || colKey2) : getFullLabel(indic2, periode2)) + (isCom2 ? " [commune]" : "");
 
-  // Update titres
-  const t1 = document.getElementById("title-idf1"); if (t1) t1.textContent = title1;
-  const t2 = document.getElementById("title-idf2"); if (t2) t2.textContent = title2;
-  const t3 = document.getElementById("title-m1"); if (t3) t3.textContent = title1;
-  const t4 = document.getElementById("title-m2"); if (t4) t4.textContent = title2;
+  // Update titres avec ⓘ info tooltip
+  function titleHtml(title, ck) {
+    let def = "", src = "";
+    if (ck.startsWith("idxg_")) {
+      def = "Indice composite de gentrification : z-scores cadres, ouvriers, emménagés récents, propriétaires, prix m², revenus médians, ratio prix/revenus.";
+      src = "INSEE RP, DVF, Filosofi";
+    } else if (ck.startsWith("ecosi_")) {
+      def = "Indicateur économie locale (SIRENE jan. 2026) : établissements, diversité sectorielle, renouvellement.";
+      src = "INSEE SIRENE";
+    } else {
+      const parsed = parseColKey(ck);
+      const ind = parsed?.indic ? INDICATEURS[parsed.indic] : null;
+      def = ind?.definition || ind?.note || "";
+      src = ind?.source || "";
+    }
+    if (!def && !src) return title;
+    const tip = `${def}${src ? `<br><em style="color:#93c5fd;">Source : ${src}</em>` : ""}`;
+    return `${title} <span class="pgent-info">ⓘ<span class="pgent-info-tip">${tip}</span></span>`;
+  }
+  const t1 = document.getElementById("title-idf1"); if (t1) t1.innerHTML = titleHtml(title1, colKey1);
+  const t2 = document.getElementById("title-idf2"); if (t2) t2.innerHTML = titleHtml(title2, colKey2);
+  const t3 = document.getElementById("title-m1"); if (t3) t3.innerHTML = titleHtml(title1, colKey1);
+  const t4 = document.getElementById("title-m2"); if (t4) t4.innerHTML = titleHtml(title2, colKey2);
 
   // GeoJSON sources — bins INDÉPENDANTS par zone + z-scores + brutes idxg en extraProps
   const extraBase = ["nom_commune", "ecosi_etab_vol_26", "libelle"];
@@ -1508,7 +1564,7 @@ const mapRefs = await (async () => {
 ```js
 {
   // Filter: top5bot5 → n≤5 (both top+bot), top10 → rank=top only
-  const labFilter = _labelMode === "top10"
+  const labFilter = _labelCtrl.mode === "top10"
     ? ["==", ["get", "_rank"], "top"]
     : ["<=", ["get", "_n"], 5];
   for (const refKey of ["idf1", "idf2", "m1", "m2"]) {
@@ -1516,7 +1572,7 @@ const mapRefs = await (async () => {
     if (!ref?.map) continue;
     const labLayerId = ref.sourceId.replace("src-", "") + "-labels";
     if (ref.map.getLayer(labLayerId)) {
-      ref.map.setLayoutProperty(labLayerId, "visibility", _showLabels ? "visible" : "none");
+      ref.map.setLayoutProperty(labLayerId, "visibility", _labelCtrl.show ? "visible" : "none");
       ref.map.setFilter(labLayerId, labFilter);
     }
   }
@@ -1542,7 +1598,7 @@ const mapRefs = await (async () => {
     const filterFn = isCom
       ? (d => d[scatterCK1] != null && d[scatterCK2] != null)
       : (d => isIrisActive(d) && (d.P22_POP || 0) >= 800 && d[scatterCK1] != null && d[scatterCK2] != null);
-    const data = srcData.filter(filterFn).map(d => ({ ...d, libelle: enrichIrisName(d) }));
+    const data = srcData.filter(filterFn).map(d => ({ ...d, libelle: isCom ? (d.libelle || d.nom_commune || d.code) : enrichIrisName(d) }));
     const xVals = data.map(d => d[scatterCK1]).sort(d3.ascending);
     const yVals = data.map(d => d[scatterCK2]).sort(d3.ascending);
     if (xVals.length < 3) return;
@@ -1570,8 +1626,8 @@ const mapRefs = await (async () => {
 
     const scatterEl = createScatterWithZoom({
       title: `${stitle1} × ${stitle2}`,
-      subtitle: `${data.length} ${isCom ? "communes" : "IRIS"} · top/bottom ${N_HIGHLIGHT} en évidence · ${depSummary}`,
-      legend: [],
+      subtitle: `${data.length} ${isCom ? "communes" : "IRIS"} · top/bottom ${N_HIGHLIGHT}`,
+      legend: Object.entries(labelMap).map(([k, v]) => ({ label: v, color: colorMap[k] || "#999" })),
       sizeLabel: null,
       data, xCol: scatterCK1, yCol: scatterCK2,
       xDomain: [xMin - xPad, xMax + xPad],
@@ -1594,7 +1650,7 @@ const mapRefs = await (async () => {
           + `<span style="color:#93c5fd;">${stitle2}:</span> ${v2 ?? "n.d."}<br>`
           + `<span style="color:#9ca3af;font-size:10px;">Pop: ${(d.P22_POP || 0).toLocaleString("fr-FR")}</span>`;
       },
-      width: 420, height: 340,
+      width: 420, height: 420,
       fontSize: "10px",
       labelCodes,
       labelMode: "noms"
