@@ -326,28 +326,50 @@ const indicOptions = new Map([...IDXG_OPTIONS, ...filtered]);
 
 <!-- &s SUB_BANNER -->
 <style>
-.pgent-sub { display:flex; flex-direction:column; gap:0; border-bottom:1px solid #e5e7eb; font-size:11px; }
+.pgent-sub { display:flex; flex-direction:column; gap:0; background:#eef0f4; box-shadow:0 2px 6px rgba(0,0,0,0.07); font-size:11px; position:relative; z-index:2; }
 .pgent-sub form { margin:0; flex:0 0 auto; }
-.pgent-sub select { font-size:10.5px; padding:2px 4px; border:1px solid #d1d5db; border-radius:3px; background:#fff; }
-.pgent-lbl { font-size:8px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#9ca3af; }
-.pgent-side-lbl { font-size:9px; font-weight:700; letter-spacing:0.3px; min-width:56px; }
-.pgent-grp { display:flex; align-items:center; gap:2px; flex:0 0 auto; }
-.pgent-sep { width:1px; height:16px; background:#d1d5db; margin:0 2px; flex:0 0 1px; }
-.pgent-per { flex:0 0 auto; margin-left:-2px; }
-.pgent-per select { max-width:72px; font-size:10px; padding:1px 3px; background:#fff; }
+.pgent-sub select { font-size:10.5px; padding:1px 3px; border:1px solid #c8cdd4; border-radius:3px; background:#fff; }
+.pgent-lbl { font-size:7.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#8b95a3; }
+.pgent-side-lbl { font-size:8.5px; font-weight:600; letter-spacing:0.2px; color:#4b5563; min-width:auto; margin-right:2px; }
+.pgent-grp { display:flex; align-items:center; gap:1px; flex:0 0 auto; }
+.pgent-sep { width:1px; height:14px; background:#c8cdd4; margin:0 3px; flex:0 0 1px; }
+.pgent-per { flex:0 0 auto; margin-left:-1px; }
+.pgent-per select { max-width:68px; font-size:10px; padding:1px 2px; background:#fff; }
 .pgent-grp-indic select { max-width:200px; }
-.pgent-ctrl-row { display:flex; align-items:center; gap:3px; padding:1px 6px; flex-wrap:nowrap; }
+.pgent-ctrl-row { display:flex; align-items:center; gap:2px; padding:1px 4px; flex-wrap:nowrap; }
 .pgent-ctrl-row > * { flex:0 0 auto; }
-.pgent-mode-sel select { max-width:88px; font-size:10px; }
+.pgent-mode-sel select { max-width:85px; font-size:10px; }
 .pgent-sub input[type="checkbox"] { margin:0; }
 .pgent-sub label { font-size:10px; margin:0; }
-.pgent-row-idf { background:#fdfaf7; border-bottom:1px solid #f0ebe0; }
-.pgent-row-m13 { background:#f7f9fd; }
+.pgent-row-idf { border-bottom:1px solid #d8dce3; }
+.pgent-row-m13 { }
+.pgent-toggle { display:flex; align-items:center; gap:4px; padding:2px 8px; background:#e8eaef; cursor:pointer; font-size:10px; color:#6b7280; border-bottom:1px solid #d8dce3; user-select:none; }
+.pgent-toggle:hover { background:#dfe2e8; color:#374151; }
+.pgent-toggle .pgent-chevron { font-size:9px; transition:transform 0.15s; }
 </style>
+
+```js
+const _toolbarToggle = (() => {
+  const bar = document.createElement("div");
+  bar.className = "pgent-toggle";
+  bar.innerHTML = `<span class="pgent-chevron">▾</span> <span>Indicateurs & options</span>`;
+  bar._collapsed = false;
+  bar.onclick = () => {
+    bar._collapsed = !bar._collapsed;
+    const sub = document.querySelector(".pgent-sub");
+    if (sub) sub.style.display = bar._collapsed ? "none" : "";
+    bar.querySelector(".pgent-chevron").textContent = bar._collapsed ? "▸" : "▾";
+    bar.querySelector(".pgent-chevron").style.transform = "";
+  };
+  return bar;
+})();
+display(_toolbarToggle);
+```
+
 <div class="pgent-sub">
 
 <div class="pgent-ctrl-row pgent-row-idf">
-<span class="pgent-side-lbl" style="color:#7f1d1d;">Vue Gauche</span>
+<span class="pgent-side-lbl">G</span>
 
 <div class="pgent-grp pgent-grp-indic">
 
@@ -414,14 +436,14 @@ const _labelCtrl = view((() => {
 <div style="margin-left:auto;flex:0 0 auto;">
 
 ```js
-display(html`<span style="font-size:9px;color:#9ca3af;white-space:nowrap;"><b style="color:#7f1d1d;">${idfData.filter(isIrisActive).length}</b>/${idfData.length} IDF</span>`);
+display(html`<span style="font-size:8.5px;color:#8b95a3;white-space:nowrap;"><b style="color:#4b5563;">${idfData.filter(isIrisActive).length}</b>/${idfData.length} IDF</span>`);
 ```
 
 </div>
 </div>
 
 <div class="pgent-ctrl-row pgent-row-m13">
-<span class="pgent-side-lbl" style="color:#1e3a5f;">Vue Droite</span>
+<span class="pgent-side-lbl">D</span>
 
 <div class="pgent-grp pgent-grp-indic">
 
@@ -467,7 +489,7 @@ const paletteMode2 = view(Inputs.select(new Map([["Valeurs", "abs"], ["± Moy.",
 <div style="margin-left:auto;flex:0 0 auto;">
 
 ```js
-display(html`<span style="font-size:9px;color:#9ca3af;white-space:nowrap;"><b style="color:#1e3a5f;">${m13Data.filter(isIrisActive).length}</b>/${m13Data.length} Mars. · idx: <b style="color:#7c3aed;">${allData.filter(d => d.idxg_t2_ind != null).length}</b></span>`);
+display(html`<span style="font-size:8.5px;color:#8b95a3;white-space:nowrap;"><b style="color:#4b5563;">${m13Data.filter(isIrisActive).length}</b>/${m13Data.length} Mars. · idx: <b style="color:#4b5563;">${allData.filter(d => d.idxg_t2_ind != null).length}</b></span>`);
 ```
 
 </div>
@@ -519,21 +541,6 @@ const _tabBarEl = (() => {
     };
     row.appendChild(btn);
   }
-  // Burger toggle button — collapse/expand .pgent-sub toolbar
-  const burger = document.createElement("button");
-  burger.innerHTML = "☰";
-  burger.title = "Afficher/masquer les contrôles indicateurs";
-  burger.style.cssText = "margin-left:auto;font-size:14px;cursor:pointer;background:none;border:1px solid #d1d5db;border-radius:4px;padding:2px 7px;color:#6b7280;border-bottom:2px solid transparent;margin-bottom:-2px;line-height:1;";
-  burger._collapsed = false;
-  burger.onclick = () => {
-    const sub = document.querySelector(".pgent-sub");
-    if (!sub) return;
-    burger._collapsed = !burger._collapsed;
-    sub.style.display = burger._collapsed ? "none" : "";
-    burger.style.color = burger._collapsed ? "#dc2626" : "#6b7280";
-    burger.style.borderColor = burger._collapsed ? "#fca5a5" : "#d1d5db";
-  };
-  row.appendChild(burger);
   el.appendChild(row);
   el.appendChild(qDiv);
   return el;
@@ -1048,8 +1055,8 @@ function buildIdxKpiTable(zoneData, accent) {
   const grpStyle = `border-left:2px solid #e5e7eb;padding-left:8px;`;
   const grpLabel = (t) => `<div style="font-size:9px;font-weight:700;color:#7c8594;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">${t}</div>`;
   const wrap = document.createElement("div");
-  let h = `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;padding:5px 6px 6px 12px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
-  // CONTEXTE
+  let h = `<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start;padding:5px 8px 6px 12px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
+  // CONTEXTE (totaux zone)
   h += `<div style="border-left:2px solid ${accent};padding-left:8px;">${grpLabel("Contexte")}`;
   h += kpiItem("Pop.", fvk(total(all, "P22_POP")), fvEvol(med(all, "dm_pop_vtcam_1622"), "%"), med(all, "dm_pop_vtcam_1622"), "TCAM 16-22");
   h += kpiItem("Étab.", fvk(total(all, "ecosi_etab_vol_26")), null, null, null);
@@ -1109,7 +1116,7 @@ function buildCommerceKpiTable(zoneData, accent) {
   const grpStyle = `border-left:2px solid #e5e7eb;padding-left:8px;`;
   const grpLabel = (t) => `<div style="font-size:9px;font-weight:700;color:#7c8594;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">${t}</div>`;
   const wrap = document.createElement("div");
-  let h = `<div style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;padding:5px 6px 6px 12px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
+  let h = `<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start;padding:5px 8px 6px 12px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
   // CONTEXTE
   h += `<div style="border-left:2px solid ${accent};padding-left:8px;">${grpLabel("Contexte")}`;
   h += kpiItem("Pop.", fvk(total(all, "P22_POP")));
@@ -1724,18 +1731,26 @@ const mapRefs = await (async () => {
     }
     if (cspCols.length) tableGroups.push({ label: "Structure CSP", cols: cspCols });
 
-    // Autres composantes (hors CSP)
+    // Autres composantes (hors CSP, hors ratio_px_rev vide)
+    const SKIP_KEYS = new Set(["ratio_px_rev"]);
     for (const c of IDXG_COMPONENTS) {
-      if (CSP_KEYS.has(c.key)) continue;
+      if (CSP_KEYS.has(c.key) || SKIP_KEYS.has(c.key)) continue;
       const cols = [c.ref.t2, c.evol.t2].filter(Boolean);
       tableKeys.push(...cols);
-      tableGroups.push({ label: c.label, cols });
+      // Rename "Prix m²/appt" → "Dyn. immob." and add px/rev mois
+      if (c.key === "px_evol") {
+        cols.push("logd_pxmoisrev_21");
+        tableKeys.push("logd_pxmoisrev_21");
+        tableGroups.push({ label: "Dyn. immob.", cols });
+      } else {
+        tableGroups.push({ label: c.label, cols });
+      }
       if (c.evol.t2) tableEvolCols.push(c.evol.t2);
     }
 
-    // Colonnes fin : Marché
-    tableKeys.push("logd_pxmoisrev_21", "ecosi_renouv_horsmE_pct_26");
-    tableGroups.push({ label: "Marché", cols: ["logd_pxmoisrev_21", "ecosi_renouv_horsmE_pct_26"] });
+    // Colonnes fin : Marché (renouv. seulement)
+    tableKeys.push("ecosi_renouv_horsmE_pct_26");
+    tableGroups.push({ label: "Marché", cols: ["ecosi_renouv_horsmE_pct_26"] });
     defaultSort = "idxg_t2_ind";
   }
 
