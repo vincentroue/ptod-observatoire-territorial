@@ -326,50 +326,45 @@ const indicOptions = new Map([...IDXG_OPTIONS, ...filtered]);
 
 <!-- &s SUB_BANNER -->
 <style>
-.pgent-sub { display:flex; flex-direction:column; gap:0; background:#eef0f4; box-shadow:0 2px 6px rgba(0,0,0,0.07); font-size:11px; position:relative; z-index:2; }
-.pgent-sub form { margin:0; flex:0 0 auto; }
-.pgent-sub select { font-size:10.5px; padding:1px 3px; border:1px solid #c8cdd4; border-radius:3px; background:#fff; }
-.pgent-lbl { font-size:7.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#8b95a3; }
-.pgent-side-lbl { font-size:8.5px; font-weight:600; letter-spacing:0.2px; color:#4b5563; min-width:auto; margin-right:2px; }
+.pgent-sub { display:flex; flex-direction:column; gap:0; background:#eef0f4; box-shadow:0 1px 3px rgba(0,0,0,0.06); font-size:11px; position:relative; z-index:2; }
+.pgent-sub form { margin:0; flex:0 0 auto; width:auto !important; display:inline-flex !important; align-items:center; }
+.pgent-sub select { font-size:10px; padding:0 2px; border:1px solid #c8cdd4; border-radius:3px; background:#fff; height:18px; }
+.pgent-lbl { font-size:7px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#8b95a3; }
+.pgent-side-lbl { font-size:8px; font-weight:600; letter-spacing:0.2px; color:#4b5563; min-width:78px; margin-right:2px; white-space:nowrap; }
 .pgent-grp { display:flex; align-items:center; gap:1px; flex:0 0 auto; }
-.pgent-sep { width:1px; height:14px; background:#c8cdd4; margin:0 3px; flex:0 0 1px; }
+.pgent-sep { width:1px; height:12px; background:#c8cdd4; margin:0 2px; flex:0 0 1px; }
 .pgent-per { flex:0 0 auto; margin-left:-1px; }
-.pgent-per select { max-width:68px; font-size:10px; padding:1px 2px; background:#fff; }
-.pgent-grp-indic select { max-width:200px; }
-.pgent-ctrl-row { display:flex; align-items:center; gap:2px; padding:1px 4px; flex-wrap:nowrap; }
-.pgent-ctrl-row > * { flex:0 0 auto; }
-.pgent-mode-sel select { max-width:85px; font-size:10px; }
-.pgent-sub input[type="checkbox"] { margin:0; }
-.pgent-sub label { font-size:10px; margin:0; }
-.pgent-row-idf { border-bottom:1px solid #d8dce3; }
+.pgent-per select { max-width:62px; font-size:9.5px; padding:0 2px; background:#fff; }
+.pgent-grp-indic select { max-width:195px; }
+.pgent-ctrl-row { display:flex; align-items:center; gap:2px; padding:0 3px; height:22px; flex-wrap:nowrap; justify-content:flex-start !important; }
+.pgent-ctrl-row > * { flex:0 0 auto !important; max-width:fit-content !important; }
+/* Force Observable cell wrappers to display:contents so they don't break flex */
+.pgent-grp > div:not([class*="pgent"]), .pgent-per > div:not([class*="pgent"]),
+.pgent-label-chk > div:not([class*="pgent"]), .pgent-mode-sel > div:not([class*="pgent"]) { display:contents !important; }
+.pgent-mode-sel select { max-width:80px; font-size:9.5px; }
+.pgent-sub input[type="checkbox"] { margin:0; width:12px; height:12px; }
+.pgent-sub label { font-size:9px; margin:0; white-space:nowrap; }
+.pgent-row-idf { }
 .pgent-row-m13 { }
-.pgent-toggle { display:flex; align-items:center; gap:4px; padding:2px 8px; background:#e8eaef; cursor:pointer; font-size:10px; color:#6b7280; border-bottom:1px solid #d8dce3; user-select:none; }
-.pgent-toggle:hover { background:#dfe2e8; color:#374151; }
-.pgent-toggle .pgent-chevron { font-size:9px; transition:transform 0.15s; }
+/* Collapse button — below sub-banner, outside */
+.pgent-collapse-btn { position:absolute; bottom:-16px; right:6px; font-size:8.5px; color:#6b7280; cursor:pointer; background:#e2e5ea; border:1px solid #c8cdd4; border-top:none; padding:1px 10px; border-radius:0 0 4px 4px; user-select:none; z-index:3; font-weight:600; letter-spacing:0.2px; }
+.pgent-collapse-btn:hover { background:#c5cad3; color:#374151; }
+.pgent-sub.pgent-collapsed .pgent-ctrl-row { display:none; }
+.pgent-sub.pgent-collapsed { min-height:4px; }
+.pgent-sub.pgent-collapsed .pgent-collapse-btn { bottom:-16px; background:#d0d5dd; }
+/* Hide MapLibre zoom +/- buttons only (NavigationControl has .maplibregl-ctrl-zoom-in) */
+.maplibregl-ctrl-zoom-in, .maplibregl-ctrl-zoom-out, .maplibregl-ctrl-compass { display:none !important; }
+.pgent-table-col .scatter-container button[title="Zoom avant"],
+.pgent-table-col .scatter-container button[title="Zoom arrière"],
+.pgent-table-col .scatter-container button[title="Reset zoom"] { display:none !important; }
+.pgent-sub .pgent-label-chk { display:inline-flex; align-items:center; gap:2px; margin-left:3px; }
+.pgent-sub .pgent-label-chk label { font-size:8.5px; color:#6b7280; }
 </style>
-
-```js
-const _toolbarToggle = (() => {
-  const bar = document.createElement("div");
-  bar.className = "pgent-toggle";
-  bar.innerHTML = `<span class="pgent-chevron">▾</span> <span>Indicateurs & options</span>`;
-  bar._collapsed = false;
-  bar.onclick = () => {
-    bar._collapsed = !bar._collapsed;
-    const sub = document.querySelector(".pgent-sub");
-    if (sub) sub.style.display = bar._collapsed ? "none" : "";
-    bar.querySelector(".pgent-chevron").textContent = bar._collapsed ? "▸" : "▾";
-    bar.querySelector(".pgent-chevron").style.transform = "";
-  };
-  return bar;
-})();
-display(_toolbarToggle);
-```
 
 <div class="pgent-sub">
 
 <div class="pgent-ctrl-row pgent-row-idf">
-<span class="pgent-side-lbl">G</span>
+<span class="pgent-side-lbl">Vue gauche (X)</span>
 
 <div class="pgent-grp pgent-grp-indic">
 
@@ -403,47 +398,28 @@ const _viewMode1 = view(Inputs.radio(new Map([["IRIS", "iris"], ["Commune ARM", 
 
 <div class="pgent-sep"></div>
 
-<span class="pgent-lbl">Mode</span>
+<span class="pgent-lbl">Mode légende</span>
 <div class="pgent-grp pgent-mode-sel">
 
 ```js
-const paletteMode1 = view(Inputs.select(new Map([["Valeurs", "abs"], ["± Moy.", "ecart"], ["Gradient", "gradient"]]), { value: "gradient", label: "" }));
+const paletteMode1 = view(Inputs.select(new Map([["Quintiles", "abs"], ["Écart moy.", "ecart"], ["Gradient", "gradient"]]), { value: "gradient", label: "" }));
 ```
 
 </div>
 
 <div class="pgent-sep"></div>
 
-<span class="pgent-lbl">Étiq.</span>
-<div class="pgent-grp pgent-mode-sel" style="gap:2px;">
+<div class="pgent-label-chk">
 
 ```js
-const _labelCtrl = view((() => {
-  const wrap = document.createElement("span");
-  wrap.style.cssText = "display:inline-flex;align-items:center;gap:3px;";
-  const tog = Inputs.toggle({ label: "", value: false });
-  const sel = Inputs.select(new Map([["Top5/Bot5", "top5bot5"], ["Top 10", "top10"]]), { value: "top5bot5", label: "" });
-  tog.style.margin = "0"; sel.style.margin = "0";
-  wrap.append(tog, sel);
-  Object.defineProperty(wrap, "value", { get: () => ({ show: tog.value, mode: sel.value }) });
-  tog.oninput = sel.oninput = () => wrap.dispatchEvent(new Event("input", {bubbles: true}));
-  return wrap;
-})());
-```
-
-</div>
-
-<div style="margin-left:auto;flex:0 0 auto;">
-
-```js
-display(html`<span style="font-size:8.5px;color:#8b95a3;white-space:nowrap;"><b style="color:#4b5563;">${idfData.filter(isIrisActive).length}</b>/${idfData.length} IDF</span>`);
+const _labelShow1 = view(Inputs.toggle({ label: "Label", value: false }));
 ```
 
 </div>
 </div>
 
 <div class="pgent-ctrl-row pgent-row-m13">
-<span class="pgent-side-lbl">D</span>
+<span class="pgent-side-lbl">Vue droite (Y)</span>
 
 <div class="pgent-grp pgent-grp-indic">
 
@@ -477,25 +453,44 @@ const _viewMode2 = view(Inputs.radio(new Map([["IRIS", "iris"], ["Commune ARM", 
 
 <div class="pgent-sep"></div>
 
-<span class="pgent-lbl">Mode</span>
+<span class="pgent-lbl">Mode légende</span>
 <div class="pgent-grp pgent-mode-sel">
 
 ```js
-const paletteMode2 = view(Inputs.select(new Map([["Valeurs", "abs"], ["± Moy.", "ecart"], ["Gradient", "gradient"]]), { value: "ecart", label: "" }));
+const paletteMode2 = view(Inputs.select(new Map([["Quintiles", "abs"], ["Écart moy.", "ecart"], ["Gradient", "gradient"]]), { value: "ecart", label: "" }));
 ```
 
 </div>
 
-<div style="margin-left:auto;flex:0 0 auto;">
+<div class="pgent-sep"></div>
+
+<div class="pgent-label-chk">
 
 ```js
-display(html`<span style="font-size:8.5px;color:#8b95a3;white-space:nowrap;"><b style="color:#4b5563;">${m13Data.filter(isIrisActive).length}</b>/${m13Data.length} Mars. · idx: <b style="color:#4b5563;">${allData.filter(d => d.idxg_t2_ind != null).length}</b></span>`);
+const _labelShow2 = view(Inputs.toggle({ label: "Label", value: false }));
 ```
 
 </div>
 </div>
 
 </div>
+
+```js
+// Collapse button — horizontal, bottom-right of sub-banner
+{
+  const sub = document.querySelector(".pgent-sub");
+  if (sub && !sub.querySelector(".pgent-collapse-btn")) {
+    const btn = document.createElement("button");
+    btn.className = "pgent-collapse-btn";
+    btn.textContent = "▲ Masquer";
+    btn.onclick = () => {
+      const collapsed = sub.classList.toggle("pgent-collapsed");
+      btn.textContent = collapsed ? "▼ Options" : "▲ Masquer";
+    };
+    sub.appendChild(btn);
+  }
+}
+```
 <!-- &e SUB_BANNER -->
 
 <!-- &s TAB_BAR — 3 onglets narratifs : Gentrification / Commerce / Croisement -->
@@ -509,20 +504,20 @@ const TAB_QUESTIONS = {
 ```js
 const _tabBarEl = (() => {
   const el = document.createElement("div");
-  el.style.cssText = "display:flex;flex-direction:column;background:#f3f4f6;border-bottom:2px solid #e5e7eb;";
+  el.style.cssText = "display:flex;flex-direction:column;background:#f3f4f6;";
   el.value = "gentri";
   const row = document.createElement("div");
   row.style.cssText = "display:flex;gap:2px;padding:2px 8px 0;";
   const qDiv = document.createElement("div");
   qDiv.className = "pgent-tab-question";
-  qDiv.style.cssText = "padding:3px 12px 5px;font-size:12.5px;font-weight:500;color:#4b5563;min-height:20px;";
+  qDiv.style.cssText = "padding:8px 12px 4px;font-size:12.5px;font-weight:500;color:#4b5563;min-height:20px;";
   qDiv.textContent = TAB_QUESTIONS["gentri"];
   for (const [label, key, icon] of [["Gentrification", "gentri", "◆"], ["Tissu économique", "commerce", "⛋"], ["Croisement libre", "explor", "⊞"]]) {
     const btn = document.createElement("button");
     btn.textContent = `${icon} ${label}`;
     btn.dataset.key = key;
     const isFirst = key === "gentri";
-    btn.style.cssText = `padding:4px 14px;font-size:11.5px;font-weight:${isFirst ? 700 : 500};cursor:pointer;border:1px solid ${isFirst ? "#c5c9d0" : "#d1d5db"};border-bottom:${isFirst ? "2px solid #fff" : "2px solid transparent"};margin-bottom:-2px;border-radius:5px 5px 0 0;background:${isFirst ? "#fff" : "#f9fafb"};color:${isFirst ? "#dc2626" : "#6b7280"};transition:all 0.15s;box-shadow:${isFirst ? "0 -1px 3px rgba(0,0,0,0.06)" : "none"};`;
+    btn.style.cssText = `padding:3px 12px;font-size:11.5px;font-weight:${isFirst ? 700 : 500};cursor:pointer;border:1px solid ${isFirst ? "#c5c9d0" : "#d1d5db"};border-radius:4px;background:${isFirst ? "#fff" : "#f9fafb"};color:${isFirst ? "#dc2626" : "#6b7280"};transition:all 0.15s;box-shadow:${isFirst ? "0 1px 3px rgba(0,0,0,0.06)" : "none"};`;
     btn.onmouseenter = () => { if (btn.dataset.key !== el.value) { btn.style.background = "#eef0f3"; btn.style.borderColor = "#b0b5bd"; } };
     btn.onmouseleave = () => { if (btn.dataset.key !== el.value) { btn.style.background = "#f9fafb"; btn.style.borderColor = "#d1d5db"; } };
     btn.onclick = () => {
@@ -533,10 +528,9 @@ const _tabBarEl = (() => {
         const active = b.dataset.key === key;
         b.style.fontWeight = active ? "700" : "500";
         b.style.border = active ? "1px solid #c5c9d0" : "1px solid #d1d5db";
-        b.style.borderBottom = active ? "2px solid #fff" : "2px solid transparent";
         b.style.background = active ? "#fff" : "#f9fafb";
         b.style.color = active ? "#dc2626" : "#6b7280";
-        b.style.boxShadow = active ? "0 -1px 3px rgba(0,0,0,0.06)" : "none";
+        b.style.boxShadow = active ? "0 1px 3px rgba(0,0,0,0.06)" : "none";
       }
     };
     row.appendChild(btn);
@@ -779,84 +773,42 @@ function makeTooltipFn(mapEl) {
     const val = props._val;
     const colKey = mapEl._colKey || "";
     const isIdx = colKey.startsWith("idxg_");
-    const label = isIdx ? (IDXG_LABELS[colKey] || colKey) : getColLabel(colKey, null, "short");
+    const label = isIdx ? (IDXG_LABELS[colKey]?.replace(/^◆\s*/, "") || colKey) : getColLabel(colKey, null, "short");
     const valStr = val != null ? (isIdx ? Number(val).toFixed(1) : formatValue(colKey, val)) : "n.d.";
     const pop = props._P22_POP || 0;
     const etab = props._NB_ETAB || 0;
     const isGreyed = isCom ? false : !isIrisActive({ P22_POP: pop, ecosi_etab_vol_26: etab });
     const zm = mapEl._zoneMean;
     const zl = mapEl._zoneLabel;
-    // Percentile
-    let pctTxt = "", pct = null;
+    const unit = isCom ? "communes" : "IRIS";
+
+    // Percentile + rank (compact)
+    let pct = null, rank = null, total = 0;
     if (val != null && mapEl._sortedVals?.length > 0) {
       const sv = mapEl._sortedVals;
-      pct = Math.round(100 * d3.bisectLeft(sv, val) / sv.length);
-      pctTxt = ` · <span style="color:#a5b4fc;">P${pct}</span>`;
+      total = sv.length;
+      pct = Math.round(100 * d3.bisectLeft(sv, val) / total);
+      rank = total - d3.bisectLeft(sv, val);
     }
-    // Polarity lookup (non-IDXG only)
-    const _indicKey = parseColKey(colKey).indic;
-    const _indMeta = INDICATEURS[_indicKey] || {};
-    const _pol = isIdx ? 0 : (_indMeta.polarity || 0);
 
-    // Rank + polarity dots + devant/derrière (EXDTC-style)
-    let rankHtml = "";
-    if (pct != null && mapEl._sortedVals?.length > 0) {
-      const sv = mapEl._sortedVals;
-      const rank = sv.length - d3.bisectLeft(sv, val);
-      if (isIdx) {
-        // IDXG: triangle arrows based on percentile
-        if (pct >= 80) rankHtml = ` · <span style="color:#ff3333;font-weight:700;">▲ ${rank}/${sv.length}</span>`;
-        else if (pct >= 60) rankHtml = ` · <span style="color:#fb923c;">▲ ${rank}/${sv.length}</span>`;
-        else if (pct <= 20) rankHtml = ` · <span style="color:#2563eb;font-weight:700;">▼ ${rank}/${sv.length}</span>`;
-        else if (pct <= 40) rankHtml = ` · <span style="color:#60a5fa;">▼ ${rank}/${sv.length}</span>`;
-        else rankHtml = ` · <span style="color:#94a3b8;">${rank}/${sv.length}</span>`;
-      } else {
-        // Non-IDXG: polarity dots ●●/●/○ + devant/derrière phrase
-        const eff = _pol === 1 ? pct : _pol === -1 ? (100 - pct) : pct;
-        let dotColor = "#94a3b8", dotSym = "○";
-        if (_pol !== 0) {
-          if (eff >= 95) { dotColor = "#4ade80"; dotSym = "●●"; }
-          else if (eff >= 80) { dotColor = "#4ade80"; dotSym = "●"; }
-          else if (eff <= 5) { dotColor = "#f87171"; dotSym = "●●"; }
-          else if (eff <= 20) { dotColor = "#f87171"; dotSym = "●"; }
-        }
-        const dot = `<span style="color:${dotColor};font-size:9px;margin-right:2px;">${dotSym}</span>`;
-        let posPhrase = "";
-        if (_pol !== 0) {
-          posPhrase = eff >= 50
-            ? ` · <span style="color:#cbd5e1;font-size:10px;">devant ${eff}% des IRIS</span>`
-            : ` · <span style="color:#cbd5e1;font-size:10px;">derrière ${100 - eff}% des IRIS</span>`;
-        }
-        rankHtml = `<br><span style="font-size:10.5px;padding-left:6px;">${dot}<span style="color:#a5b4fc;">${rank}<sup style="font-size:7px;">e</sup>/${sv.length}</span>${posPhrase}</span>`;
-      }
+    // L1 — Name + commune
+    const lines = [`<b>${name}</b>${commune ? ` <span style="color:#94a3b8;font-size:10px;">${commune}</span>` : ""}`];
+    if (isGreyed) {
+      lines.push(`<span style="color:#f87171;font-size:10px;">Non classé</span>`);
     }
-    // Zone mean inline
-    let zmInline = "";
+
+    // L2 — Value (compact, one line)
+    lines.push(`<span style="color:#93c5fd;">${label}</span> : <b>${valStr}</b>`);
+
+    // L3 — P{pct} · rank/total · moy.zone (one compact line)
+    const metaParts = [];
+    if (pct != null) metaParts.push(`P${pct} · ${rank}<sup style="font-size:6px;">e</sup>/${total} ${unit}`);
     if (zm != null && zl) {
       const zmStr = isIdx ? Number(zm).toFixed(1) : formatValue(colKey, zm);
-      zmInline = ` · <span style="color:#94a3b8;font-size:10px;">moy.${zl}: ${zmStr}</span>`;
+      metaParts.push(`moy.${zl}: ${zmStr}`);
     }
-    // Value color: polarity-aware for non-IDXG
-    let valColor = "#93c5fd";
-    if (!isIdx && _pol !== 0 && pct != null) {
-      const eff = _pol === 1 ? pct : (100 - pct);
-      if (eff >= 80) valColor = "#86efac";
-      else if (eff <= 20) valColor = "#fca5a5";
-    }
-    // L1 — Nom + commune (isolé, bold)
-    const lines = [`<b style="font-size:12px;">${name}</b>${commune ? ` <span style="color:#94a3b8;font-size:10px;">${commune}</span>` : ""}`];
-    if (isGreyed) lines.push(`<span style="color:#f87171;font-size:10.5px;">Non classé (pop. &lt; ${POP_MIN} et étab. &lt; ${ETAB_MIN})</span>`);
-    // L2 — Valeur indicateur (isolé, gros)
-    lines.push(`<span style="color:${valColor};font-size:12.5px;font-weight:600;">${label} : ${valStr}</span>`);
-    // L3 — Rang simplifié (sans moy zone)
-    if (isIdx && val != null && mapEl._sortedVals?.length > 0) {
-      const sv = mapEl._sortedVals;
-      const rank = sv.length - d3.bisectLeft(sv, val);
-      const unit = isCom ? "communes" : "IRIS";
-      lines.push(`<span style="color:#94a3b8;font-size:10px;">P${pct} · ${rank}<sup style="font-size:6px;">e</sup>/${sv.length} ${unit}</span>`);
-    } else if (!isIdx) {
-      let l2extra = pctTxt + zmInline + rankHtml;
-      if (l2extra) lines[lines.length - 1] += l2extra;
+    if (metaParts.length) {
+      lines.push(`<span style="color:#94a3b8;font-size:10px;">${metaParts.join(" · ")}</span>`);
     }
     // Commune-level _com_ : show median idx + SD
     if (isIdx && colKey.includes("_com_") && isCom) {
@@ -924,24 +876,76 @@ function makeTooltipFn(mapEl) {
       }
     }
     // Pop + Étab sur même ligne
-    const metaParts = [];
-    if (pop) metaParts.push(`Pop. ${Math.round(Number(pop)).toLocaleString("fr-FR")} hab.`);
-    if (etab && !isCom) metaParts.push(`${Number(etab).toLocaleString("fr-FR")} étab.`);
-    if (metaParts.length) lines.push(`<span style="color:#64748b;font-size:10px;">${metaParts.join(" · ")}</span>`);
-    // Commerce tab : bloc SIRENE enrichi (secteurs dominants, Shannon, densité)
-    if (mapEl._activeTab === "commerce") {
-      const sd1 = props._ecosi_nafdom1_lib_26, sd1p = props._ecosi_nafdom1_pct_26;
-      const sd2 = props._ecosi_nafdom2_lib_26, sd2p = props._ecosi_nafdom2_pct_26;
-      const shan = props._ecosi_shannon_ind_26;
-      const dens = props._ecosi_etab_denspop_26;
-      const _sep = `<span style="color:#374151;font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-top:2px;display:block;">Tissu éco.</span>`;
-      let ecoLines = [_sep];
-      if (sd1) ecoLines.push(`<span style="color:#a5b4fc;font-size:10px;">1. ${sd1}${sd1p != null ? ` (${Number(sd1p).toFixed(1)}%)` : ""}</span>`);
-      if (sd2) ecoLines.push(`<span style="color:#a5b4fc;font-size:10px;">2. ${sd2}${sd2p != null ? ` (${Number(sd2p).toFixed(1)}%)` : ""}</span>`);
-      const ecoMeta = [];
-      if (shan != null) ecoMeta.push(`Shannon ${Number(shan).toFixed(2)}`);
-      if (dens != null) ecoMeta.push(`${Number(dens).toFixed(0)} étab/1k hab`);
-      if (ecoMeta.length) ecoLines.push(`<span style="color:#94a3b8;font-size:9.5px;">${ecoMeta.join(" · ")}</span>`);
+    const popParts = [];
+    if (pop) popParts.push(`Pop. ${Math.round(Number(pop)).toLocaleString("fr-FR")}`);
+    if (etab && !isCom) popParts.push(`${Number(etab).toLocaleString("fr-FR")} étab.`);
+    if (popParts.length) lines.push(`<span style="color:#64748b;font-size:10px;">${popParts.join(" · ")}</span>`);
+    // Tooltip enrichi SIRENE (toujours affiché si données ecosi présentes)
+    if (props._ecosi_etab_vol_26 != null || props._ecosi_shannon_ind_26 != null) {
+      const m = mapEl._ecoMeans || {};
+      const _hdr = (t) => `<span style="color:#475569;font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-top:3px;display:block;border-top:1px solid #334155;padding-top:2px;">${t}</span>`;
+      const _ecart = (v, avg, u, d) => {
+        if (v == null || avg == null) return "";
+        const diff = Number(v) - avg;
+        const sign = diff > 0 ? "+" : "";
+        const col = Math.abs(diff) < 0.5 ? "#94a3b8" : diff > 0 ? "#f87171" : "#60a5fa";
+        const dStr = d === 0 ? Math.round(diff).toLocaleString("fr-FR") : diff.toFixed(d);
+        return `<span style="color:${col};font-size:9px;"> (${sign}${dStr}${u})</span>`;
+      };
+      const _row = (label, val, ecart) => `<span style="font-size:9px;color:#cbd5e1;">${label} : <b style="color:#e2e8f0;font-size:9px;">${val}</b>${ecart}</span>`;
+
+      const ecoLines = [];
+
+      // Bloc Structure
+      ecoLines.push(_hdr("Structure"));
+      const etabV = props._ecosi_etab_vol_26;
+      if (etabV != null) ecoLines.push(_row("Étab.", `${Math.round(Number(etabV)).toLocaleString("fr-FR")}`, _ecart(etabV, m.ecosi_etab_vol_26, "", 0)));
+      const densV = props._ecosi_etab_denspop_26;
+      if (densV != null) ecoLines.push(_row("Densité", `${Number(densV).toFixed(1)} / 1 000 hab`, _ecart(densV, m.ecosi_etab_denspop_26, "", 1)));
+      const socV = props._ecosi_soc_pct_26;
+      if (socV != null) ecoLines.push(_row("Sociétés", `${Number(socV).toFixed(0)}%`, _ecart(socV, m.ecosi_soc_pct_26, " pts", 1)));
+      const empV = props._ecosi_emp_pct_26;
+      if (empV != null) ecoLines.push(_row("Employeurs", `${Number(empV).toFixed(0)}%`, _ecart(empV, m.ecosi_emp_pct_26, " pts", 1)));
+      const meV = props._ecosi_einonemp_pct_26;
+      if (meV != null) ecoLines.push(_row("Micro-E", `${Number(meV).toFixed(0)}%`, _ecart(meV, m.ecosi_einonemp_pct_26, " pts", 1)));
+
+      // Bloc Diversité sectorielle
+      ecoLines.push(_hdr("Diversité sectorielle"));
+      const shanV = props._ecosi_shannon_ind_26;
+      if (shanV != null) ecoLines.push(_row("Shannon", `${Number(shanV).toFixed(2)} (max 3.64)`, _ecart(shanV, m.ecosi_shannon_ind_26, "", 2)));
+      const nbdivV = props._ecosi_nbdiv_vol_26;
+      if (nbdivV != null) ecoLines.push(_row("Secteurs", `${Math.round(Number(nbdivV))} / 38`, _ecart(nbdivV, m.ecosi_nbdiv_vol_26, "", 0)));
+
+      // Bloc Renouvellement
+      ecoLines.push(_hdr("Renouvellement"));
+      const recV = props._ecosi_etabrec_pct_26;
+      if (recV != null) ecoLines.push(_row("Renouvellement", `${Number(recV).toFixed(0)}% (depuis 2020)`, _ecart(recV, m.ecosi_etabrec_pct_26, " pts", 1)));
+      const renV = props._ecosi_renouv_horsmE_pct_26;
+      if (renV != null) ecoLines.push(_row("Hors micro-E", `${Number(renV).toFixed(0)}%`, _ecart(renV, m.ecosi_renouv_horsmE_pct_26, " pts", 1)));
+      if (recV != null && renV != null) {
+        const ecartPts = (Number(recV) - Number(renV)).toFixed(1);
+        const porteMsg = Number(ecartPts) > 0 ? "porté par micro-E" : "tiré par sociétés";
+        ecoLines.push(`<span style="font-size:8.5px;color:#94a3b8;font-style:italic;">(écart ${ecartPts} pts = ${porteMsg})</span>`);
+      }
+
+      // Bloc Secteurs surreprésentés (fallback nafdom lookup pour mode commune)
+      let sd1 = props._ecosi_nafdom1_lib_26, sd1p = props._ecosi_nafdom1_pct_26, sd1q = props._ecosi_nafdom1ql_ind_26;
+      let sd2 = props._ecosi_nafdom2_lib_26, sd2p = props._ecosi_nafdom2_pct_26, sd2q = props._ecosi_nafdom2ql_ind_26;
+      if (!sd1 && isCom && props._code) {
+        const nf = (mapEl._nafdomLookup || {})[props._code];
+        if (nf) { sd1 = nf.lib1; sd2 = nf.lib2; }
+      }
+      if (sd1 || sd1p != null) {
+        ecoLines.push(_hdr("Secteurs surreprésentés"));
+        const ql1 = sd1q != null ? ` (QL ${Number(sd1q).toFixed(1)})` : "";
+        const lbl1 = sd1 || "Sect. 1";
+        ecoLines.push(`<span style="color:#a5b4fc;font-size:8.5px;">1. ${lbl1} — ${sd1p != null ? Number(sd1p).toFixed(0) : "?"}%${ql1}</span>`);
+        if (sd2 || sd2p != null) {
+          const ql2 = sd2q != null ? ` (QL ${Number(sd2q).toFixed(1)})` : "";
+          const lbl2 = sd2 || "Sect. 2";
+          ecoLines.push(`<span style="color:#a5b4fc;font-size:8.5px;">2. ${lbl2} — ${sd2p != null ? Number(sd2p).toFixed(0) : "?"}%${ql2}</span>`);
+        }
+      }
       lines.push(ecoLines.join("<br>"));
     }
     return lines.join("<br>");
@@ -1055,7 +1059,7 @@ function buildIdxKpiTable(zoneData, accent) {
   const grpStyle = `border-left:2px solid #e5e7eb;padding-left:8px;`;
   const grpLabel = (t) => `<div style="font-size:9px;font-weight:700;color:#7c8594;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">${t}</div>`;
   const wrap = document.createElement("div");
-  let h = `<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start;padding:5px 8px 6px 12px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
+  let h = `<div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;padding:5px 12px 6px 14px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
   // CONTEXTE (totaux zone)
   h += `<div style="border-left:2px solid ${accent};padding-left:8px;">${grpLabel("Contexte")}`;
   h += kpiItem("Pop.", fvk(total(all, "P22_POP")), fvEvol(med(all, "dm_pop_vtcam_1622"), "%"), med(all, "dm_pop_vtcam_1622"), "TCAM 16-22");
@@ -1116,7 +1120,7 @@ function buildCommerceKpiTable(zoneData, accent) {
   const grpStyle = `border-left:2px solid #e5e7eb;padding-left:8px;`;
   const grpLabel = (t) => `<div style="font-size:9px;font-weight:700;color:#7c8594;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;">${t}</div>`;
   const wrap = document.createElement("div");
-  let h = `<div style="display:flex;gap:22px;flex-wrap:wrap;align-items:flex-start;padding:5px 8px 6px 12px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
+  let h = `<div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;padding:5px 12px 6px 14px;font-family:Inter,system-ui,sans-serif;background:#fafbfc;border-radius:4px;border:1px solid #ebedf0;">`;
   // CONTEXTE
   h += `<div style="border-left:2px solid ${accent};padding-left:8px;">${grpLabel("Contexte")}`;
   h += kpiItem("Pop.", fvk(total(all, "P22_POP")));
@@ -1272,7 +1276,7 @@ const mapRefs = await (async () => {
     // Zoom — padding asymétrique par zone
     const pad = fitPad || { top: 0, bottom: 0, left: 0, right: 0 };
     map.fitBounds(bounds, { padding: pad, duration: 0 });
-    // Bouton reset zoom (⌂)
+    // Bouton reset zoom (⌂) — recentrer sur la zone
     map.addControl({
       onAdd: () => {
         const div = document.createElement("div");
@@ -1300,6 +1304,45 @@ const mapRefs = await (async () => {
           onOpen: () => map.resize(),
           onClose: () => map.resize()
         });
+        div.appendChild(btn);
+        return div;
+      },
+      onRemove: function() { this._container?.remove(); }
+    }, "top-right");
+    // Export SVG button (⤓) — reads stored GeoJSON + projects via map.project()
+    map.addControl({
+      onAdd: () => {
+        const div = document.createElement("div");
+        div.className = "maplibregl-ctrl maplibregl-ctrl-group";
+        const btn = document.createElement("button");
+        btn.innerHTML = "⤓";
+        btn.title = "Export SVG";
+        btn.style.cssText = "font-size:13px;line-height:1;cursor:pointer;";
+        btn.onclick = () => {
+          const geo = container._geoData;
+          if (!geo?.features?.length) { console.warn("SVG export: no GeoJSON data stored"); return; }
+          const canvas = map.getCanvas();
+          const w = canvas.clientWidth, h = canvas.clientHeight;
+          const proj = (coords) => { const p = map.project(coords); return [p.x, p.y]; };
+          let paths = "";
+          for (const f of geo.features) {
+            const fill = f.properties?._fill || "#ccc";
+            const geom = f.geometry;
+            if (!geom) continue;
+            const rings = geom.type === "MultiPolygon" ? geom.coordinates.flat() : (geom.type === "Polygon" ? geom.coordinates : []);
+            for (const ring of rings) {
+              const pts = ring.map(c => proj(c));
+              const d = pts.map((p, i) => `${i === 0 ? "M" : "L"}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join("") + "Z";
+              paths += `<path d="${d}" fill="${fill}" stroke="#9ca3af" stroke-width="0.3"/>`;
+            }
+          }
+          const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${paths}</svg>`;
+          const blob = new Blob([svg], { type: "image/svg+xml" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url; a.download = `carte_${container.id || "map"}.svg`; a.click();
+          URL.revokeObjectURL(url);
+        };
         div.appendChild(btn);
         return div;
       },
@@ -1418,7 +1461,7 @@ const mapRefs = await (async () => {
 
   // Update titres avec ⓘ info tooltip
   function titleHtml(title, ck) {
-    let def = "", src = "";
+    let def = "", note = "", src = "";
     if (ck.startsWith("idxg_")) {
       def = "Indice composite de gentrification : z-scores cadres, ouvriers, emménagés récents, propriétaires, prix m², revenus médians, ratio prix/revenus.";
       src = "INSEE RP, DVF, Filosofi";
@@ -1428,12 +1471,20 @@ const mapRefs = await (async () => {
     } else {
       const parsed = parseColKey(ck);
       const ind = parsed?.indic ? INDICATEURS[parsed.indic] : null;
-      def = ind?.definition || ind?.note || "";
+      def = ind?.definition || "";
+      note = ind?.note || "";
       src = ind?.source || "";
     }
-    if (!def && !src) return title;
-    const tip = `${def}${src ? `<br><em style="color:#93c5fd;">Source : ${src}</em>` : ""}`;
-    return `${title} <span class="pgent-info">ⓘ<span class="pgent-info-tip">${tip}</span></span>`;
+    if (!def && !note && !src) return title;
+    const parts = [];
+    if (def) parts.push(`<b style="color:#e2e8f0;">Définition</b><br>${def}`);
+    if (note) parts.push(`<b style="color:#e2e8f0;">Note de lecture</b><br>${note}`);
+    if (src) parts.push(`<em style="color:#93c5fd;">Source : ${src}</em>`);
+    const tip = parts.join("<br>");
+    const hasInfo = def || note;
+    const iconColor = hasInfo ? "#3b82f6" : "#9ca3af";
+    const srcLine = src ? `<div style="font-size:8px;color:#9ca3af;font-style:italic;margin-top:-1px;">${src}</div>` : "";
+    return `${title} <span class="pgent-info" style="color:${iconColor};">ⓘ<span class="pgent-info-tip">${tip}</span></span>${srcLine}`;
   }
   const t1 = document.getElementById("title-idf1"); if (t1) t1.innerHTML = titleHtml(title1, colKey1);
   const t2 = document.getElementById("title-idf2"); if (t2) t2.innerHTML = titleHtml(title2, colKey2);
@@ -1443,9 +1494,11 @@ const mapRefs = await (async () => {
   // GeoJSON sources — bins INDÉPENDANTS par zone + z-scores + brutes idxg en extraProps
   const extraBase = ["nom_commune", "ecosi_etab_vol_26", "libelle"];
   // Commerce tab : ajouter colonnes SIRENE pour tooltip enrichi
-  const _ecoExtra = activeTab === "commerce"
-    ? ["ecosi_nafdom1_lib_26", "ecosi_nafdom1_pct_26", "ecosi_nafdom2_lib_26", "ecosi_nafdom2_pct_26", "ecosi_shannon_ind_26", "ecosi_etab_denspop_26"]
-    : [];
+  const _ecoExtra = ["ecosi_nafdom1_lib_26", "ecosi_nafdom1_pct_26", "ecosi_nafdom1ql_ind_26",
+       "ecosi_nafdom2_lib_26", "ecosi_nafdom2_pct_26", "ecosi_nafdom2ql_ind_26",
+       "ecosi_shannon_ind_26", "ecosi_nbdiv_vol_26", "ecosi_equit_ind_26",
+       "ecosi_etab_denspop_26", "ecosi_soc_pct_26", "ecosi_emp_pct_26",
+       "ecosi_einonemp_pct_26", "ecosi_etabrec_pct_26", "ecosi_renouv_horsmE_pct_26"];
   const extra1 = [...extraBase, ..._ecoExtra, ...getIdxgZscores(colKey1), ...getIdxgRawCols(colKey1)];
   const extra2 = [...extraBase, ..._ecoExtra, ...getIdxgZscores(colKey2), ...getIdxgRawCols(colKey2)];
   const geoIdf1 = buildGentSource(_idfFeat1, _idfDM1, colKey1, getColorIdf1, { codeProperty: _codeProp1, extraProps: extra1, bins: binsIdf1, checkActive: _isActive1 });
@@ -1492,6 +1545,7 @@ const mapRefs = await (async () => {
     if (!ref?.map) return;
     const src = ref.map.getSource(ref.sourceId);
     if (src) src.setData(geo);
+    ref.container._geoData = geo;  // store for SVG export
     ref.container._colKey = colKey;
     ref.container._sortedVals = sortedVals;
     ref.container._zoneMean = zoneMean;
@@ -1500,6 +1554,8 @@ const mapRefs = await (async () => {
     ref.container._activeTab = activeTab;
     ref.container._tooltipFn = makeTooltipFn(ref.container);
     const fillId = ref.sourceId.replace("src-", "") + "-fill";
+    const lineId = ref.sourceId.replace("src-", "") + "-line";
+    ref.map.setPaintProperty(lineId, "line-width", vmSide === "commune" ? 0 : 0.3);
     ref.map.setFilter(fillId, null);
     // Légende compacte bottom-left
     if (ref.container._leg) ref.container._leg.remove();
@@ -1563,23 +1619,68 @@ const mapRefs = await (async () => {
   updateMap(mapRefs.idf2, geoIdf2, colKey2, svIdf2, binsIdf2, makeFilterCb(mapRefs.idf2), meanIdf2, naIdf2, "IDF", viewMode2);
   updateMap(mapRefs.m1, geoM1, colKey1, svM1, binsM1, makeFilterCb(mapRefs.m1), meanM1, naM1, "Marseille", viewMode1);
   updateMap(mapRefs.m2, geoM2, colKey2, svM2, binsM2, makeFilterCb(mapRefs.m2), meanM2, naM2, "Marseille", viewMode2);
+
+  // Moyennes SIRENE pour tooltip écart + lookup nafdom commune
+  const ecoKeys = ["ecosi_etab_vol_26","ecosi_etab_denspop_26","ecosi_soc_pct_26","ecosi_emp_pct_26",
+    "ecosi_einonemp_pct_26","ecosi_etabrec_pct_26","ecosi_renouv_horsmE_pct_26",
+    "ecosi_shannon_ind_26","ecosi_nbdiv_vol_26","ecosi_equit_ind_26"];
+  function calcEcoMeans(data, checkFn) {
+    const means = {};
+    for (const k of ecoKeys) {
+      const vals = data.filter(d => checkFn(d) && d[k] != null).map(d => Number(d[k]));
+      means[k] = vals.length ? d3.mean(vals) : null;
+    }
+    return means;
+  }
+  // Lookup nafdom par commune (mode dominant parmi IRIS, pondéré par nb étab)
+  function buildNafdomLookup(data) {
+    const byComm = {};
+    for (const d of data) {
+      const com = d._commune;
+      const lib = d.ecosi_nafdom1_lib_26;
+      if (!com || !lib) continue;
+      if (!byComm[com]) byComm[com] = {};
+      const w = Number(d.ecosi_etab_vol_26) || 1;
+      byComm[com][lib] = (byComm[com][lib] || 0) + w;
+    }
+    const lookup = {};
+    for (const [com, sectors] of Object.entries(byComm)) {
+      const sorted = Object.entries(sectors).sort((a, b) => b[1] - a[1]);
+      lookup[com] = { lib1: sorted[0]?.[0], lib2: sorted[1]?.[0] };
+    }
+    return lookup;
+  }
+  const ecoMeansIdf = calcEcoMeans(activeIdfData1, _isActive1);
+  const ecoMeansM13 = calcEcoMeans(activeM13Data1, _isActive1);
+  const nafdomIdf = buildNafdomLookup(idfData);
+  const nafdomM13 = buildNafdomLookup(m13Data);
+  for (const ref of [mapRefs.idf1, mapRefs.idf2]) if (ref?.container) { ref.container._ecoMeans = ecoMeansIdf; ref.container._nafdomLookup = nafdomIdf; }
+  for (const ref of [mapRefs.m1, mapRefs.m2]) if (ref?.container) { ref.container._ecoMeans = ecoMeansM13; ref.container._nafdomLookup = nafdomM13; }
 }
 ```
 <!-- &e MAP_UPDATE -->
 
-<!-- &s LABEL_TOGGLE — Toggle + filtre labels (léger, pas de rebuild carte) -->
+<!-- &s LABEL_TOGGLE — Per-side label toggle (G → idf1+m1, D → idf2+m2) -->
 ```js
 {
-  // Filter: top5bot5 → n≤5 (both top+bot), top10 → rank=top only
-  const labFilter = _labelCtrl.mode === "top10"
-    ? ["==", ["get", "_rank"], "top"]
-    : ["<=", ["get", "_n"], 5];
-  for (const refKey of ["idf1", "idf2", "m1", "m2"]) {
+  const labFilter = ["<=", ["get", "_n"], 5]; // Top5/Bot5 toujours
+  // Left maps (G) — _labelShow1
+  for (const refKey of ["idf1", "m1"]) {
     const ref = mapRefs[refKey];
     if (!ref?.map) continue;
     const labLayerId = ref.sourceId.replace("src-", "") + "-labels";
     if (ref.map.getLayer(labLayerId)) {
-      ref.map.setLayoutProperty(labLayerId, "visibility", _labelCtrl.show ? "visible" : "none");
+      ref.map.setLayoutProperty(labLayerId, "visibility", _labelShow1 ? "visible" : "none");
+      ref.map.setFilter(labLayerId, labFilter);
+    }
+  }
+  // Right maps (D) — _labelShow2
+  for (const refKey of ["idf2", "m2"]) {
+    const ref = mapRefs[refKey];
+    if (!ref?.map) continue;
+    const labLayerId = ref.sourceId.replace("src-", "") + "-labels";
+    if (ref.map.getLayer(labLayerId)) {
+      ref.map.setLayoutProperty(labLayerId, "visibility", _labelShow2 ? "visible" : "none");
       ref.map.setFilter(labLayerId, labFilter);
     }
   }
@@ -1633,8 +1734,8 @@ const mapRefs = await (async () => {
 
     const scatterEl = createScatterWithZoom({
       title: `${stitle1} × ${stitle2}`,
-      subtitle: `${data.length} ${isCom ? "communes" : "IRIS"} · top/bottom ${N_HIGHLIGHT}`,
-      legend: Object.entries(labelMap).map(([k, v]) => ({ label: v, color: colorMap[k] || "#999" })),
+      subtitle: `${data.length} ${isCom ? "communes" : "IRIS"}`,
+      legend: [],
       sizeLabel: null,
       data, xCol: scatterCK1, yCol: scatterCK2,
       xDomain: [xMin - xPad, xMax + xPad],
@@ -1652,10 +1753,13 @@ const mapRefs = await (async () => {
         const v2 = scatterCK2.startsWith("idxg_") ? d[scatterCK2]?.toFixed(1) : formatValue(scatterCK2, d[scatterCK2]);
         const dep = d._dep || String(d.code || "").substring(0, 2);
         const depLabel = labelMap[dep] || dep;
+        // Percentiles (consistent with map tooltip)
+        const pX = d[scatterCK1] != null ? Math.round(100 * d3.bisectLeft(xVals, d[scatterCK1]) / xVals.length) : null;
+        const pY = d[scatterCK2] != null ? Math.round(100 * d3.bisectLeft(yVals, d[scatterCK2]) / yVals.length) : null;
         return `<b>${name}</b> <span style="color:#9ca3af;font-size:10px;">${depLabel}</span><br>`
-          + `<span style="color:#93c5fd;">${stitle1}:</span> ${v1 ?? "n.d."}<br>`
-          + `<span style="color:#93c5fd;">${stitle2}:</span> ${v2 ?? "n.d."}<br>`
-          + `<span style="color:#9ca3af;font-size:10px;">Pop: ${(d.P22_POP || 0).toLocaleString("fr-FR")}</span>`;
+          + `<span style="color:#93c5fd;">${stitle1}</span> : <b>${v1 ?? "n.d."}</b>${pX != null ? ` <span style="color:#94a3b8;font-size:10px;">P${pX}</span>` : ""}<br>`
+          + `<span style="color:#93c5fd;">${stitle2}</span> : <b>${v2 ?? "n.d."}</b>${pY != null ? ` <span style="color:#94a3b8;font-size:10px;">P${pY}</span>` : ""}<br>`
+          + `<span style="color:#94a3b8;font-size:10px;">Pop. ${(d.P22_POP || 0).toLocaleString("fr-FR")}</span>`;
       },
       width: 420, height: 420,
       fontSize: "10px",

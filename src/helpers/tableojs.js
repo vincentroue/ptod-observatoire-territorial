@@ -18,9 +18,10 @@ function _injectCSS() {
 .t-toolbar .info { font-size:10px; color:#9ca3af; white-space:nowrap; }
 .t { font-family:Inter,system-ui,sans-serif; }
 .t table { width:100%; border-collapse:collapse; font-size:10px; }
-.t th { padding:2px 4px; border-bottom:1px solid #d0d4d9; font-size:9px; font-weight:600; color:#a0a7af; cursor:pointer; white-space:nowrap; text-align:left; background:#f0f2f4; }
+.t th { padding:2px 4px; border-bottom:1px solid #d0d4d9; font-size:9px; font-weight:700; color:#4b5563; cursor:pointer; white-space:nowrap; text-align:left; background:#f0f2f4; }
 .t th.active { color:#dc2626; }
-.t th .th-unit { display:block; font-size:7.5px; font-weight:400; color:#6b7280; }
+.t th .th-unit { display:block; font-size:7.5px; font-weight:500; color:#6b7280; }
+.t th .th-evol { color:#e67e22; font-size:8px; margin-right:1px; }
 .t td { padding:2px 6px 2px 4px; border-bottom:1px solid #f3f4f6; font-size:9.5px; white-space:nowrap; vertical-align:middle; background:#fff; }
 .t tr:hover td { background:#f8f9fa; }
 .t .supra th { font-size:8px; text-align:center; background:#d5d8dc; border-bottom:1px solid #bcc1c7; padding:1px 2px; color:#1f2937; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; }
@@ -146,7 +147,9 @@ export function buildDataTable(container, data, config) {
     const dd = DDICT[k] || {};
     const lbl = dd.short || k;
     const unit = (dd.unit && !UNIT_SKIP[dd.unit]) ? dd.unit : "";
-    headers[k] = unit ? lbl + '<span class="th-unit">' + unit + '</span>' : lbl;
+    const isEvol = evolCols.has(k);
+    const evolPrefix = isEvol ? '<span class="th-evol">△</span>' : '';
+    headers[k] = evolPrefix + (unit ? lbl + '<span class="th-unit">' + unit + '</span>' : lbl);
     tips[k] = (dd.desc || dd.label || "").replace(/"/g, "&quot;");
   }
 
