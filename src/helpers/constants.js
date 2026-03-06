@@ -121,7 +121,7 @@ export const FICHE_INDICS = {
   soc: ['soc_txchom_1564', 'dsp_csp_cadres_pct', 'dsp_dipl_supbac2_pct'],
   men: ['men_coupsenf_pct', 'men_mono_pct'],
   log: ['log_prop_pct', 'log_vac_pct', 'log_ressec_pct'],
-  logd: ['logd_px2q2_mai', 'logd_px2_global_vevol_1924'],
+  logd: ['logd_px2q2_mai', 'logd_px2_glb_vevol_1924'],
   rev: ['rev_med', 'rev_txpauv']
 };
 

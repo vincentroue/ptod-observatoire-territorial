@@ -1,5 +1,5 @@
 ---
-title: ObTer — Communes
+title: Communes
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css
@@ -81,7 +81,7 @@ import {
   createGradientScale,   // (data, col, options) → {getColor, min, max, divergent, palette}
   GRADIENT_PALETTES,     // {divergent, sequential} pour mode gradient
   computeEcartFrance,    // (data, col, ref, options) → {getColor, getEcartInfo, thresholds, ...}
-  PAL_ECART_FRANCE,      // 9 couleurs RdBu pour mode écart
+  PAL_ECART_FRANCE,      // 9 couleurs BuRd pour mode écart (bleu=baisse, rouge=hausse)
   ECART_FRANCE_SYMBOLS   // 9 symboles courts (▼▼..▲▲)
 } from "./helpers/colors.js";
 
@@ -367,7 +367,7 @@ const periode2 = view(Inputs.select(per2Map, { value: [...per2Map.values()][0], 
 <div class="sub-banner-instructions">
 <span>Comparez 2 indicateurs sur cartes choroplèthes. <b>Clic</b> = zoom, <b>Ctrl+clic</b> = multi-sélection.</span>
 <span>Le tableau liste les communes ; <b>clic header</b> = tri, la sélection carte filtre les lignes.</span>
-<span class="version">ObTer v2.0</span>
+<span class="version">v2.0</span>
 </div>
 
 </div>

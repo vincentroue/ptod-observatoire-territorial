@@ -14,7 +14,7 @@ style: styles/dashboard.css
       <circle cx="20" cy="22" r="4" fill="#1e40af"/>
     </svg>
     <div class="banner-titles">
-      <h1>OTTD — Exploration Communes</h1>
+      <h1>Exploration Communes</h1>
       <p>Analyse détaillée des 35 000 communes françaises — Vincent Roué</p>
     </div>
     <span class="sources-btn" title="Sources : INSEE RP 2011/2016/2022, DVF, Filosofi. Géométries : IGN Admin Express 2025.">? Sources</span>

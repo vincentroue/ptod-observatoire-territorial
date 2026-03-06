@@ -123,6 +123,37 @@ export const GRADIENT_PALETTES = {
   sequential: ["#f0ebe0", "#ffe68a", "#fecc5c", "#fd8d3c", "#fc4e2a", "#bd0026", "#5b1a8c"]
 };
 
+/**
+ * PAL_BREDGREYBLUE_DIV7 — Divergente z-score 7 classes : bleu (bas) → gris neutre → bordeaux (haut)
+ * Bins : z<-2 / -2≤z<-1 / -1≤z<-0.5 / -0.5≤z≤0.5 / 0.5<z≤1 / 1<z≤2 / z>2
+ * Gris central très clair pour neutralité maximale
+ * SYNC: jcn-setup.R pal_bredgreyblue_div7
+ */
+export const PAL_BREDGREYBLUE_DIV7 = [
+  "#1b5ea0",  // Bleu foncé — z < -2  (extrême bas)
+  "#6baed6",  // Bleu moyen — -2 ≤ z < -1
+  "#c6dbef",  // Bleu clair — -1 ≤ z < -0.5
+  "#d0d4d8",  // Gris très clair — -0.5 ≤ z ≤ 0.5  (neutre)
+  "#e8b4c0",  // Rose clair — 0.5 < z ≤ 1
+  "#c97b8e",  // Rose moyen — 1 < z ≤ 2
+  "#8c2d4a"   // Bordeaux foncé — z > 2  (extrême haut)
+];
+
+/**
+ * PAL_BREDGREYBLUE_DIV6 — Divergente variation 6 classes centrée 0 (sans neutre)
+ * Bins : z<-2 / -2≤z<-1 / -1≤z<0 / 0≤z<1 / 1≤z<2 / z≥2
+ * Pas de classe neutre — passage direct négatif→positif à 0
+ * SYNC: jcn-setup.R pal_bredgreyblue_div6
+ */
+export const PAL_BREDGREYBLUE_DIV6 = [
+  "#1b5ea0",  // Bleu foncé — z < -2
+  "#6baed6",  // Bleu moyen — -2 ≤ z < -1
+  "#c6dbef",  // Bleu clair — -1 ≤ z < 0
+  "#e8b4c0",  // Rose clair — 0 ≤ z < 1
+  "#c97b8e",  // Rose moyen — 1 ≤ z < 2
+  "#8c2d4a"   // Bordeaux foncé — z ≥ 2
+];
+
 // ============================================================
 // &s DENSITÉ — Couleurs et labels par niveau de densité
 // ============================================================
@@ -565,14 +596,14 @@ export function makeDivQuantileBins6(data, col, options = {}) {
 import * as d3 from "npm:d3";
 
 /**
- * Palette divergente 9 couleurs RdBu pour mode "Écart France"
- * Bleu foncé (très au-dessus) → blanc neutre → rouge foncé (très en-dessous)
- * Source: ColorBrewer RdBu 9-class
+ * Palette divergente 9 couleurs BuRd pour mode "Écart à la moyenne"
+ * Bleu foncé (très en-dessous) → blanc neutre → rouge foncé (très au-dessus / hausse)
+ * Source: ColorBrewer RdBu 9-class inversé — convention : rouge = hausse
  */
 export const PAL_ECART_FRANCE = [
-  "#67001f", "#b2182b", "#d6604d", "#f4a582",  // En-dessous (rouge)
+  "#053061", "#2166ac", "#4393c3", "#92c5de",  // En-dessous (bleu)
   "#f7f7f7",                                     // Neutre (autour de la ref)
-  "#92c5de", "#4393c3", "#2166ac", "#053061"     // Au-dessus (bleu)
+  "#f4a582", "#d6604d", "#b2182b", "#67001f"   // Au-dessus / hausse (rouge)
 ];
 
 /**

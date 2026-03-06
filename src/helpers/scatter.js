@@ -81,7 +81,8 @@ export function renderScatter(config) {
     zoomFactor = 1,
     annotations = [],
     quadrantRects = [],
-    marginRight = 16
+    marginRight = 16,
+    fontSize = "13px"
   } = config;
 
   const validData = data.filter(d => d[xCol] != null && d[yCol] != null);
@@ -216,7 +217,7 @@ export function renderScatter(config) {
   const plot = Plot.plot({
     grid: true,
     r: { type: "identity" },
-    style: { fontFamily: "Inter, sans-serif", fontSize: "13px", color: "#333" },
+    style: { fontFamily: "Inter, sans-serif", fontSize, color: "#333" },
     x: { label: xLabelFull, domain: xDomain, labelOffset: 42, labelAnchor: "right", line: true, ticks: xTicks, labelArrow: "none", fontSize: 12 },
     y: { label: yLabelFull, domain: yDomain, labelAnchor: "top", line: true, ticks: yTicks, labelArrow: "none", fontSize: 12 },
     marginBottom: 52,

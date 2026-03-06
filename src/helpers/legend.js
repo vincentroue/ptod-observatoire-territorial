@@ -109,9 +109,12 @@ export function createGradientLegend(config) {
   const titleStyle = "font-size:9px;font-weight:600;color:#374151;margin-bottom:4px;text-align:center;";
   const barStyle = `height:8px;border-radius:2px;border:0.5px solid rgba(0,0,0,0.2);margin:2px 0;background:linear-gradient(to right, ${safeColors.join(', ')});`;
   const axisStyle = "display:flex;align-items:center;font-size:8.5px;color:#4b5563;font-variant-numeric:tabular-nums;gap:2px;";
-  const minStyle = "color:#5b1a8c;font-weight:500;";
+  // Couleur labels = couleur correspondante du gradient (ocre pour low séquentiel, violet pour high)
+  const minCol = safeColors[0] === "#f0ebe0" ? "#a08050" : safeColors[0];
+  const maxCol = safeColors[safeColors.length - 1];
+  const minStyle = `color:${minCol};font-weight:500;`;
   const zeroStyle = "color:#6b7280;";
-  const maxStyle = "color:#5b1a8c;font-weight:500;";
+  const maxStyle = `color:${maxCol};font-weight:500;`;
 
   return html`<div style="${wrapperStyle}">
     ${title ? html`<div style="${titleStyle}">${title}</div>` : ""}

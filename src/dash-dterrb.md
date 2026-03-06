@@ -1,5 +1,5 @@
 ---
-title: ObTer — Fiche Territoire IRIS
+title: Fiche Territoire IRIS
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css

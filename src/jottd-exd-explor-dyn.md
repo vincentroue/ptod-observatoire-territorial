@@ -1923,7 +1923,7 @@ display(renderArrowTypo({
   polarity: polarityL,
   franceT1: grilleFrance?.[col1116],
   franceT2: grilleFrance?.[col1622],
-  options: { width: 520, unit: indicXUnit_L, grilleKey }
+  options: { width: 520, unit: indicXUnit_L, grilleKey, labelT1: periodeLabel_XR, labelT2: periodeLabel_XL }
 }));
 ```
 

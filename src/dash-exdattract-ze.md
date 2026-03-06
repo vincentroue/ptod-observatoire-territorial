@@ -1,5 +1,5 @@
 bar;;;;;;;;;;;;;;;;;;;;
-title: OTTD — Attractivité;;;;;;;;;;;;;;;;;;;;
+title: Attractivité;;;;;;;;;;;;;;;;;;;;
 toc: false;;;;;;;;;;;;;;;;;;;;
 theme: dashboard;;;;;;;;;;;;;;;;;;;;
 style: styles/dashboard-light.css;;;;;;;;;;;;;;;;;;;;
@@ -17,7 +17,7 @@ style: styles/dashboard-light.css;;;;;;;;;;;;;;;;;;;;
 ```js;;;;;;;;;;;;;;;;;;;;
 "import { createBanner, createNav, OTTD_PAGES } from ""./helpers/layout.js""";;;;;;;;;;;;;;;;;;;;
 display(createBanner({;;;;;;;;;;;;;;;;;;;;
-"  title: ""OTTD — Attractivité résidentielle et productive"",";;;;;;;;;;;;;;;;;;;;
+"  title: ""Attractivité résidentielle et productive"",";;;;;;;;;;;;;;;;;;;;
 "  subtitle: ""Quelles trajectoires territoriales depuis 2011 ?"",";;;;;;;;;;;;;;;;;;;;
   navElement: createNav(OTTD_PAGES, 'exdattract'),;;;;;;;;;;;;;;;;;;;;
 "  sourcesText: ""? Sources"",";;;;;;;;;;;;;;;;;;;;

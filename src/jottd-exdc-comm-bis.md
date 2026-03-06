@@ -1,5 +1,5 @@
 ---
-title: OTTD — Communes (bis)
+title: Communes (bis)
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css
@@ -20,7 +20,7 @@ style: styles/dashboard-light.css
 <div class="banner">
   <div class="banner-inner">
     <div class="banner-titles">
-      <h1>OTTD — Communes (bis)</h1>
+      <h1>Communes (bis)</h1>
       <p>Version template — 35k communes × indicateurs étendus</p>
     </div>
     <nav class="nav-banner" id="nav-container"></nav>

@@ -102,3 +102,7 @@ export function getDecimalsForType(type, value = null) {
 }
 
 // &e
+
+// Whitelist dpgent déplacée → helpers/indicators-dpgent.js
+
+// &e

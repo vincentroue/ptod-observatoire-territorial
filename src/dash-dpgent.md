@@ -326,7 +326,7 @@ const indicOptions = new Map([...IDXG_OPTIONS, ...filtered]);
 
 <!-- &s SUB_BANNER -->
 <style>
-.pgent-sub { display:flex; flex-direction:column; gap:0; background:#eef0f4; box-shadow:0 1px 3px rgba(0,0,0,0.06); font-size:11px; position:relative; z-index:2; }
+.pgent-sub { display:flex; flex-direction:column; gap:0; background:#eef0f4; box-shadow:0 1px 4px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06); border-bottom:1px solid #c8cdd4; font-size:11px; position:relative; z-index:2; }
 .pgent-sub form { margin:0; flex:0 0 auto; width:auto !important; display:inline-flex !important; align-items:center; }
 .pgent-sub select { font-size:10px; padding:0 2px; border:1px solid #c8cdd4; border-radius:3px; background:#fff; height:18px; }
 .pgent-lbl { font-size:7px; font-weight:700; text-transform:uppercase; letter-spacing:0.3px; color:#8b95a3; }
@@ -334,9 +334,9 @@ const indicOptions = new Map([...IDXG_OPTIONS, ...filtered]);
 .pgent-grp { display:flex; align-items:center; gap:1px; flex:0 0 auto; }
 .pgent-sep { width:1px; height:12px; background:#c8cdd4; margin:0 2px; flex:0 0 1px; }
 .pgent-per { flex:0 0 auto; margin-left:-1px; }
-.pgent-per select { max-width:62px; font-size:9.5px; padding:0 2px; background:#fff; }
+.pgent-per select { max-width:70px; font-size:9.5px; padding:0 2px; background:#fff; }
 .pgent-grp-indic select { max-width:195px; }
-.pgent-ctrl-row { display:flex; align-items:center; gap:2px; padding:0 3px; height:22px; flex-wrap:nowrap; justify-content:flex-start !important; }
+.pgent-ctrl-row { display:flex; align-items:center; gap:2px; padding:0 3px; height:24px; flex-wrap:nowrap; justify-content:flex-start !important; }
 .pgent-ctrl-row > * { flex:0 0 auto !important; max-width:fit-content !important; }
 /* Force Observable cell wrappers to display:contents so they don't break flex */
 .pgent-grp > div:not([class*="pgent"]), .pgent-per > div:not([class*="pgent"]),
@@ -357,8 +357,9 @@ const indicOptions = new Map([...IDXG_OPTIONS, ...filtered]);
 .pgent-table-col .scatter-container button[title="Zoom avant"],
 .pgent-table-col .scatter-container button[title="Zoom arrière"],
 .pgent-table-col .scatter-container button[title="Reset zoom"] { display:none !important; }
-.pgent-sub .pgent-label-chk { display:inline-flex; align-items:center; gap:2px; margin-left:3px; }
+.pgent-sub .pgent-label-chk { display:inline-flex; align-items:center; gap:1px; margin-left:1px; }
 .pgent-sub .pgent-label-chk label { font-size:8.5px; color:#6b7280; }
+.pgent-sub select:disabled { opacity:0.4; }
 </style>
 
 <div class="pgent-sub">
@@ -412,7 +413,14 @@ const paletteMode1 = view(Inputs.select(new Map([["Quintiles", "abs"], ["Écart 
 <div class="pgent-label-chk">
 
 ```js
-const _labelShow1 = view(Inputs.toggle({ label: "Label", value: false }));
+const _labelShow1 = view(Inputs.toggle({ label: "Label", value: true }));
+```
+
+</div>
+<div class="pgent-grp pgent-mode-sel">
+
+```js
+const _labelMode1 = view(Inputs.select(new Map([["Top 5", "top5"], ["Top 10", "top10"], ["Top 5+Bot 5", "top5bot5"], ["Bot 5", "bot5"], ["Pop.", "pop"]]), { value: "top5", label: "", disabled: !_labelShow1 }));
 ```
 
 </div>
@@ -467,7 +475,14 @@ const paletteMode2 = view(Inputs.select(new Map([["Quintiles", "abs"], ["Écart 
 <div class="pgent-label-chk">
 
 ```js
-const _labelShow2 = view(Inputs.toggle({ label: "Label", value: false }));
+const _labelShow2 = view(Inputs.toggle({ label: "Label", value: true }));
+```
+
+</div>
+<div class="pgent-grp pgent-mode-sel">
+
+```js
+const _labelMode2 = view(Inputs.select(new Map([["Top 5", "top5"], ["Top 10", "top10"], ["Top 5+Bot 5", "top5bot5"], ["Bot 5", "bot5"], ["Pop.", "pop"]]), { value: "top5", label: "", disabled: !_labelShow2 }));
 ```
 
 </div>
@@ -584,6 +599,8 @@ const colKey1 = indic1.startsWith("idxg_") ? buildIdxgColKey(indic1, periode1) :
 const colKey2 = indic2.startsWith("idxg_") ? buildIdxgColKey(indic2, periode2) : buildColKey(indic2, periode2);
 const viewMode1 = _viewMode1;
 const viewMode2 = _viewMode2;
+const labelMode1 = _labelMode1;
+const labelMode2 = _labelMode2;
 ```
 <!-- &e COLKEYS -->
 
@@ -630,7 +647,7 @@ const IDXG_COMPONENTS = [
   { key: "prop_evol", label: "Propriétaires", evol: { t2: "log_prop_vdifp_1622" }, ref: { t2: "log_prop_pct_22" }, evolUnit: "pts", refUnit: "%", refFmt: 1 },
   { key: "px_evol", label: "Prix m²/appt", evol: { t2: "logd_px2_glb_vevol_1624" }, ref: { t2: "logd_px2mm3_appt_24" }, evolUnit: "%", refUnit: "€", refFmt: 0 },
   { key: "revmed_evol", label: "Rev. médian", evol: { t2: "rev_med_vevol_1921" }, ref: { t2: "rev_med_21" }, evolUnit: "%", refUnit: "€", refFmt: 0 },
-  { key: "ratio_px_rev", label: "Ratio prix/rev.", evol: {}, ref: { t2: "rev_ratio_px_rev_21" }, evolUnit: "", refUnit: "×", refFmt: 0 },
+  { key: "ratio_px_rev", label: "Ratio prix/rev.", evol: {}, ref: { t2: "logd_pxmoisrev_21" }, evolUnit: "", refUnit: " mois", refFmt: 1 },
 ];
 function getIdxgZscores(colKey) {
   if (!colKey.startsWith("idxg_")) return [];
@@ -880,10 +897,10 @@ function makeTooltipFn(mapEl) {
     if (pop) popParts.push(`Pop. ${Math.round(Number(pop)).toLocaleString("fr-FR")}`);
     if (etab && !isCom) popParts.push(`${Number(etab).toLocaleString("fr-FR")} étab.`);
     if (popParts.length) lines.push(`<span style="color:#64748b;font-size:10px;">${popParts.join(" · ")}</span>`);
-    // Tooltip enrichi SIRENE (toujours affiché si données ecosi présentes)
-    if (props._ecosi_etab_vol_26 != null || props._ecosi_shannon_ind_26 != null) {
+    // Tooltip enrichi SIRENE — seulement pour indicateurs ecosi_*
+    if (colKey.startsWith("ecosi_") && (props._ecosi_etab_vol_26 != null || props._ecosi_shannon_ind_26 != null)) {
       const m = mapEl._ecoMeans || {};
-      const _hdr = (t) => `<span style="color:#475569;font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-top:3px;display:block;border-top:1px solid #334155;padding-top:2px;">${t}</span>`;
+      const _hdr = (t) => `<span style="color:#475569;font-size:7.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;display:block;border-top:1px solid #334155;padding-top:1px;margin-top:1px;">${t}</span>`;
       const _ecart = (v, avg, u, d) => {
         if (v == null || avg == null) return "";
         const diff = Number(v) - avg;
@@ -893,10 +910,7 @@ function makeTooltipFn(mapEl) {
         return `<span style="color:${col};font-size:9px;"> (${sign}${dStr}${u})</span>`;
       };
       const _row = (label, val, ecart) => `<span style="font-size:9px;color:#cbd5e1;">${label} : <b style="color:#e2e8f0;font-size:9px;">${val}</b>${ecart}</span>`;
-
       const ecoLines = [];
-
-      // Bloc Structure
       ecoLines.push(_hdr("Structure"));
       const etabV = props._ecosi_etab_vol_26;
       if (etabV != null) ecoLines.push(_row("Étab.", `${Math.round(Number(etabV)).toLocaleString("fr-FR")}`, _ecart(etabV, m.ecosi_etab_vol_26, "", 0)));
@@ -908,15 +922,11 @@ function makeTooltipFn(mapEl) {
       if (empV != null) ecoLines.push(_row("Employeurs", `${Number(empV).toFixed(0)}%`, _ecart(empV, m.ecosi_emp_pct_26, " pts", 1)));
       const meV = props._ecosi_einonemp_pct_26;
       if (meV != null) ecoLines.push(_row("Micro-E", `${Number(meV).toFixed(0)}%`, _ecart(meV, m.ecosi_einonemp_pct_26, " pts", 1)));
-
-      // Bloc Diversité sectorielle
       ecoLines.push(_hdr("Diversité sectorielle"));
       const shanV = props._ecosi_shannon_ind_26;
       if (shanV != null) ecoLines.push(_row("Shannon", `${Number(shanV).toFixed(2)} (max 3.64)`, _ecart(shanV, m.ecosi_shannon_ind_26, "", 2)));
       const nbdivV = props._ecosi_nbdiv_vol_26;
       if (nbdivV != null) ecoLines.push(_row("Secteurs", `${Math.round(Number(nbdivV))} / 38`, _ecart(nbdivV, m.ecosi_nbdiv_vol_26, "", 0)));
-
-      // Bloc Renouvellement
       ecoLines.push(_hdr("Renouvellement"));
       const recV = props._ecosi_etabrec_pct_26;
       if (recV != null) ecoLines.push(_row("Renouvellement", `${Number(recV).toFixed(0)}% (depuis 2020)`, _ecart(recV, m.ecosi_etabrec_pct_26, " pts", 1)));
@@ -927,10 +937,11 @@ function makeTooltipFn(mapEl) {
         const porteMsg = Number(ecartPts) > 0 ? "porté par micro-E" : "tiré par sociétés";
         ecoLines.push(`<span style="font-size:8.5px;color:#94a3b8;font-style:italic;">(écart ${ecartPts} pts = ${porteMsg})</span>`);
       }
-
-      // Bloc Secteurs surreprésentés (fallback nafdom lookup pour mode commune)
-      let sd1 = props._ecosi_nafdom1_lib_26, sd1p = props._ecosi_nafdom1_pct_26, sd1q = props._ecosi_nafdom1ql_ind_26;
-      let sd2 = props._ecosi_nafdom2_lib_26, sd2p = props._ecosi_nafdom2_pct_26, sd2q = props._ecosi_nafdom2ql_ind_26;
+      // Secteurs surreprésentés — String() pour Arrow types DuckDB-WASM
+      let sd1 = props._ecosi_nafdom1_lib_26 != null ? String(props._ecosi_nafdom1_lib_26) : null;
+      let sd1p = props._ecosi_nafdom1_pct_26, sd1q = props._ecosi_nafdom1ql_ind_26;
+      let sd2 = props._ecosi_nafdom2_lib_26 != null ? String(props._ecosi_nafdom2_lib_26) : null;
+      let sd2p = props._ecosi_nafdom2_pct_26, sd2q = props._ecosi_nafdom2ql_ind_26;
       if (!sd1 && isCom && props._code) {
         const nf = (mapEl._nafdomLookup || {})[props._code];
         if (nf) { sd1 = nf.lib1; sd2 = nf.lib2; }
@@ -938,12 +949,10 @@ function makeTooltipFn(mapEl) {
       if (sd1 || sd1p != null) {
         ecoLines.push(_hdr("Secteurs surreprésentés"));
         const ql1 = sd1q != null ? ` (QL ${Number(sd1q).toFixed(1)})` : "";
-        const lbl1 = sd1 || "Sect. 1";
-        ecoLines.push(`<span style="color:#a5b4fc;font-size:8.5px;">1. ${lbl1} — ${sd1p != null ? Number(sd1p).toFixed(0) : "?"}%${ql1}</span>`);
+        ecoLines.push(`<span style="color:#a5b4fc;font-size:8.5px;">1. ${sd1 || "Sect. 1"} — ${sd1p != null ? Number(sd1p).toFixed(0) : "?"}%${ql1}</span>`);
         if (sd2 || sd2p != null) {
           const ql2 = sd2q != null ? ` (QL ${Number(sd2q).toFixed(1)})` : "";
-          const lbl2 = sd2 || "Sect. 2";
-          ecoLines.push(`<span style="color:#a5b4fc;font-size:8.5px;">2. ${lbl2} — ${sd2p != null ? Number(sd2p).toFixed(0) : "?"}%${ql2}</span>`);
+          ecoLines.push(`<span style="color:#a5b4fc;font-size:8.5px;">2. ${sd2 || "Sect. 2"} — ${sd2p != null ? Number(sd2p).toFixed(0) : "?"}%${ql2}</span>`);
         }
       }
       lines.push(ecoLines.join("<br>"));
@@ -1262,7 +1271,7 @@ const mapRefs = await (async () => {
     const lineId = `${prefix}-line`;
     const hoverId = `${prefix}-hover`;
     map.addLayer({ id: fillId, type: "fill", source: sourceId, paint: { "fill-color": ["get", "_fill"], "fill-opacity": 0.78 } });
-    map.addLayer({ id: lineId, type: "line", source: sourceId, paint: { "line-color": "#9ca3af", "line-width": 0.3 } });
+    map.addLayer({ id: lineId, type: "line", source: sourceId, paint: { "line-color": "#d5dae0", "line-width": 0.15 } });
     map.addLayer({ id: hoverId, type: "fill", source: sourceId, paint: { "fill-color": "#ffd700", "fill-opacity": 0.3 }, filter: ["==", ["get", "_hoverCode"], ""] });
 
     container._tooltipFn = () => "";
@@ -1462,12 +1471,11 @@ const mapRefs = await (async () => {
   // Update titres avec ⓘ info tooltip
   function titleHtml(title, ck) {
     let def = "", note = "", src = "";
-    if (ck.startsWith("idxg_")) {
-      def = "Indice composite de gentrification : z-scores cadres, ouvriers, emménagés récents, propriétaires, prix m², revenus médians, ratio prix/revenus.";
-      src = "INSEE RP, DVF, Filosofi";
-    } else if (ck.startsWith("ecosi_")) {
-      def = "Indicateur économie locale (SIRENE jan. 2026) : établissements, diversité sectorielle, renouvellement.";
-      src = "INSEE SIRENE";
+    if (ck.startsWith("idxg_") || ck.startsWith("ecosi_")) {
+      const ind = INDICATEURS[ck] || INDICATEURS[ck.replace(/_\d+$/, "")];
+      def = ind?.definition || (ck.startsWith("idxg_") ? "Indice composite de gentrification." : "Indicateur économie locale (SIRENE).");
+      note = ind?.note || "";
+      src = ind?.source || (ck.startsWith("idxg_") ? "INSEE RP, DVF, Filosofi" : "INSEE SIRENE");
     } else {
       const parsed = parseColKey(ck);
       const ind = parsed?.indic ? INDICATEURS[parsed.indic] : null;
@@ -1541,7 +1549,7 @@ const mapRefs = await (async () => {
   const naM2 = activeM13Data2.filter(d => _isActive2(d) && _isNA(d[colKey2])).length;
 
   // setData + légendes + marqueur moyenne zone + bin NA + labels top5/bot5
-  function updateMap(ref, geo, colKey, sortedVals, bins, filterCb, zoneMean, naCount, zoneLabel, vmSide) {
+  function updateMap(ref, geo, colKey, sortedVals, bins, filterCb, zoneMean, naCount, zoneLabel, vmSide, lbMode) {
     if (!ref?.map) return;
     const src = ref.map.getSource(ref.sourceId);
     if (src) src.setData(geo);
@@ -1555,7 +1563,7 @@ const mapRefs = await (async () => {
     ref.container._tooltipFn = makeTooltipFn(ref.container);
     const fillId = ref.sourceId.replace("src-", "") + "-fill";
     const lineId = ref.sourceId.replace("src-", "") + "-line";
-    ref.map.setPaintProperty(lineId, "line-width", vmSide === "commune" ? 0 : 0.3);
+    ref.map.setPaintProperty(lineId, "line-width", vmSide === "commune" ? 0 : 0.15);
     ref.map.setFilter(fillId, null);
     // Légende compacte bottom-left
     if (ref.container._leg) ref.container._leg.remove();
@@ -1565,18 +1573,30 @@ const mapRefs = await (async () => {
     ref.container.appendChild(leg);
     ref.container._leg = leg;
 
-    // Labels top10 + bot5 — toggled/filtered by LABEL_TOGGLE cell
+    // Labels dynamiques selon lbMode — toggled by LABEL_TOGGLE cell
     const labSrcId = ref.sourceId + "-labels";
     const labLayerId = ref.sourceId.replace("src-", "") + "-labels";
     const ranked = geo.features
       .filter(f => f.properties._val != null && !isNaN(f.properties._val) && f.properties._fill !== GREY_NA)
       .sort((a, b) => a.properties._val - b.properties._val);
-    const bot5 = ranked.slice(0, 5);
-    const top10 = ranked.slice(-10).reverse();
-    const labFeatures = [
-      ...top10.map((f, i) => [f, "top", i + 1]),
-      ...bot5.map((f, i) => [f, "bot", i + 1])
-    ].map(([f, rank, n]) => {
+    let labPairs;
+    if (lbMode === "top5") {
+      labPairs = ranked.slice(-5).reverse().map((f, i) => [f, "top", i + 1]);
+    } else if (lbMode === "top10") {
+      labPairs = ranked.slice(-10).reverse().map((f, i) => [f, "top", i + 1]);
+    } else if (lbMode === "bot5") {
+      labPairs = ranked.slice(0, 5).map((f, i) => [f, "bot", i + 1]);
+    } else if (lbMode === "pop") {
+      const byPop = [...ranked].sort((a, b) => (b.properties._P22_POP || 0) - (a.properties._P22_POP || 0));
+      labPairs = byPop.slice(0, 12).map((f, i) => [f, "pop", i + 1]);
+    } else {
+      // top5bot5 (défaut)
+      labPairs = [
+        ...ranked.slice(-5).reverse().map((f, i) => [f, "top", i + 1]),
+        ...ranked.slice(0, 5).map((f, i) => [f, "bot", i + 1])
+      ];
+    }
+    const labFeatures = labPairs.map(([f, rank, n]) => {
       const centroid = d3.geoCentroid(f);
       const v = f.properties._val;
       const isIdx = colKey.startsWith("idxg_");
@@ -1610,15 +1630,15 @@ const mapRefs = await (async () => {
           "text-halo-width": 1.8
         }
       });
+      // Hidden on first creation — toggled by LABEL_TOGGLE reactive cell
+      ref.map.setLayoutProperty(labLayerId, "visibility", "none");
     }
-    // Default: hidden (toggled + filtered by LABEL_TOGGLE reactive cell)
-    ref.map.setLayoutProperty(labLayerId, "visibility", "none");
   }
 
-  updateMap(mapRefs.idf1, geoIdf1, colKey1, svIdf1, binsIdf1, makeFilterCb(mapRefs.idf1), meanIdf1, naIdf1, "IDF", viewMode1);
-  updateMap(mapRefs.idf2, geoIdf2, colKey2, svIdf2, binsIdf2, makeFilterCb(mapRefs.idf2), meanIdf2, naIdf2, "IDF", viewMode2);
-  updateMap(mapRefs.m1, geoM1, colKey1, svM1, binsM1, makeFilterCb(mapRefs.m1), meanM1, naM1, "Marseille", viewMode1);
-  updateMap(mapRefs.m2, geoM2, colKey2, svM2, binsM2, makeFilterCb(mapRefs.m2), meanM2, naM2, "Marseille", viewMode2);
+  updateMap(mapRefs.idf1, geoIdf1, colKey1, svIdf1, binsIdf1, makeFilterCb(mapRefs.idf1), meanIdf1, naIdf1, "IDF", viewMode1, labelMode1);
+  updateMap(mapRefs.idf2, geoIdf2, colKey2, svIdf2, binsIdf2, makeFilterCb(mapRefs.idf2), meanIdf2, naIdf2, "IDF", viewMode2, labelMode2);
+  updateMap(mapRefs.m1, geoM1, colKey1, svM1, binsM1, makeFilterCb(mapRefs.m1), meanM1, naM1, "Marseille", viewMode1, labelMode1);
+  updateMap(mapRefs.m2, geoM2, colKey2, svM2, binsM2, makeFilterCb(mapRefs.m2), meanM2, naM2, "Marseille", viewMode2, labelMode2);
 
   // Moyennes SIRENE pour tooltip écart + lookup nafdom commune
   const ecoKeys = ["ecosi_etab_vol_26","ecosi_etab_denspop_26","ecosi_soc_pct_26","ecosi_emp_pct_26",
@@ -1663,26 +1683,24 @@ const mapRefs = await (async () => {
 <!-- &s LABEL_TOGGLE — Per-side label toggle (G → idf1+m1, D → idf2+m2) -->
 ```js
 {
-  const labFilter = ["<=", ["get", "_n"], 5]; // Top5/Bot5 toujours
+  // Track labelMode changes so this cell re-fires when mode changes (features already updated by MAP_UPDATE)
+  const _lm1 = labelMode1;
+  const _lm2 = labelMode2;
   // Left maps (G) — _labelShow1
   for (const refKey of ["idf1", "m1"]) {
     const ref = mapRefs[refKey];
     if (!ref?.map) continue;
     const labLayerId = ref.sourceId.replace("src-", "") + "-labels";
-    if (ref.map.getLayer(labLayerId)) {
+    if (ref.map.getLayer(labLayerId))
       ref.map.setLayoutProperty(labLayerId, "visibility", _labelShow1 ? "visible" : "none");
-      ref.map.setFilter(labLayerId, labFilter);
-    }
   }
   // Right maps (D) — _labelShow2
   for (const refKey of ["idf2", "m2"]) {
     const ref = mapRefs[refKey];
     if (!ref?.map) continue;
     const labLayerId = ref.sourceId.replace("src-", "") + "-labels";
-    if (ref.map.getLayer(labLayerId)) {
+    if (ref.map.getLayer(labLayerId))
       ref.map.setLayoutProperty(labLayerId, "visibility", _labelShow2 ? "visible" : "none");
-      ref.map.setFilter(labLayerId, labFilter);
-    }
   }
 }
 ```

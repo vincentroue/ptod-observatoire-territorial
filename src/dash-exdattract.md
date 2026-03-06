@@ -1,5 +1,5 @@
 ---
-title: ObTer — Attractivité
+title: Attractivité
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css
@@ -179,7 +179,7 @@ const TAB_DEFS = {
   }
 };
 
-// Scatter & maps color : bleu-bordeaux (PAL_ECART_FRANCE) centered on 50 (indices) or 0 (deltas)
+// Scatter & maps color : BuRd (PAL_ECART_FRANCE, bleu=baisse rouge=hausse) centered on 50 (indices) or 0 (deltas)
 ```
 <!-- &e TAB_CONFIG -->
 

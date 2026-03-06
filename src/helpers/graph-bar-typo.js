@@ -1,41 +1,27 @@
 // helpers/graph-bar-typo.js — Barres horizontales par grille typologique
-// Barre France en référence, couleur divergente par écart à la moyenne France
-// Date : 2026-02-19
+// v3 : Labels homogènes, tooltip HTML riche, étiquettes bien positionnées
+// Date : 2026-02-22
 
 import * as Plot from "npm:@observablehq/plot";
 import * as d3 from "npm:d3";
 import { PAL_PURPLE_GREEN } from "./colors.js";
+import { LIB_TYPO, fixLib } from "./graph-typo-common.js";
 
+// &s RENDER_BAR_TYPO — Barres horizontales par catégorie typologique
 /**
- * Render horizontal bar chart for typology categories
  * @param {Object} params
- * @param {Array} params.data - [{code, lib, lib_court, ...indicateurs}] catégories (sans France)
- * @param {string} params.indicCol - colonne indicateur (ex: "dm_pop_vtcam_1622")
+ * @param {Array} params.data - [{code, lib, lib_court, ...indicateurs}]
+ * @param {string} params.indicCol - colonne indicateur (ex: "dm_sma_vtcam_1622")
  * @param {number} params.franceValue - valeur France (repère)
- * @param {Object} [params.options] - {width, title}
+ * @param {Object} [params.options] - {width, title, unit, periodeLabel}
  */
 export function renderBarTypo({ data, indicCol, franceValue, options = {} }) {
   const {
-    width = 400,
-    title = null
+    width = 420,
+    title = null,
+    unit = "",
+    periodeLabel = ""
   } = options;
-
-  // Correction accents/labels manquants dans sat3col sources
-  const LIB_FIX = {
-    "Pole de Paris": "Pôle de Paris", "Pole Paris": "Pôle Paris",
-    "Autres poles denses": "Autres pôles denses", "Poles denses": "Pôles denses",
-    "Poles intermediaires et petits": "Pôles intermédiaires", "Poles int.": "Pôles int.",
-    "Couronnes urbaines": "Autres couronnes urb.", "Cour. urb.": "Aut. cour. urb.",
-    "Rural forte influence": "Rural forte influence", "Rural faible influence": "Rural faible influence",
-    "Rural hors attraction": "Rural hors attraction",
-    "Grandes aires >=200k": "Grandes aires ≥200k", "Aires moyennes 50-200k": "Aires moy. 50-200k",
-    "Dense": "Dense", "Intermediaire": "Intermédiaire", "Rural": "Rural",
-    "Grand centre urbain": "Grand centre urbain", "Centre urbain intermediaire": "Centre urbain interm.",
-    "Ceinture urbaine": "Ceinture urbaine", "Petit centre urbain": "Petit centre urbain",
-    "Bourg rural": "Bourg rural", "Rural a habitat disperse": "Rural habitat dispersé",
-    "Rural a habitat tres disperse": "Rural très dispersé"
-  };
-  const fixLib = (s) => LIB_FIX[s] || s;
 
   // Filtrer données valides
   const valid = data.filter(d => d[indicCol] != null && !isNaN(d[indicCol]));
@@ -49,14 +35,13 @@ export function renderBarTypo({ data, indicCol, franceValue, options = {} }) {
   // Trier par valeur décroissante
   const sorted = [...valid].sort((a, b) => (b[indicCol] ?? 0) - (a[indicCol] ?? 0));
 
-  // France value (fallback 0)
+  // France ref
   const fr = franceValue ?? 0;
 
-  // Échelle de couleur divergente basée sur l'écart à France
+  // Échelle couleur divergente par écart à France
   const ecarts = sorted.map(d => d[indicCol] - fr);
   const maxAbsEcart = d3.max(ecarts.map(Math.abs)) || 1;
 
-  // Interpolation continue : bordeaux (négatif) ↔ vert (positif) via PAL_PURPLE_GREEN
   const colorScale = d3.scaleLinear()
     .domain([-maxAbsEcart, -maxAbsEcart * 0.5, -maxAbsEcart * 0.1,
              maxAbsEcart * 0.1, maxAbsEcart * 0.5, maxAbsEcart])
@@ -65,7 +50,7 @@ export function renderBarTypo({ data, indicCol, franceValue, options = {} }) {
     .interpolate(d3.interpolateRgb)
     .clamp(true);
 
-  // Préparer données pour Plot
+  // Préparer données
   const barData = sorted.map(d => ({
     label: fixLib(d.lib_court || d.lib || d.code),
     value: d[indicCol],
@@ -75,81 +60,90 @@ export function renderBarTypo({ data, indicCol, franceValue, options = {} }) {
   }));
 
   // Dimensions
-  const barHeight = 28;
+  const barHeight = 30;
   const calculatedHeight = barData.length * barHeight + 60;
-
-  // Catégories dans l'ordre trié (décroissant)
   const categoryOrder = barData.map(d => d.label);
 
-  // Formater valeur écart
-  const fmtEcart = (v) => {
-    const sign = v >= 0 ? "+" : "";
-    const dec = Math.abs(v) < 0.1 ? 3 : Math.abs(v) < 1 ? 2 : Math.abs(v) < 10 ? 1 : 0;
-    return `${sign}${v.toFixed(dec)}`;
-  };
-
-  // Formater valeur principale
+  // Format FR
   const fmtVal = (v) => {
+    if (v == null) return "—";
     const dec = Math.abs(v) < 0.1 ? 3 : Math.abs(v) < 1 ? 2 : Math.abs(v) < 10 ? 1 : 0;
-    return v.toFixed(dec);
+    return v.toFixed(dec).replace(".", ",");
   };
+  const fmtEcart = (v) => {
+    const sign = v > 0 ? "+" : "";
+    const dec = Math.abs(v) < 0.1 ? 3 : Math.abs(v) < 1 ? 2 : Math.abs(v) < 10 ? 1 : 0;
+    return `${sign}${v.toFixed(dec).replace(".", ",")}`;
+  };
+  const fmtPop = (v) => v ? d3.format(",")(Math.round(v)).replace(/,/g, " ") : "—";
 
   const plot = Plot.plot({
     width,
     height: calculatedHeight,
-    marginLeft: 110,
-    marginRight: 80,
-    marginTop: 8,
+    marginLeft: 140,
+    marginRight: 90,
+    marginTop: 12,
     marginBottom: 30,
 
     y: {
       domain: categoryOrder,
       label: null,
-      padding: 0.15
+      padding: 0.18
     },
     x: {
       label: null,
-      grid: true
+      grid: true,
+      tickFormat: v => fmtVal(v)
     },
-    color: {
-      type: "identity"
-    },
+    color: { type: "identity" },
 
     marks: [
-      // Ligne France (référence verticale)
+      // Ligne France
       Plot.ruleX([fr], {
-        stroke: "#333",
+        stroke: "#c62828",
         strokeWidth: 1.5,
-        strokeDasharray: "4,3"
+        strokeDasharray: "5,3"
       }),
 
-      // Barres horizontales
+      // Barres
       Plot.barX(barData, {
         y: "label",
         x: "value",
         fill: "color",
-        title: d => `${d.label}\nValeur: ${fmtVal(d.value)}\nÉcart France: ${fmtEcart(d.ecart)}\nPop: ${d.pop ? d3.format(",")(d.pop) : "—"}`
+        title: d => `${d.label}\n${fmtVal(d.value)} ${unit}\nÉcart France : ${fmtEcart(d.ecart)} ${unit}\nPop : ${fmtPop(d.pop)}`
       }),
 
-      // Labels valeur + écart à droite des barres
+      // Étiquette valeur — toujours à droite de la barre
       Plot.text(barData, {
         y: "label",
         x: "value",
-        text: d => `${fmtVal(d.value)} (${fmtEcart(d.ecart)})`,
-        textAnchor: d => d.value >= fr ? "start" : "end",
-        dx: d => d.value >= fr ? 4 : -4,
-        fontSize: 10,
-        fill: "#555",
-        fontWeight: d => Math.abs(d.ecart) > maxAbsEcart * 0.5 ? "600" : "400"
+        text: d => `${fmtVal(d.value)}`,
+        textAnchor: d => d.value >= 0 ? "start" : "end",
+        dx: d => d.value >= 0 ? 5 : -5,
+        fontSize: 11,
+        fontWeight: "600",
+        fill: "#444"
       }),
 
-      // Annotation "France" sur la règle
-      Plot.text([{ x: fr, label: `Fr. ${fmtVal(fr)}` }], {
+      // Étiquette écart — sous la valeur, gris
+      Plot.text(barData, {
+        y: "label",
+        x: "value",
+        text: d => `(${fmtEcart(d.ecart)})`,
+        textAnchor: d => d.value >= 0 ? "start" : "end",
+        dx: d => d.value >= 0 ? 5 : -5,
+        dy: 12,
+        fontSize: 9,
+        fill: "#999"
+      }),
+
+      // Annotation France
+      Plot.text([{ x: fr }], {
         x: "x",
-        text: "label",
+        text: d => `Fr. ${fmtVal(d.x)}`,
         dy: -8,
         fontSize: 9,
-        fill: "#666",
+        fill: "#c62828",
         fontWeight: "600",
         frameAnchor: "top"
       })
@@ -158,14 +152,13 @@ export function renderBarTypo({ data, indicCol, franceValue, options = {} }) {
 
   // Container
   const container = document.createElement("div");
-
   if (title) {
     const titleDiv = document.createElement("div");
     titleDiv.style.cssText = "font-weight:600;font-size:13px;color:#666;margin-bottom:4px";
     titleDiv.textContent = title;
     container.appendChild(titleDiv);
   }
-
   container.appendChild(plot);
   return container;
 }
+// &e

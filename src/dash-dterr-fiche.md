@@ -1,5 +1,5 @@
 ---
-title: ObTer — Fiche Territoire
+title: Fiche Territoire
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css

@@ -3,7 +3,7 @@
 // AUTO-GÉNÉRÉ depuis config/ddict_indicateurs_ottd.json + CSV volets (v_*)
 // NE PAS MODIFIER - Relancer: Rscript scripts/util-gen-indicators-js.R
 // Volets: source CSV ddict-validation-light_ottd.csv (colonnes v_*)
-// Généré: 2026-02-26 12:28:55.04191
+// Généré: 2026-03-06 10:02:23.245441
 // =======================================================================
 
 import * as d3 from "npm:d3";
@@ -92,6 +92,12 @@ const DDICT = {
       "long": "2021-2022",
       "duree": 1,
       "source": "MIGCOM"
+    },
+    "14_24": {
+      "short": "14-24",
+      "long": "2014-2024",
+      "duree": 10,
+      "source": "DVF MM3"
     },
     "16_24": {
       "short": "16-24",
@@ -447,6 +453,116 @@ const DDICT = {
       "definition": "Taux de croissance annuel moyen de la population sur la période, lissant les variations annuelles.",
       "note": "Vitesse d’évolution de la population lissée sur la période. Un TCAM de +1%/an signifie qu’en moyenne la population augmente de 1% chaque année. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}/an).",
       "agg_dash": true,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "dm_imm_pct": {
+      "short": "Part immigres",
+      "medium": "Part de la population immigree",
+      "long": "Part des personnes immigrees dans la population totale",
+      "type": "pct",
+      "unit": "%",
+      "theme": "dm",
+      "ordre": 1.5,
+      "source": "INSEE RP",
+      "formula": "P_POP_IMM / P_POP × 100",
+      "note": "Part des personnes nees etrangeres a l'etranger et residant en France. Inclut les personnes ayant acquis la nationalite francaise. Un immigre reste immigre toute sa vie, meme apres naturalisation.",
+      "definition": "Rapport entre la population immigree et la population totale. Definition INSEE : personne nee etrangere a l'etranger.",
+      "periodes": [
+        "11",
+        "16",
+        "22"
+      ],
+      "srcVar": [
+        "P11_POP_IMM",
+        "P16_POP_IMM",
+        "P22_POP_IMM"
+      ],
+      "volets": [],
+      "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "dm_imm_pct_vdifp": {
+      "short": "Evol part immigres",
+      "medium": "Evolution part immigree (diff. pts)",
+      "long": "Evolution de la part de la population immigree en difference de points",
+      "type": "vdifp",
+      "unit": "pts",
+      "theme": "dm",
+      "ordre": 1.6,
+      "source": "INSEE RP",
+      "formula": "dm_imm_pct_fin - dm_imm_pct_debut",
+      "note": "Variation en points de pourcentage de la part d'immigres. Ex : passage de 12% a 15% = +3 pts. Positif = augmentation de la part immigree dans la population.",
+      "periodes": [
+        "16_22",
+        "11_22"
+      ],
+      "volets": [],
+      "eda": false,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "dm_etr_pct": {
+      "short": "Part etrangers",
+      "medium": "Part de la population etrangere",
+      "long": "Part des personnes de nationalite etrangere dans la population totale",
+      "type": "pct",
+      "unit": "%",
+      "theme": "dm",
+      "ordre": 1.7,
+      "source": "INSEE RP",
+      "formula": "P_POP_ETR / P_POP × 100",
+      "note": "Part des personnes n'ayant pas la nationalite francaise. A distinguer de la part d'immigres : un etranger ne en France n'est pas immigre, un immigre naturalise n'est plus etranger.",
+      "definition": "Rapport entre la population de nationalite etrangere et la population totale.",
+      "periodes": [
+        "11",
+        "16",
+        "22"
+      ],
+      "srcVar": [
+        "P11_POP_ETR",
+        "P16_POP_ETR",
+        "P22_POP_ETR"
+      ],
+      "volets": [],
+      "eda": true,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "dm_etr_pct_vdifp": {
+      "short": "Evol part etrangers",
+      "medium": "Evolution part etrangere (diff. pts)",
+      "long": "Evolution de la part de la population etrangere en difference de points",
+      "type": "vdifp",
+      "unit": "pts",
+      "theme": "dm",
+      "ordre": 1.8,
+      "source": "INSEE RP",
+      "formula": "dm_etr_pct_fin - dm_etr_pct_debut",
+      "note": "Variation en points de pourcentage de la part d'etrangers. Positif = augmentation de la part etrangere.",
+      "periodes": [
+        "16_22",
+        "11_22"
+      ],
+      "volets": [],
+      "eda": false,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "agg_dash": false,
       "agg_ecodash": false,
       "agg_logdash": false
     },
@@ -1655,6 +1771,106 @@ const DDICT = {
       "volets": [],
       "eda": false,
       "priority": 3,
+      "polarity": 0,
+      "symbol": "◆",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "idxg_com_med": {
+      "short": "Idx gentrific. med.",
+      "medium": "Gentrification commune (mediane)",
+      "long": "Indice median de gentrification des quartiers (IRIS) de la commune",
+      "type": "ind",
+      "unit": "ind",
+      "theme": "idx",
+      "ordre": 4.1,
+      "source": "Calcul PTOD agg IRIS",
+      "formula": "median(idxg_ind des IRIS de la commune)",
+      "note": "Valeur mediane de l'indice de gentrification parmi les IRIS de la commune. Echelle 0-100, centree sur 50. Au-dessus de 55 : dynamique de gentrification notable. Plus robuste que la moyenne car insensible aux quartiers atypiques.",
+      "definition": "Mediane des indices de gentrification IRIS. Prefere a la moyenne car non influencee par un quartier extremement gentrifie ou preserve.",
+      "periodes": [
+        "16_22"
+      ],
+      "echelon": "commune_iris",
+      "volets": [],
+      "eda": false,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "◆",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "idxg_com_sd": {
+      "short": "Dispersion gentrific.",
+      "medium": "Dispersion intra-commune gentrification",
+      "long": "Ecart-type de l'indice de gentrification entre quartiers (IRIS) d'une meme commune",
+      "type": "ind",
+      "unit": "pts",
+      "theme": "idx",
+      "ordre": 4.2,
+      "source": "Calcul PTOD agg IRIS",
+      "formula": "sd(idxg_ind des IRIS de la commune)",
+      "note": "Mesure l'heterogeneite intra-communale. Lecture : SD < 5 = commune homogene, SD 5-10 = contrastes moderes, SD > 10 = forte heterogeneite (quartiers en gentrification rapide coexistant avec quartiers preserves). Ex : Gentilly SD=9.1 (8 IRIS tres contrastes).",
+      "definition": "Ecart-type des indices de gentrification IRIS au sein de la commune. Plus il est eleve, plus les dynamiques de transformation different entre quartiers.",
+      "periodes": [
+        "16_22"
+      ],
+      "echelon": "commune_iris",
+      "volets": [],
+      "eda": false,
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "◆",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "idxg_com_pct_top20": {
+      "short": "% IRIS top 20%",
+      "medium": "Part des quartiers les plus gentrifiants",
+      "long": "Part des IRIS de la commune dans le quintile superieur de gentrification du perimetre d'etude",
+      "type": "pct",
+      "unit": "%",
+      "theme": "idx",
+      "ordre": 4.3,
+      "source": "Calcul PTOD agg IRIS",
+      "formula": "nb IRIS > P80 perimetre / nb IRIS total × 100",
+      "note": "Indique la diffusion spatiale de la gentrification dans la commune. Lecture : 0% = aucun quartier dans le top 20% du perimetre, 50% = la moitie des quartiers se gentrifient fortement, 100% = gentrification generalisee. Le seuil P80 est calcule sur l'ensemble du perimetre (Paris+couronne ou Marseille). Ex : Saint-Ouen 72% vs Aubervilliers 19%.",
+      "definition": "Pourcentage des IRIS dont l'indice de gentrification depasse le 80e percentile du perimetre. Mesure l'etendue spatiale de la gentrification a l'echelle communale.",
+      "periodes": [
+        "16_22"
+      ],
+      "echelon": "commune_iris",
+      "volets": [],
+      "eda": false,
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "◆",
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "idxg_com_ncomp_med": {
+      "short": "Qualite idx (composantes)",
+      "medium": "Nb median de composantes de l'indice",
+      "long": "Nombre median de composantes disponibles pour le calcul de l'indice de gentrification par IRIS",
+      "type": "num",
+      "unit": "n",
+      "theme": "idx",
+      "ordre": 4.4,
+      "source": "Calcul PTOD agg IRIS",
+      "formula": "median(idxg_ncomp des IRIS de la commune)",
+      "note": "Indicateur de fiabilite. L'indice combine 7 composantes max (cadres, ouvriers, proprietaires, emmenagements, prix immo, ratio prix/revenu, revenu median). Lecture : 7 = toutes les donnees disponibles, 5-6 = DVF ou Filosofi manquant sur certains IRIS, < 5 = indice fragile a interpreter avec prudence.",
+      "definition": "Nombre median de composantes utilisees dans le calcul de l'indice de gentrification. Permet de juger la robustesse de l'indicateur communal.",
+      "periodes": [
+        "16_22"
+      ],
+      "echelon": "commune_iris",
+      "volets": [],
+      "eda": false,
+      "priority": 4,
       "polarity": 0,
       "symbol": "◆",
       "agg_dash": false,
@@ -5888,6 +6104,27 @@ const DDICT = {
       "agg_ecodash": false,
       "agg_logdash": false
     },
+    "logd_pxmoisrev": {
+      "short": "Ratio prix/revenu",
+      "medium": "Mois de revenu médian par m²",
+      "long": "Nombre de mois de revenu médian nécessaires pour acheter 1 m² d'appartement (prix MM3 DVF / revenu médian mensuel Filosofi)",
+      "definition": "Ratio entre le prix au m² moyen mobile 3 ans des appartements (DVF) et le revenu médian mensuel (Filosofi). Indique la tension entre marché immobilier et capacité financière des ménages.",
+      "note": "Ratio prix/revenu. Plus la valeur est élevée, plus le marché est tendu par rapport aux revenus locaux. Valeur supérieure à {percentile}% des territoires (🇫🇷 {france_value}).",
+      "type": "ratio",
+      "unit": "mois",
+      "theme": "logd",
+      "periodes": [
+        "21"
+      ],
+      "source": "DVF+Filosofi",
+      "priority": 1,
+      "polarity": 0,
+      "symbol": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
     "logd_dpe_fg_pct": {
       "short": "% Passoires F+G",
       "medium": "Part logements DPE F ou G",
@@ -6120,7 +6357,11 @@ const DDICT = {
       "polarity": 1,
       "symbol": "",
       "definition": "Nombre total d'établissements actifs implantés sur l'IRIS (stock SIRENE). Inclut EI, sociétés, sièges et établissements secondaires.",
-      "note": "Stock à date, pas un flux. Un même entreprise peut avoir plusieurs établissements."
+      "note": "Stock à date, pas un flux. Un même entreprise peut avoir plusieurs établissements.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "ecosi_emp_vol": {
       "short": "Étab. employeurs",
@@ -6138,7 +6379,11 @@ const DDICT = {
       "polarity": 1,
       "symbol": "",
       "definition": "Établissements déclarant au moins un salarié. Proxy de la densité d'emploi local.",
-      "note": ""
+      "note": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "ecosi_emp_pct": {
       "short": "% employeurs",
@@ -6156,7 +6401,11 @@ const DDICT = {
       "polarity": 1,
       "symbol": "",
       "definition": "Proportion des établissements actifs employant au moins un salarié. Indicateur de maturité du tissu économique local.",
-      "note": "Part élevée = tissu structuré avec emploi salarié. Part faible = dominance micro-entrepreneurs/EI."
+      "note": "Part élevée = tissu structuré avec emploi salarié. Part faible = dominance micro-entrepreneurs/EI.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "ecosi_soc_vol": {
       "short": "Nb sociétés",
@@ -6174,7 +6423,11 @@ const DDICT = {
       "polarity": 1,
       "symbol": "",
       "definition": "Nombre de sociétés (hors EI). Formes juridiques : SA, SAS, SARL, SCI, etc.",
-      "note": ""
+      "note": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "ecosi_soc_pct": {
       "short": "% sociétés",
@@ -6192,52 +6445,20 @@ const DDICT = {
       "polarity": 1,
       "symbol": "",
       "definition": "Proportion de sociétés (vs entrepreneurs individuels). Indicateur de structuration économique.",
-      "note": "Valeur élevée = tissu d'entreprises structurées. Faible = dominance auto-entrepreneurs."
-    },
-    "ecosi_eiemp_vol": {
-      "short": "EI employeurs",
-      "medium": "Entrepreneurs individuels avec salariés",
-      "long": "Nombre d'EI employant au moins un salarié",
-      "type": "vol",
-      "unit": "nb",
-      "theme": "ecosi",
-      "ordre": 6,
-      "source": "SIRENE",
-      "periodes": [
-        "26"
-      ],
-      "priority": 4,
-      "polarity": 0,
-      "symbol": "",
-      "definition": "Entrepreneurs individuels (EI) déclarant au moins un salarié. Catégorie résiduelle en forte baisse.",
-      "note": ""
-    },
-    "ecosi_einonemp_vol": {
-      "short": "EI sans salarié",
-      "medium": "Entrepreneurs individuels sans salarié",
-      "long": "Nombre d'EI sans salarié (dont micro-entrepreneurs)",
-      "type": "vol",
-      "unit": "nb",
-      "theme": "ecosi",
-      "ordre": 7,
-      "source": "SIRENE",
-      "periodes": [
-        "26"
-      ],
-      "priority": 3,
-      "polarity": 0,
-      "symbol": "",
-      "definition": "Entrepreneurs individuels sans salarié, dont micro-entrepreneurs. Boom post-2009 (régime auto-entrepreneur).",
-      "note": ""
+      "note": "Valeur élevée = tissu d'entreprises structurées. Faible = dominance auto-entrepreneurs.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "ecosi_einonemp_pct": {
       "short": "% EI sans salarié",
-      "medium": "Part des EI sans salarié",
+      "medium": "Part des EI sans salarié (proxy micro-E)",
       "long": "Part des entrepreneurs individuels sans salarié (%)",
       "type": "pct",
       "unit": "%",
       "theme": "ecosi",
-      "ordre": 8,
+      "ordre": 6,
       "source": "SIRENE",
       "periodes": [
         "26"
@@ -6246,16 +6467,20 @@ const DDICT = {
       "polarity": 0,
       "symbol": "",
       "definition": "Proportion d'EI sans salarié parmi les établissements. Forte dans les quartiers résidentiels (services à domicile, livraison).",
-      "note": ""
+      "note": "Proxy micro-entrepreneurs : SIRENE ne distingue pas micro-E des EI classiques. Le filtre trancheEffectifs=NN/00 (aucun salarié) est le meilleur proxy disponible. 37% en France. Valeur élevée = économie de plateformes (livraison, VTC, services à domicile).",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "ecosi_etabrec_vol": {
       "short": "Étab. récents",
-      "medium": "Établissements récents (≤3 ans)",
-      "long": "Nombre d'établissements créés depuis 3 ans ou moins",
+      "medium": "Établissements récents (depuis 2020)",
+      "long": "Nombre d'établissements créés depuis 2020",
       "type": "vol",
       "unit": "nb",
       "theme": "ecosi",
-      "ordre": 9,
+      "ordre": 7,
       "source": "SIRENE",
       "periodes": [
         "26"
@@ -6263,17 +6488,21 @@ const DDICT = {
       "priority": 2,
       "polarity": 1,
       "symbol": "",
-      "definition": "Établissements dont la date de création remonte à 3 ans ou moins. Proxy du dynamisme entrepreneurial local.",
-      "note": ""
+      "definition": "Établissements dont la date de création est ≥ 2020. Proxy du dynamisme entrepreneurial local.",
+      "note": "Seuil paramétrable via seuil_annee_recent() dans le SQL. Stock fév 2026 = 6 ans de recul.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
     "ecosi_etabrec_pct": {
       "short": "% étab. récents",
-      "medium": "Part des établissements récents",
-      "long": "Part des établissements créés depuis ≤3 ans (%)",
+      "medium": "Taux de renouvellement (depuis 2020)",
+      "long": "Part des établissements créés depuis 2020 (%)",
       "type": "pct",
       "unit": "%",
       "theme": "ecosi",
-      "ordre": 10,
+      "ordre": 8,
       "source": "SIRENE",
       "periodes": [
         "26"
@@ -6281,13 +6510,61 @@ const DDICT = {
       "priority": 1,
       "polarity": 1,
       "symbol": "",
-      "definition": "Taux de renouvellement du tissu économique : part des établissements de moins de 3 ans. Indicateur clé de gentrification commerciale.",
-      "note": "Valeur très élevée peut signaler un turnover excessif (commerces éphémères) plutôt qu'un dynamisme sain."
+      "definition": "Taux de renouvellement du tissu économique : part des établissements créés depuis 2020. Inclut tous types (EI, sociétés, micro-E).",
+      "note": "Note de lecture : parmi tous les établissements actifs aujourd'hui (stock fév 2026), quelle part a été créée depuis 2020. Ce n'est PAS une évolution du stock (hausse/baisse), c'est un taux de renouvellement. 43% en France = presque 1 étab sur 2 a moins de 6 ans. Valeur très élevée (>55%) peut signaler du turnover (commerces éphémères, domiciliation) plutôt qu'un dynamisme sain. Comparer avec renouv_horsmE pour isoler l'effet micro-entrepreneurs.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
-    "ecosi_siege_vol": {
-      "short": "Nb sièges",
-      "medium": "Nombre de sièges sociaux",
-      "long": "Nombre de sièges sociaux implantés sur l'IRIS",
+    "ecosi_shannon_ind": {
+      "short": "◆ Shannon",
+      "medium": "◆ Indice de Shannon — diversité sectorielle A38",
+      "long": "Indice de Shannon mesurant la diversité sectorielle NAF A38",
+      "type": "ind",
+      "unit": "ind",
+      "theme": "ecosi",
+      "ordre": 9,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Indice de Shannon calculé sur la répartition des établissements par catégorie NAF A38 (38 postes INSEE). H = -Σ(pi × ln(pi)). Max théorique = ln(38) ≈ 3.64.",
+      "note": "Note de lecture : Shannon mesure combien l'activité est répartie entre différents secteurs. Un IRIS à 3.0 a une économie très diversifiée (commerces, services, industrie, santé...). Un IRIS à 1.5 est dominé par 1-2 secteurs. Médiane France = 2.36. Quartiers résidentiels typiquement 2.0-2.5, centres-villes diversifiés 2.8-3.2, zones mono-activité (commerce, logistique) < 1.5.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "ecosi_equit_ind": {
+      "short": "◆ Équitabilité",
+      "medium": "◆ Indice d'équitabilité (Pielou) A38",
+      "long": "Indice d'équitabilité de Pielou — régularité répartition sectorielle A38",
+      "type": "ind",
+      "unit": "ind",
+      "theme": "ecosi",
+      "ordre": 10,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Rapport Shannon / ln(nb catégories A38 présentes). Mesure l'homogénéité de la répartition entre secteurs. 1 = répartition parfaitement uniforme.",
+      "note": "Note de lecture : Pielou corrige le Shannon pour le nombre de secteurs présents. Un IRIS avec 5 secteurs parfaitement équilibrés (20% chacun) a Pielou = 1.0, mais Shannon = 1.61 seulement. Pielou = 0.8 = bonne répartition, 0.5 = un secteur domine, < 0.3 = quasi mono-activité. Très corrélé au Shannon (~0.95), utile surtout pour comparer des IRIS ayant des nombres de secteurs très différents.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "ecosi_nbdiv_vol": {
+      "short": "Nb catégories A38",
+      "medium": "Nombre de catégories NAF A38 distinctes",
+      "long": "Nombre de catégories NAF A38 présentes sur l'IRIS",
       "type": "vol",
       "unit": "nb",
       "theme": "ecosi",
@@ -6299,67 +6576,83 @@ const DDICT = {
       "priority": 3,
       "polarity": 1,
       "symbol": "",
-      "definition": "Nombre de sièges sociaux d'entreprises. Concentration forte dans les quartiers d'affaires.",
-      "note": ""
+      "definition": "Nombre de catégories NAF A38 (38 postes INSEE) ayant au moins un établissement sur l'IRIS. Max = 38.",
+      "note": "Nom de colonne historique nbdiv conservé pour compatibilité pipeline.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
-    "ecosi_shannon_ind": {
-      "short": "◆ Shannon",
-      "medium": "◆ Indice de Shannon — diversité sectorielle",
-      "long": "Indice de Shannon mesurant la diversité sectorielle NAF",
-      "type": "ind",
-      "unit": "ind",
+    "ecosi_nafdom1_cat": {
+      "short": "NAF dom. 1",
+      "medium": "Code A38 du 1er secteur dominant",
+      "long": "Code NAF A38 du secteur dominant de l'IRIS (1er rang)",
+      "type": "cat",
+      "unit": "",
       "theme": "ecosi",
       "ordre": 12,
       "source": "SIRENE",
       "periodes": [
         "26"
       ],
-      "priority": 1,
-      "polarity": 1,
-      "symbol": "◆",
-      "definition": "Indice de Shannon calculé sur la répartition des établissements par division NAF. Mesure la diversité sectorielle. Max théorique = ln(nb_divisions).",
-      "note": "Valeur élevée = économie locale diversifiée. Faible = spécialisation sectorielle forte."
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Code A38 du secteur NAF ayant le plus grand nombre d'établissements actifs sur l'IRIS.",
+      "note": "Catégoriel (38 valeurs possibles). Libellé dans ecosi_nafdom1_lib.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
-    "ecosi_equit_ind": {
-      "short": "◆ Équitabilité",
-      "medium": "◆ Indice d'équitabilité (Pielou)",
-      "long": "Indice d'équitabilité de Pielou — régularité répartition sectorielle",
-      "type": "ind",
-      "unit": "ind",
+    "ecosi_nafdom1_lib": {
+      "short": "Libellé dom. 1",
+      "medium": "Libellé du 1er secteur dominant",
+      "long": "Libellé NAF A38 du secteur dominant de l'IRIS (1er rang)",
+      "type": "cat",
+      "unit": "",
       "theme": "ecosi",
       "ordre": 13,
       "source": "SIRENE",
       "periodes": [
         "26"
       ],
-      "priority": 2,
-      "polarity": 1,
-      "symbol": "◆",
-      "definition": "Rapport Shannon / ln(nb_divisions). Mesure l'homogénéité de la répartition entre secteurs. 1 = répartition parfaitement uniforme.",
-      "note": "Complément du Shannon : un IRIS avec 2 secteurs équilibrés (50/50) aura une forte équitabilité mais un faible Shannon."
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Libellé court du secteur A38 dominant (ex: Commerce, Activités immobilières, Construction).",
+      "note": "Catégoriel texte. Accompagne ecosi_nafdom1_cat.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
-    "ecosi_nbdiv_vol": {
-      "short": "Nb divisions NAF",
-      "medium": "Nombre de divisions NAF distinctes",
-      "long": "Nombre de divisions NAF présentes sur l'IRIS",
-      "type": "vol",
-      "unit": "nb",
+    "ecosi_nafdom1_pct": {
+      "short": "% dom. 1",
+      "medium": "Part du 1er secteur dominant (%)",
+      "long": "Part du secteur NAF A38 dominant dans les établissements de l'IRIS (%)",
+      "type": "pct",
+      "unit": "%",
       "theme": "ecosi",
       "ordre": 14,
       "source": "SIRENE",
       "periodes": [
         "26"
       ],
-      "priority": 3,
-      "polarity": 1,
+      "priority": 2,
+      "polarity": 0,
       "symbol": "",
-      "definition": "Nombre de divisions NAF (niveau 2 — 88 divisions) ayant au moins un établissement sur l'IRIS.",
-      "note": ""
+      "definition": "Proportion d'établissements du secteur A38 dominant parmi le total de l'IRIS. Part élevée = spécialisation sectorielle marquée.",
+      "note": "",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     },
-    "ecosi_nafdomql_ind": {
-      "short": "◆ Score NAF dom.",
-      "medium": "◆ Score qualitatif du secteur dominant",
-      "long": "Score qualitatif du secteur NAF dominant",
+    "ecosi_nafdom1ql_ind": {
+      "short": "◆ QL surrepr. 1",
+      "medium": "◆ QL du 1er secteur le plus surreprésenté",
+      "long": "Quotient de localisation du secteur NAF A38 le plus surreprésenté de l'IRIS",
       "type": "ind",
       "unit": "ind",
       "theme": "ecosi",
@@ -6368,11 +6661,169 @@ const DDICT = {
       "periodes": [
         "26"
       ],
-      "priority": 3,
+      "priority": 2,
       "polarity": 0,
       "symbol": "◆",
-      "definition": "Score attribué au secteur NAF dominant de l'IRIS. Reflète le positionnement qualitatif du tissu économique local.",
-      "note": "Échelle indicative. Valeur élevée = secteur à forte valeur ajoutée (finance, conseil). Faible = commerce de détail, services basiques."
+      "definition": "QL = (part locale A38 / part périmètre A38). Classé par QL décroissant (secteur le plus surreprésenté). Ref = zone pgent si disponible, sinon département. QL > 1 = surreprésentation. Filtre ≥2 étab.",
+      "note": "Note de lecture : le QL (quotient de localisation) compare la part d'un secteur dans l'IRIS à sa part dans le périmètre de référence. QL = 1 = même proportion qu'alentour. QL = 2 = deux fois plus concentré. QL = 0.5 = deux fois moins. Exemple : si la restauration fait 15% des étab de l'IRIS mais 5% du département, QL = 3.0. Le classement par QL fait remonter les secteurs distinctifs du quartier, pas forcément les plus gros en volume.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "ecosi_nafdom2_cat": {
+      "short": "NAF dom. 2",
+      "medium": "Code A38 du 2e secteur dominant",
+      "long": "Code NAF A38 du 2e secteur de l'IRIS (2e rang)",
+      "type": "cat",
+      "unit": "",
+      "theme": "ecosi",
+      "ordre": 16,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Code A38 du deuxième secteur NAF par nombre d'établissements sur l'IRIS.",
+      "note": "Catégoriel. NULL si l'IRIS n'a qu'un seul secteur A38.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "ecosi_nafdom2_lib": {
+      "short": "Libellé dom. 2",
+      "medium": "Libellé du 2e secteur dominant",
+      "long": "Libellé NAF A38 du 2e secteur de l'IRIS (2e rang)",
+      "type": "cat",
+      "unit": "",
+      "theme": "ecosi",
+      "ordre": 17,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Libellé court du 2e secteur A38 de l'IRIS.",
+      "note": "Catégoriel texte. Accompagne ecosi_nafdom2_cat.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "ecosi_nafdom2_pct": {
+      "short": "% surrepr. 2",
+      "medium": "Part du 2e secteur surreprésenté (%)",
+      "long": "Part du 2e secteur NAF A38 le plus surreprésenté dans l'IRIS (%)",
+      "type": "pct",
+      "unit": "%",
+      "theme": "ecosi",
+      "ordre": 18,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 3,
+      "polarity": 0,
+      "symbol": "",
+      "definition": "Proportion d'établissements du 2e secteur A38 le plus surreprésenté (par QL). Peut être un secteur minoritaire en volume.",
+      "note": "NULL si l'IRIS n'a qu'un seul secteur A38 avec ≥2 étab.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "ecosi_nafdom2ql_ind": {
+      "short": "◆ QL surrepr. 2",
+      "medium": "◆ QL du 2e secteur le plus surreprésenté",
+      "long": "Quotient de localisation du 2e secteur NAF A38 le plus surreprésenté de l'IRIS",
+      "type": "ind",
+      "unit": "ind",
+      "theme": "ecosi",
+      "ordre": 19,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 2,
+      "polarity": 0,
+      "symbol": "◆",
+      "definition": "QL du 2e secteur le plus surreprésenté (classé par QL décroissant). Ref = zone pgent ou département.",
+      "note": "NULL si l'IRIS n'a qu'un seul secteur A38 avec ≥2 étab.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "ecosi_siege_pct": {
+      "short": "% sièges",
+      "medium": "Part des sièges sociaux",
+      "long": "Part des sièges sociaux parmi les établissements (%)",
+      "type": "pct",
+      "unit": "%",
+      "theme": "ecosi",
+      "ordre": 20,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 3,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Proportion de sièges sociaux parmi les établissements actifs. Proxy de centralité décisionnelle. Part élevée = quartier d'affaires ou zone résidentielle à domiciliation.",
+      "note": "Note de lecture : France = 89%. Un IRIS à 95%+ peut signaler de la domiciliation massive (sociétés de domiciliation, adresses fiscales). Un IRIS nettement sous 80% = présence d'établissements secondaires (succursales, agences) qui indique un tissu d'emploi réel plutôt que des sièges administratifs.",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "ecosi_renouv_horsmE_pct": {
+      "short": "◆ Renouv. hors µE",
+      "medium": "◆ Taux renouvellement hors micro-entrepreneurs",
+      "long": "Taux de renouvellement des établissements hors micro-entrepreneurs (%)",
+      "type": "pct",
+      "unit": "%",
+      "theme": "ecosi",
+      "ordre": 21,
+      "source": "SIRENE",
+      "periodes": [
+        "26"
+      ],
+      "priority": 1,
+      "polarity": 1,
+      "symbol": "◆",
+      "definition": "Étab récents (≥2020) hors EI non-employeur / stock total hors EI non-employeur. Filtre le bruit des micro-entrepreneurs pour mesurer le renouvellement économique structurel.",
+      "note": "Note de lecture : indicateur clé de mutation commerciale. Même calcul que le taux de renouvellement global, mais en excluant les EI sans salarié (proxy micro-E : livreurs, VTC, services à domicile). France = 39% vs 43% global → ~4 pts portés par les micro-E. Un écart local fort (ex: 50% global vs 35% hors micro-E) signale que le renouvellement est porté par l'ubérisation, pas par des commerces/bureaux structurels. Un taux hors micro-E élevé (>45%) signale une vraie mutation du tissu commercial (nouvelles boutiques, restaurants, enseignes).",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
+    },
+    "ecosi_etab_denspop": {
+      "short": "Densité étab.",
+      "medium": "Établissements pour 1 000 habitants",
+      "long": "Densité d'établissements actifs pour 1 000 habitants",
+      "type": "dens",
+      "unit": "‰ hab",
+      "theme": "ecosi",
+      "ordre": 22,
+      "source": "SIRENE × INSEE RP",
+      "periodes": [
+        "26"
+      ],
+      "priority": 2,
+      "polarity": 1,
+      "symbol": "",
+      "definition": "Nombre d'établissements actifs pour 1 000 habitants (P22_POP). Normalise le volume d'activité par la population résidente.",
+      "note": "Note de lecture : combien d'établissements pour 1 000 résidents. Permet de comparer des IRIS de tailles différentes. Quartier résidentiel typique = 20-50. Centre-ville actif = 100-300. Quartier d'affaires/commercial = 500+. Valeurs extrêmes (>1000) = zones d'activité à faible population résidente (La Défense, zones industrielles, gares).",
+      "volets": [],
+      "agg_dash": false,
+      "agg_ecodash": false,
+      "agg_logdash": false
     }
   },
   "mapping_observable_to_new": {

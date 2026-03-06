@@ -1,5 +1,5 @@
 ---
-title: ObTer — Logement
+title: Logement
 toc: false
 theme: dashboard
 style: styles/dashboard-light.css
