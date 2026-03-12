@@ -398,6 +398,24 @@ const extraIndics = view(Inputs.select(
 </aside>
 <!-- &e SIDEBAR -->
 
+```js
+// &s SIDEBAR_TOGGLE
+{
+  const toggle = document.createElement("div");
+  toggle.className = "sidebar-toggle";
+  toggle.title = "Replier/déplier le menu";
+  toggle.innerHTML = `<span class="toggle-chevron">«</span><span class="toggle-label">Menu</span>`;
+  document.body.appendChild(toggle);
+  document.body.classList.add("sidebar-collapsed");
+  toggle.querySelector(".toggle-chevron").textContent = "»";
+  toggle.addEventListener("click", () => {
+    const collapsed = document.body.classList.toggle("sidebar-collapsed");
+    toggle.querySelector(".toggle-chevron").textContent = collapsed ? "»" : "«";
+  });
+}
+// &e SIDEBAR_TOGGLE
+```
+
 <!-- &s LAYOUT_MAIN -->
 <div class="layout-main" style="margin-top:0;">
 

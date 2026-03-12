@@ -47,7 +47,8 @@ export function renderButterflyMulti({ franceData, territories = [], options = {
     widthEvol = 120,       // Réduit (était 160)
     widthLabels = 110,     // Réduit (était 120)
     evolLabel = "Évol. 22→23 (%)",  // Configurable selon source
-    capEvol = null          // Cap barres évol à ±N% (ex: 30)
+    capEvol = null,         // Cap barres évol à ±N% (ex: 30)
+    referenceLabel = "France (référence)"  // Label du bloc référence
   } = options;
 
   // Ordre secteurs = ordre France (par part décroissante)
@@ -246,7 +247,7 @@ export function renderButterflyMulti({ franceData, territories = [], options = {
   container.style.cssText = 'display:flex;align-items:flex-start;overflow-x:auto;gap:0;';
 
   // === FRANCE (référence) ===
-  container.appendChild(createTerritoryBlock(franceAligned, 'France (référence)', true));
+  container.appendChild(createTerritoryBlock(franceAligned, referenceLabel, true));
 
   // === TERRITOIRES COMPARÉS ===
   territories.forEach((terr) => {

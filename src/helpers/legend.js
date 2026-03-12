@@ -156,7 +156,7 @@ export function createEcartFranceLegend(config) {
   const {
     palette,
     symbols = [],
-    pctLabels,
+    pctLabels = [],
     counts = [],
     title = "",
     reverse = true,

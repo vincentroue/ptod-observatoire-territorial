@@ -86,11 +86,7 @@ export function createBanner(options) {
   }
   titles.appendChild(line1);
 
-  // Ligne 2 : Observatoire des trajectoires territoriales
-  const line2 = document.createElement('div');
-  line2.className = 'banner-line2';
-  line2.textContent = 'Observatoire Territorial Multiéchelon des Profils et Trajectoires';
-  titles.appendChild(line2);
+  // Ligne 2 supprimée (ancien titre long "Observatoire Territorial...")
 
   inner.appendChild(titles);
 
@@ -120,7 +116,10 @@ export function createNav(pages, activePage) {
   const nav = document.createElement('nav');
   nav.className = 'nav-banner';
 
-  pages.forEach(page => {
+  // Filter devOnly pages in production
+  const visiblePages = IS_DEV ? pages : pages.filter(p => !p.devOnly);
+
+  visiblePages.forEach(page => {
     const link = document.createElement('a');
     link.className = 'nav-btn';
     link.textContent = page.label;
@@ -259,20 +258,36 @@ export const OTTD_PAGES = [
     color: '#2563eb' },
   { id: 'dterr', label: '📋 Focus territoire', href: './dash-dterr-fiche',
     title: 'Focus territoire : portrait commune avec comparaisons multi-échelon',
-    color: '#0f766e' },
+    color: '#0f766e', devOnly: true },
   { id: 'dterrb', label: '🔬 Fiche IRIS', href: './dash-dterrb',
     title: 'Fiche Territoire IRIS : zoom progressif DEP→EPCI→Commune→IRIS (MapLibre)',
-    color: '#7c3aed' },
+    color: '#7c3aed', devOnly: true },
   { id: 'dpgent', label: '🔬 Gentrification', href: './dash-dpgent',
     title: 'Gentrification IRIS : revenus, CSP, logement sur Paris+PC & Marseille',
-    color: '#dc2626' },
+    color: '#dc2626', devOnly: true },
   { id: 'exd', label: '◇ Exploratoire', href: './jottd-exd-explor-dyn', deprecated: true,
     title: 'Explorateur legacy — tous indicateurs, 7 niveaux géographiques',
-    color: '#8e44ad' },
+    color: '#8e44ad', devOnly: true },
   { id: 'exdf', label: '⇄ Flux', href: './dash-exdf-flux-migr', disabled: true,
     title: 'Flux migratoires : MIGCOM détaillé (à venir)',
-    color: '#c0392b' }
+    color: '#c0392b', devOnly: true }
 ];
+
+/**
+ * Détecte si on est en local (dev) ou en production (Netlify)
+ * localhost / 127.0.0.1 = dev, sinon prod
+ */
+export const IS_DEV = typeof window !== "undefined" &&
+  (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+/**
+ * Pages filtrées selon environnement :
+ * - En local : toutes les pages visibles
+ * - En prod : masque les pages devOnly
+ */
+export function getVisiblePages() {
+  return IS_DEV ? OTTD_PAGES : OTTD_PAGES.filter(p => !p.devOnly);
+}
 
 // &e PAGES_CONFIG
 
