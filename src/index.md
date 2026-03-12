@@ -41,29 +41,6 @@ body { padding-top: 0 !important; }
 }
 .idx-col-right { flex: 1; background: #f0f4f8; padding: 8px 10px; overflow-y: auto; transition: margin 0.3s ease; }
 
-/* Sidebar toggle button */
-.idx-sb-toggle {
-  position: fixed; top: 52px; left: 200px; width: 22px; z-index: 96;
-  background: #c5cad3; border: 1px solid #b0b6c0; border-left: none;
-  border-radius: 0 6px 6px 0; cursor: pointer;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  gap: 4px; padding: 8px 2px;
-  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.15s ease;
-  box-shadow: 1px 0 4px rgba(0,0,0,0.08);
-}
-.idx-sb-toggle:hover { background: #a8afba; }
-.idx-sb-toggle .tg-chev { font-size: 11px; font-weight: 700; color: #556; line-height: 1; }
-.idx-sb-toggle .tg-lbl {
-  writing-mode: vertical-rl; text-orientation: mixed;
-  font-size: 9px; font-weight: 600; color: #556; letter-spacing: 0.5px;
-}
-
-/* Sidebar collapsed state */
-.idx-cols.idx-collapsed .idx-col-left { transform: translateX(-200px); margin-left: -200px; }
-.idx-cols.idx-collapsed + .idx-sb-toggle,
-.idx-collapsed ~ .idx-sb-toggle { left: 0; width: 24px; border-left: 1px solid #b0b6c0; background: #d0d5dd; }
-body.idx-sb-off .idx-sb-toggle { left: 0; width: 24px; border-left: 1px solid #b0b6c0; background: #d0d5dd; }
-body.idx-sb-off .idx-col-left { transform: translateX(-200px); margin-left: -200px; }
 
 .idx-l-title { font-size: 10px; font-weight: 600; color: #8899aa; text-transform: uppercase; letter-spacing: 0.5px; margin: 10px 0 6px; }
 .idx-volet {
@@ -192,7 +169,7 @@ import * as Plot from "npm:@observablehq/plot";
 import * as d3 from "npm:d3";
 import rewind from "npm:@mapbox/geojson-rewind";
 
-import { OTTD_PAGES, IS_DEV } from "./helpers/layout.js";
+import { OTTD_PAGES, isDevMode } from "./helpers/layout.js";
 import { computeIndicBins, PAL_SEQ7_BYRV, PAL_ECART_FRANCE, PAL_PURPLE_GREEN, computeEcartFrance, ECART_FRANCE_SYMBOLS, countBins } from "./helpers/colors.js";
 import { renderChoropleth, addZoomBehavior, PROJECTION_FRANCE } from "./helpers/maps.js";
 import { INDICATEURS, PERIODES, THEMES, formatValue, getColLabel, getSource } from "./helpers/indicators-ddict-js.js";
@@ -362,7 +339,7 @@ const brand = document.createElement("div"); brand.className = "idx-mb-brand";
 brand.innerHTML = `<h1>ObTer <span>\u2014</span> Observatoire Territorial</h1>`;
 row1b.appendChild(brand);
 const nav = document.createElement("div"); nav.className = "idx-mb-nav";
-const _visiblePages = IS_DEV ? OTTD_PAGES : OTTD_PAGES.filter(p => !p.devOnly);
+const _visiblePages = isDevMode() ? OTTD_PAGES : OTTD_PAGES.filter(p => !p.devOnly);
 _visiblePages.forEach(p => {
   const a = document.createElement("a");
   a.href = p.disabled ? "#" : p.href; a.textContent = p.label;
@@ -374,7 +351,7 @@ _visiblePages.forEach(p => {
 });
 row1b.appendChild(nav); _banner.appendChild(row1b);
 const q = document.createElement("p"); q.className = "idx-mb-q";
-q.innerHTML = `Dynamiques territoriales : demographie, emploi, logement, attractivite, revenus \u2014 35 000 communes, 306 ZE, 8 echelons.`;
+q.innerHTML = `Dynamiques territoriales : demographie, emploi, logement, attractivite, revenus.`;
 _banner.appendChild(q);
 // KPI strip moved to sidebar
 display(_banner);
@@ -400,7 +377,7 @@ const voletDefs = [
 voletDefs.forEach(def => {
   const page = OTTD_PAGES.find(p => p.id === def.id);
   if (!page) return;
-  if (page.devOnly && !IS_DEV) return;
+  if (page.devOnly && !isDevMode()) return;
   const a = document.createElement("a"); a.className = "idx-volet"; a.href = page.href;
   a.style.setProperty("--vc", def.color);
   a.innerHTML = `<span class="v-icon">${def.icon}</span><div class="v-body"><div class="v-title">${def.title}</div><div class="v-desc">${def.desc}</div></div>`;
@@ -487,18 +464,6 @@ rightCol.appendChild(row3);
 
 cols.appendChild(rightCol);
 display(cols);
-
-// Sidebar toggle button
-const sbToggle = document.createElement("div");
-sbToggle.className = "idx-sb-toggle";
-sbToggle.title = "Replier/déplier le menu";
-sbToggle.innerHTML = `<span class="tg-chev">\u00ab</span><span class="tg-lbl">Menu</span>`;
-document.body.appendChild(sbToggle);
-sbToggle.addEventListener("click", () => {
-  const isCollapsed = cols.classList.toggle("idx-collapsed");
-  sbToggle.querySelector(".tg-chev").textContent = isCollapsed ? "\u00bb" : "\u00ab";
-  sbToggle.style.left = isCollapsed ? "0px" : "200px";
-});
 
 const _domReady = true;
 // &e

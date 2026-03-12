@@ -116,8 +116,8 @@ export function createNav(pages, activePage) {
   const nav = document.createElement('nav');
   nav.className = 'nav-banner';
 
-  // Filter devOnly pages in production
-  const visiblePages = IS_DEV ? pages : pages.filter(p => !p.devOnly);
+  // Filter devOnly pages in production (runtime check)
+  const visiblePages = isDevMode() ? pages : pages.filter(p => !p.devOnly);
 
   visiblePages.forEach(page => {
     const link = document.createElement('a');
@@ -276,7 +276,13 @@ export const OTTD_PAGES = [
 /**
  * Détecte si on est en local (dev) ou en production (Netlify)
  * localhost / 127.0.0.1 = dev, sinon prod
+ * IMPORTANT: Fonction (pas const) pour évaluation runtime dans le navigateur
  */
+export function isDevMode() {
+  return typeof window !== "undefined" &&
+    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+}
+// Compat — alias const (évalué à l'import dans le navigateur)
 export const IS_DEV = typeof window !== "undefined" &&
   (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
@@ -286,7 +292,7 @@ export const IS_DEV = typeof window !== "undefined" &&
  * - En prod : masque les pages devOnly
  */
 export function getVisiblePages() {
-  return IS_DEV ? OTTD_PAGES : OTTD_PAGES.filter(p => !p.devOnly);
+  return isDevMode() ? OTTD_PAGES : OTTD_PAGES.filter(p => !p.devOnly);
 }
 
 // &e PAGES_CONFIG
